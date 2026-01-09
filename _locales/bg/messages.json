@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Удостоверителя генерира 2-фактурна защита, за вашият браузър.",
+    "message": "Удостоверителя генерира 2-фактурна защита, за вашият браузър. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

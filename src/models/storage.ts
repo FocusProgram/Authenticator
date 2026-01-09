@@ -218,11 +218,14 @@ export class EntryStorage {
       encrypted = false;
     }
 
+    // entry.type is already a string like "totp", don't convert it
+    const typeString =
+      typeof entry.type === "number" ? OTPType[entry.type] : entry.type;
     const storageItem: RawOTPStorage = {
       encrypted,
       hash: entry.hash,
       index: entry.index,
-      type: OTPType[entry.type],
+      type: typeString,
       secret,
     };
 
@@ -368,6 +371,7 @@ export class EntryStorage {
       }
       return exportData;
     } catch (error) {
+      console.error("Error in getExport:", error);
       return error;
     }
   }
@@ -386,9 +390,90 @@ export class EntryStorage {
 
       const entry = _data[hash];
 
-      // TODO: fix this
+      // Handle EncOTPStorage (v3 encryption)
       if (entry.dataType === "EncOTPStorage") {
-        continue;
+        if (encrypted) {
+          // For encrypted export, keep as is
+          continue;
+        } else {
+          // For unencrypted export, try to decrypt
+          if (encryption && encryption.getEncryptionStatus()) {
+            try {
+              // Create a temporary entry object for decryption
+              const tempEntry = ({
+                encData: entry.data,
+                keyId: entry.keyId,
+              } as unknown) as OTPEntryInterface;
+              const decrypted = encryption.decryptEncSecret(tempEntry);
+              if (decrypted && decrypted.secret) {
+                const plainData = {
+                  ...decrypted,
+                  encrypted: false,
+                  dataType: DataType.OTPStorage,
+                };
+                // Remove keyId from plain text export
+                delete plainData.keyId;
+                _data[hash] = plainData;
+                continue;
+              }
+            } catch (error) {
+              console.error("Failed to decrypt EncOTPStorage:", error);
+            }
+          }
+          // If decryption fails or no encryption, remove from export
+          delete _data[hash];
+          continue;
+        }
+      }
+
+      // If encrypted export is requested and data is currently unencrypted, encrypt it
+      if (
+        encrypted &&
+        encryption &&
+        encryption.getEncryptionStatus() &&
+        entry.dataType === "OTPStorage" &&
+        !entry.encrypted
+      ) {
+        try {
+          // Convert string type to OTPType number
+          const typeNum =
+            typeof entry.type === "string"
+              ? (parseInt(entry.type) as OTPType) ||
+                (OTPType[entry.type as keyof typeof OTPType] as OTPType) ||
+                OTPType.totp
+              : entry.type;
+
+          // Convert algorithm if it's a string
+          let algorithmNum = OTPAlgorithm.SHA1;
+          if (entry.algorithm) {
+            algorithmNum =
+              typeof entry.algorithm === "string"
+                ? (parseInt(entry.algorithm) as OTPAlgorithm) ||
+                  (OTPAlgorithm[
+                    entry.algorithm as keyof typeof OTPAlgorithm
+                  ] as OTPAlgorithm) ||
+                  OTPAlgorithm.SHA1
+                : entry.algorithm;
+          }
+
+          const entryData = {
+            ...entry,
+            type: typeNum,
+            algorithm: algorithmNum,
+            encrypted: false as const,
+          };
+
+          // Create OTPEntry from storage data to encrypt it
+          const otpEntry = new OTPEntry(entryData, encryption);
+          const encryptedStorage = this.getOTPStorageFromEntry(otpEntry);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if ((encryptedStorage as any).dataType === "EncOTPStorage") {
+            _data[hash] = encryptedStorage;
+            continue;
+          }
+        } catch (error) {
+          console.error("Failed to encrypt entry for export:", error);
+        }
       }
 
       // remove unnecessary fields
@@ -422,6 +507,9 @@ export class EntryStorage {
       delete entry.pinned;
 
       if (!encrypted) {
+        // For plain text export, remove keyId to prevent requiring password on restore
+        delete entry.keyId;
+
         // decrypt the data to export
         if (entry.encrypted) {
           const decryptedSecret = encryption.decryptSecretString(entry.secret);
@@ -437,7 +525,8 @@ export class EntryStorage {
         }
       }
     }
-    if (encryption.getEncryptionStatus()) {
+    // Only include encryption keys for encrypted exports
+    if (encrypted && encryption.getEncryptionStatus()) {
       const keys = await BrowserStorage.getKeys();
       if (isOldKey(keys)) {
         Object.assign(_data, { key: keys });
@@ -551,7 +640,8 @@ export class EntryStorage {
       }
 
       const entry = new OTPEntry(entryData, encryption);
-      _data[entryData.hash] = this.getOTPStorageFromEntry(entry);
+      const storageItem = this.getOTPStorageFromEntry(entry);
+      _data[entryData.hash] = storageItem;
     }
     _data = this.ensureUniqueIndex(_data);
     await BrowserStorage.set(_data);

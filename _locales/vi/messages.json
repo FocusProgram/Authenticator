@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator tạo mã xác thực hai yếu tố trong trình duyệt của bạn",
+    "message": "Authenticator tạo mã xác thực hai yếu tố trong trình duyệt của bạn (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

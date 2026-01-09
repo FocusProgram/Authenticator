@@ -71,7 +71,11 @@ export default Vue.extend({
   },
   methods: {
     getBackupToken() {
-      chrome.runtime.sendMessage({ action: service });
+      chrome.runtime.sendMessage({ action: service }, () => {
+        if (chrome.runtime.lastError) {
+          return;
+        }
+      });
     },
     async backupLogout() {
       await new Promise((resolve: (value: boolean) => void) => {

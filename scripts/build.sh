@@ -32,10 +32,12 @@ fi
 
 if ! [[ $CREDS =~ $CREDREGEX ]] ; then
     if [[ $PLATFORM = "prod" ]]; then
-        echo -e "\e[7m\033[33mError: Missing info in credentials.ts\033[0m"
+        echo "Error: Missing info in src/models/credentials.ts"
+        echo "Provide API keys in src/models/credentials.ts or use a non-prod build."
         exit 1
     else
-        echo -e "\e[7m\033[33mWarning: Missing info in credentials.ts\033[0m"
+        echo "Warning: Missing info in src/models/credentials.ts"
+        echo "Continuing without API keys (some backup providers may not work)."
     fi
 fi
 

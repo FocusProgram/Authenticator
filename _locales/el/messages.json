@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Ο επαληθευτής δημιουργεί κωδικούς ταυτότητας δυο παραγόντων στο πρόγραμμα περιήγησής σας.",
+    "message": "Ο επαληθευτής δημιουργεί κωδικούς ταυτότητας δυο παραγόντων στο πρόγραμμα περιήγησής σας. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

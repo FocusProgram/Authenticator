@@ -87,7 +87,11 @@ export default Vue.extend({
     getBackupToken(business?: boolean) {
       UserSettings.items.oneDriveBusiness = Boolean(business);
       UserSettings.commitItems();
-      chrome.runtime.sendMessage({ action: service });
+      chrome.runtime.sendMessage({ action: service }, () => {
+        if (chrome.runtime.lastError) {
+          return;
+        }
+      });
     },
     async backupLogout() {
       UserSettings.items.oneDriveToken = undefined;

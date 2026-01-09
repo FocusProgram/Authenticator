@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator generearret 2-stapsferifikaasjekoades yn jo browser.",
+    "message": "Authenticator generearret 2-stapsferifikaasjekoades yn jo browser. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator はお使いのブラウザーで2段階認証コードを生成します。",
+    "message": "Authenticator はお使いのブラウザーで2段階認証コードを生成します。 (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

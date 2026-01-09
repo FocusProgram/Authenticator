@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator 在你的瀏覽器中生成兩步驟驗證碼。",
+    "message": "Authenticator 在你的瀏覽器中生成兩步驟驗證碼。 (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

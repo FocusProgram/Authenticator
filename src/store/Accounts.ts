@@ -447,11 +447,19 @@ export class Accounts implements Module {
           }
 
           if (!state.getters.currentlyEncrypted) {
-            chrome.runtime.sendMessage({
-              action: "cachePassphrase",
-              value: saltedHash,
-              keyId: defaultEncryption.getEncryptionKeyId(),
-            });
+            chrome.runtime.sendMessage(
+              {
+                action: "cachePassphrase",
+                value: saltedHash,
+                keyId: defaultEncryption.getEncryptionKeyId(),
+              },
+              () => {
+                // Ignore errors - caching is optional
+                if (chrome.runtime.lastError) {
+                  return;
+                }
+              }
+            );
           }
 
           state.commit("style/hideInfo", true, { root: true });
@@ -542,11 +550,19 @@ export class Accounts implements Module {
               await BrowserStorage.clearLogs();
             }
 
-            chrome.runtime.sendMessage({
-              action: "cachePassphrase",
-              value: saltedHash,
-              keyId: key.id,
-            });
+            chrome.runtime.sendMessage(
+              {
+                action: "cachePassphrase",
+                value: saltedHash,
+                keyId: key.id,
+              },
+              () => {
+                // Ignore errors - caching is optional
+                if (chrome.runtime.lastError) {
+                  return;
+                }
+              }
+            );
           } else {
             for (const entry of state.state.entries) {
               await entry.changeEncryption(new Encryption("", ""));
@@ -564,9 +580,17 @@ export class Accounts implements Module {
 
             await state.dispatch("updateEntries");
 
-            chrome.runtime.sendMessage({
-              action: "lock",
-            });
+            chrome.runtime.sendMessage(
+              {
+                action: "lock",
+              },
+              () => {
+                // Ignore errors
+                if (chrome.runtime.lastError) {
+                  return;
+                }
+              }
+            );
           }
 
           // remove cached passphrase in old version
@@ -611,6 +635,36 @@ export class Accounts implements Module {
           if (state.state.entries.length >= 10) {
             state.commit("showSearch");
           }
+        },
+        clearAllData: async (state: ActionContext<AccountsState, object>) => {
+          const entries = await BrowserStorage.get();
+          // Filter out UserSettings to preserve WebDAV config and other settings
+          const entryKeys = Object.keys(entries).filter(
+            (key) => key !== "UserSettings"
+          );
+          if (entryKeys.length) {
+            await BrowserStorage.remove(entryKeys);
+          }
+
+          // Don't remove encryption keys and state to preserve security password
+          // const storedKeys = await BrowserStorage.getKeys();
+          // if (isOldKey(storedKeys)) {
+          //   await BrowserStorage.remove("key");
+          // } else if (Array.isArray(storedKeys) && storedKeys.length) {
+          //   await BrowserStorage.remove(storedKeys.map((key) => key.id));
+          // }
+
+          // state.state.encryption.clear();
+          // state.state.defaultEncryption = "";
+          await state.dispatch("updateEntries");
+          // Don't lock the app to keep password unlocked
+          // chrome.runtime.sendMessage({ action: "lock" }, () => {
+          //   // Ignore errors
+          //   if (chrome.runtime.lastError) {
+          //     return;
+          //   }
+          // });
+          return "updateSuccess";
         },
         migrateStorage: async (
           state: ActionContext<AccountsState, object>,

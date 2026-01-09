@@ -43,8 +43,19 @@ export default Vue.extend({
           files: ["/css/content.css"],
         });
 
-        chrome.runtime.sendMessage({ action: "updateContentTab", data: tab });
+        chrome.runtime.sendMessage(
+          { action: "updateContentTab", data: tab },
+          () => {
+            if (chrome.runtime.lastError) {
+              return;
+            }
+          }
+        );
         chrome.tabs.sendMessage(tab.id, { action: "capture" }, (result) => {
+          if (chrome.runtime.lastError) {
+            this.$store.commit("notification/alert", this.i18n.capture_failed);
+            return;
+          }
           if (result !== "beginCapture") {
             this.$store.commit("notification/alert", this.i18n.capture_failed);
           } else {

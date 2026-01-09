@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "অথেন্টিকেটর আপনার ব্রাউজারে টু-ফ্যাক্টর অথেন্টিকেশন কোড উৎপন্ন করে।",
+    "message": "অথেন্টিকেটর আপনার ব্রাউজারে টু-ফ্যাক্টর অথেন্টিকেশন কোড উৎপন্ন করে। (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

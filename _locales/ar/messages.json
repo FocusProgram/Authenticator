@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "يقوم المصادق بإنشاء رموز المصادقة ذات عاملين في المتصفح الخاص بك.",
+    "message": "يقوم المصادق بإنشاء رموز المصادقة ذات عاملين في المتصفح الخاص بك. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

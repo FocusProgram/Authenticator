@@ -20,6 +20,14 @@ interface UserSettingsData {
   oneDriveRevoked?: boolean;
   oneDriveRefreshToken?: string;
   oneDriveToken?: string;
+  webdavUrl?: string;
+  webdavUsername?: string;
+  webdavPassword?: string;
+  webdavEncrypted?: boolean;
+  webdavAutoBackup?: boolean;
+  webdavLastBackupTime?: number;
+  webdavClearBeforeRestore?: boolean;
+  webdavMaxBackups?: number;
   storageLocation?: StorageLocation;
 
   // syncable settings
@@ -50,6 +58,13 @@ const LocalUserSettingsDataKeys = [
   "oneDriveRevoked",
   "oneDriveRefreshToken",
   "oneDriveToken",
+  "webdavUrl",
+  "webdavUsername",
+  "webdavPassword",
+  "webdavEncrypted",
+  "webdavAutoBackup",
+  "webdavLastBackupTime",
+  "webdavClearBeforeRestore",
   "storageLocation",
 ];
 
@@ -184,9 +199,17 @@ type BooleanOption =
   | "oneDriveBusiness"
   | "oneDriveEncrypted"
   | "oneDriveRevoked"
-  | "smartFilter";
+  | "smartFilter"
+  | "webdavEncrypted"
+  | "webdavAutoBackup"
+  | "webdavClearBeforeRestore";
 
-type NumberOption = "autolock" | "lastRemindingBackupTime" | "offset" | "zoom";
+type NumberOption =
+  | "autolock"
+  | "lastRemindingBackupTime"
+  | "offset"
+  | "zoom"
+  | "webdavLastBackupTime";
 
 type JSONOption = "advisorIgnoreList";
 
@@ -202,13 +225,20 @@ function isBooleanOption(key: string): key is BooleanOption {
     "oneDriveEncrypted",
     "oneDriveRevoked",
     "smartFilter",
+    "webdavEncrypted",
+    "webdavAutoBackup",
+    "webdavClearBeforeRestore",
   ].includes(key);
 }
 
 function isNumberOption(key: string): key is NumberOption {
-  return ["autolock", "lastRemindingBackupTime", "offset", "zoom"].includes(
-    key
-  );
+  return [
+    "autolock",
+    "lastRemindingBackupTime",
+    "offset",
+    "zoom",
+    "webdavLastBackupTime",
+  ].includes(key);
 }
 
 function isJSONOption(key: string): key is JSONOption {

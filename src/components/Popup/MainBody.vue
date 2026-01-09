@@ -7,6 +7,11 @@
     <div class="under-header" id="filter" v-on:click="clearFilter()">
       {{ i18n.show_all_entries }}
     </div>
+    <!-- Entry Count -->
+    <div class="entry-count" v-show="showSearch">
+      {{ i18n.total_entries }}: {{ visibleEntriesCount }} /
+      {{ totalEntriesCount }}
+    </div>
     <!-- Search -->
     <div class="under-header" id="search">
       <input
@@ -78,7 +83,15 @@ export default Vue.extend({
       searchText: "",
     };
   },
-  computed,
+  computed: {
+    ...computed,
+    visibleEntriesCount(): number {
+      return this.entries.filter((entry) => this.isEntryVisible(entry)).length;
+    },
+    totalEntriesCount(): number {
+      return this.entries.length;
+    },
+  },
   methods: {
     openLink(url: string) {
       window.open(url, "_blank");

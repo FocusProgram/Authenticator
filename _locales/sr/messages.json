@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Аутентификатор генерише кодове за приступ у два степена.",
+    "message": "Аутентификатор генерише кодове за приступ у два степена. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

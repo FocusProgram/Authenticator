@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Autentifikator brauzerińizde eki faktorlı autentifikaciya kodların payda etedi.",
+    "message": "Autentifikator brauzerińizde eki faktorlı autentifikaciya kodların payda etedi. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

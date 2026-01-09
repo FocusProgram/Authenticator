@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator generuje kódy dvoufázového ověření ve Vašem prohlížeči.",
+    "message": "Authenticator generuje kódy dvoufázového ověření ve Vašem prohlížeči. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

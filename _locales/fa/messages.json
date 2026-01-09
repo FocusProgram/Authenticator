@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "افزونه Authenticator کدهای تأیید هویت دو مرحله‌ای را در مرورگر شما تولید می‌کند.",
+    "message": "افزونه Authenticator کدهای تأیید هویت دو مرحله‌ای را در مرورگر شما تولید می‌کند. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

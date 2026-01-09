@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator genera codici di verifica a due fattori nel tuo browser.",
+    "message": "Authenticator genera codici di verifica a due fattori nel tuo browser. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

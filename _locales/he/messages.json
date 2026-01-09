@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "המאמת מחולל קודי אימות דו שלבי ישירות מהדפדפן.",
+    "message": "המאמת מחולל קודי אימות דו שלבי ישירות מהדפדפן. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

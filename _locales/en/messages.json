@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator generates two-factor authentication codes in your browser.",
+    "message": "Authenticator generates two-factor authentication codes in your browser. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {
@@ -277,6 +277,10 @@
     "message": "Search",
     "description": "Search"
   },
+  "total_entries": {
+    "message": "Total",
+    "description": "Total entries count label"
+  },
   "popout": {
     "message": "Popup mode",
     "description": "Make window turn into persistent popup"
@@ -292,6 +296,166 @@
   "manual_dropbox": {
     "message": "Manual Backup",
     "description": "Manual backup"
+  },
+  "webdav_section_title": {
+    "message": "WebDAV Backup",
+    "description": "Header text for WebDAV section on backup page"
+  },
+  "webdav_card_connection": {
+    "message": "Connection",
+    "description": "Title for connection settings card"
+  },
+  "webdav_card_backup": {
+    "message": "Backup",
+    "description": "Title for backup card"
+  },
+  "webdav_card_restore": {
+    "message": "Restore",
+    "description": "Title for restore card"
+  },
+  "webdav_server_url": {
+    "message": "Server URL",
+    "description": "Label for WebDAV server URL"
+  },
+  "webdav_username": {
+    "message": "Account",
+    "description": "Label for WebDAV username"
+  },
+  "webdav_password": {
+    "message": "Password",
+    "description": "Label for WebDAV password"
+  },
+  "webdav_save": {
+    "message": "Save Settings",
+    "description": "Save WebDAV configuration button"
+  },
+  "webdav_test_connection": {
+    "message": "Test Connection",
+    "description": "Test WebDAV connection button"
+  },
+  "webdav_backup_button": {
+    "message": "Backup to WebDAV",
+    "description": "Trigger WebDAV backup"
+  },
+  "webdav_restore_button": {
+    "message": "Restore Selected Backup",
+    "description": "Trigger WebDAV restore"
+  },
+  "webdav_refresh_list": {
+    "message": "Refresh Backup List",
+    "description": "Refresh WebDAV backup list"
+  },
+  "webdav_choose_backup": {
+    "message": "Choose a backup file",
+    "description": "Placeholder for backup selection dropdown"
+  },
+  "webdav_backup_option_encrypted": {
+    "message": "Encrypt backups (recommended)",
+    "description": "Encrypted backup option label"
+  },
+  "webdav_backup_option_plain": {
+    "message": "Store backups without encryption",
+    "description": "Plain backup option label"
+  },
+  "webdav_auto_backup": {
+    "message": "Automatic WebDAV backup",
+    "description": "Toggle label for automatic WebDAV backups"
+  },
+  "webdav_auto_backup_desc": {
+    "message": "Keep a copy on your WebDAV server every 7 days when Authenticator is opened.",
+    "description": "Description for automatic WebDAV backups"
+  },
+  "webdav_connection_success": {
+    "message": "Connected to WebDAV successfully.",
+    "description": "Successful connection message"
+  },
+  "webdav_connection_failure": {
+    "message": "Failed to connect to WebDAV. Please check your credentials.",
+    "description": "WebDAV connection failure message"
+  },
+  "webdav_permission_denied": {
+    "message": "Permission denied for this WebDAV server. Please allow access when prompted.",
+    "description": "Permission denied warning"
+  },
+  "webdav_invalid_url": {
+    "message": "Invalid WebDAV URL format.",
+    "description": "Invalid URL warning"
+  },
+  "webdav_backup_success": {
+    "message": "Backup uploaded to WebDAV.",
+    "description": "Backup success message"
+  },
+  "webdav_backup_failure": {
+    "message": "Backup failed. Please try again.",
+    "description": "Backup failure message"
+  },
+  "webdav_restore_success": {
+    "message": "Backup restored successfully.",
+    "description": "Restore success message"
+  },
+  "webdav_restore_failure": {
+    "message": "Restore failed. Please try again.",
+    "description": "Restore failure message"
+  },
+  "webdav_clear_before_restore": {
+    "message": "Clear current data before restoring",
+    "description": "Toggle label for clearing local data before restore"
+  },
+  "webdav_clear_before_restore_desc": {
+    "message": "Existing entries will be erased immediately before importing the selected backup.",
+    "description": "Description for clear before restore option"
+  },
+  "webdav_restore_parse_error": {
+    "message": "Unable to parse the selected backup file.",
+    "description": "WebDAV restore parse error"
+  },
+  "webdav_restore_passphrase_prompt": {
+    "message": "Enter the passphrase that was used to encrypt this backup:",
+    "description": "Prompt shown when encrypted backup needs passphrase"
+  },
+  "webdav_restore_cancelled": {
+    "message": "Restore cancelled.",
+    "description": "Restore operation cancelled"
+  },
+  "webdav_loading_files": {
+    "message": "Loading WebDAV backups…",
+    "description": "Status text while loading file list"
+  },
+  "webdav_no_files": {
+    "message": "No backup files found.",
+    "description": "Shown when WebDAV directory has no files"
+  },
+  "webdav_last_backup": {
+    "message": "Last backup",
+    "description": "Label for showing last backup date"
+  },
+  "webdav_never_backed_up": {
+    "message": "Never backed up",
+    "description": "Shown when no WebDAV backup has been recorded"
+  },
+  "webdav_fetch_failed": {
+    "message": "Failed to load WebDAV backups.",
+    "description": "Shown when listing backups fails"
+  },
+  "webdav_settings_missing": {
+    "message": "Please fill in your WebDAV settings first.",
+    "description": "Shown when required settings are missing"
+  },
+  "backup_clear_button": {
+    "message": "Clear All Data",
+    "description": "Button text for one-click clear"
+  },
+  "backup_clear_confirm": {
+    "message": "This will delete all authenticator entries. Continue?",
+    "description": "Confirmation before clearing data"
+  },
+  "backup_clear_backup_prompt": {
+    "message": "Would you like to create a WebDAV backup first?",
+    "description": "Prompt asking the user to back up before clearing"
+  },
+  "backup_clear_success": {
+    "message": "All authenticator data has been removed.",
+    "description": "Shown after clear data succeeds"
   },
   "use_autofill": {
     "message": "Use Autofill",

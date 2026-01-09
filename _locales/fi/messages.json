@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator-laajennus tuottaa kaksivaiheisen todennuksen tunnuslukuja selaimessasi.",
+    "message": "Authenticator-laajennus tuottaa kaksivaiheisen todennuksen tunnuslukuja selaimessasi. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

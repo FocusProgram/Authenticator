@@ -224,10 +224,19 @@ export default Vue.extend({
               await insertContentScript();
               const tab = await getCurrentTab();
               if (tab && tab.id) {
-                chrome.tabs.sendMessage(tab.id, {
-                  action: "pastecode",
-                  code: entry.code,
-                });
+                chrome.tabs.sendMessage(
+                  tab.id,
+                  {
+                    action: "pastecode",
+                    code: entry.code,
+                  },
+                  () => {
+                    // Ignore errors - autofill may not work on all pages
+                    if (chrome.runtime.lastError) {
+                      return;
+                    }
+                  }
+                );
               }
             }
 

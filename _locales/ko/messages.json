@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "인증 도구는 브라우저에서 2단계 인증 코드를 생성합니다.",
+    "message": "인증 도구는 브라우저에서 2단계 인증 코드를 생성합니다. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

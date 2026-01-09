@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "აუთენთიფიკატორი აგენერირებს ორფაქტორიან აუთენთიფიკაციის კოდებს თქვენს ბრაუზერში.",
+    "message": "აუთენთიფიკატორი აგენერირებს ორფაქტორიან აუთენთიფიკაციის კოდებს თქვენს ბრაუზერში. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

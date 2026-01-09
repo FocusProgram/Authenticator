@@ -16,7 +16,6 @@
         id="i-plus"
         v-bind:title="i18n.add_code"
         v-on:click="showInfo('AddMethodPage')"
-        v-show="style.isEditing"
       >
         <IconPlus />
       </div>
@@ -31,9 +30,18 @@
       </div>
       <div
         class="icon"
+        id="i-backup"
+        v-bind:title="i18n.backup"
+        v-on:click="showBackup()"
+        v-show="!style.isEditing"
+      >
+        <IconBackup />
+      </div>
+      <div
+        class="icon"
         id="i-sync"
         v-bind:style="{
-          left: !!defaultEncryption ? '70px' : '45px',
+          left: !!defaultEncryption ? '120px' : '95px',
         }"
         v-show="
           (dropboxToken || driveToken || oneDriveToken) && !style.isEditing
@@ -84,6 +92,7 @@ import IconScan from "../../../svg/scan.svg";
 import IconPencil from "../../../svg/pencil.svg";
 import IconCheck from "../../../svg/check.svg";
 import IconPlus from "../../../svg/plus.svg";
+import IconBackup from "../../../svg/sync.svg";
 import { isFirefox } from "../../browser";
 
 const computedPrototype = [
@@ -135,6 +144,10 @@ export default Vue.extend({
       this.$store.commit("style/showInfo");
       this.$store.commit("currentView/changeView", page);
     },
+    showBackup() {
+      this.$store.commit("style/showInfo");
+      this.$store.commit("currentView/changeView", "BackupPage");
+    },
     editEntry() {
       this.$store.commit("style/toggleEdit");
       this.$store.commit("accounts/stopFilter");
@@ -182,8 +195,19 @@ export default Vue.extend({
           }
         }
 
-        chrome.runtime.sendMessage({ action: "updateContentTab", data: tab });
+        chrome.runtime.sendMessage(
+          { action: "updateContentTab", data: tab },
+          () => {
+            if (chrome.runtime.lastError) {
+              return;
+            }
+          }
+        );
         chrome.tabs.sendMessage(tab.id, { action: "capture" }, (result) => {
+          if (chrome.runtime.lastError) {
+            this.$store.commit("notification/alert", this.i18n.capture_failed);
+            return;
+          }
           if (result !== "beginCapture") {
             this.$store.commit("notification/alert", this.i18n.capture_failed);
           } else {
@@ -201,6 +225,7 @@ export default Vue.extend({
     IconPencil,
     IconCheck,
     IconPlus,
+    IconBackup,
   },
 });
 </script>

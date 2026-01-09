@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Autentifikuesi gjeneron kode autentifikimi me 2 faktorë në shletuesin tuaj.",
+    "message": "Autentifikuesi gjeneron kode autentifikimi me 2 faktorë në shletuesin tuaj. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

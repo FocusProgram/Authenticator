@@ -18,6 +18,12 @@ import { Notification } from "./store/Notification";
 import { Qr } from "./store/Qr";
 import { Advisor } from "./store/Advisor";
 import { Dropbox, Drive, OneDrive } from "./models/backup";
+import {
+  uploadWebDAVBackup,
+  getWebDAVConfig,
+  getWebDAVOrigin,
+} from "./models/webdav";
+import type { WebDAVConfig } from "./models/webdav";
 import { syncTimeWithGoogle } from "./syncTime";
 import { StorageLocation, UserSettings } from "./models/settings";
 
@@ -201,6 +207,8 @@ async function init() {
 init();
 
 async function runScheduledBackup(clientTime: number, instance: Vue) {
+  const webdavAutoConfig = await getWebDAVAutoConfig();
+
   if (instance.$store.state.backup.dropboxToken) {
     chrome.permissions.contains(
       { origins: ["https://*.dropboxapi.com/*"] },
@@ -324,13 +332,95 @@ async function runScheduledBackup(clientTime: number, instance: Vue) {
       }
     );
   }
+
+  if (webdavAutoConfig) {
+    // Delay WebDAV backup to give background time to initialize
+    setTimeout(async () => {
+      try {
+        await maybeWebDAVAutoBackup(clientTime, instance, webdavAutoConfig);
+      } catch (error) {
+        // Silently fail - don't disrupt user experience
+      }
+    }, 2000);
+  }
+
   if (
     !instance.$store.state.backup.driveToken &&
     !instance.$store.state.backup.dropboxToken &&
-    !instance.$store.state.backup.oneDriveToken
+    !instance.$store.state.backup.oneDriveToken &&
+    !webdavAutoConfig
   ) {
     instance.$store.commit("notification/alert", instance.i18n.remind_backup);
     UserSettings.items.lastRemindingBackupTime = clientTime;
     UserSettings.commitItems();
   }
+}
+
+type WebDAVAutoConfig = {
+  config: WebDAVConfig;
+  lastBackupDay: number;
+};
+
+async function getWebDAVAutoConfig(): Promise<WebDAVAutoConfig | null> {
+  await UserSettings.updateItems();
+  if (UserSettings.items.webdavAutoBackup === false) {
+    return null;
+  }
+  const config = await getWebDAVConfig();
+  if (!config.url || !config.username || !config.password) {
+    return null;
+  }
+  const origin = getWebDAVOrigin(config.url);
+  if (!origin) {
+    return null;
+  }
+  const hasPermission = await hasOriginPermission(origin);
+  if (!hasPermission) {
+    return null;
+  }
+  return {
+    config,
+    lastBackupDay: Number(UserSettings.items.webdavLastBackupTime || 0),
+  };
+}
+
+async function maybeWebDAVAutoBackup(
+  clientTime: number,
+  instance: Vue,
+  autoConfig: WebDAVAutoConfig
+) {
+  const delta = clientTime - autoConfig.lastBackupDay;
+  if (delta >= 0 && delta < 7) {
+    return;
+  }
+  const encryption = instance.$store.state.accounts.encryption.get(
+    instance.$store.state.accounts.defaultEncryption
+  );
+  if (!encryption) {
+    return;
+  }
+  try {
+    const success = await uploadWebDAVBackup(
+      encryption,
+      autoConfig.config.encrypted
+    );
+    if (success) {
+      UserSettings.items.webdavLastBackupTime = clientTime;
+      await UserSettings.commitItems();
+    }
+  } catch (error) {
+    console.error("WebDAV auto backup failed", error);
+  }
+}
+
+function hasOriginPermission(origin: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    if (!origin) {
+      resolve(false);
+      return;
+    }
+    chrome.permissions.contains({ origins: [origin] }, (result) => {
+      resolve(Boolean(result));
+    });
+  });
 }

@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator erzeugt Zwei-Faktor-Authentifizierungscodes in Ihrem Browser.",
+    "message": "Authenticator erzeugt Zwei-Faktor-Authentifizierungscodes in Ihrem Browser. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

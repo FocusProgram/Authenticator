@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Автентифікатор генерує коди двофакторної аутентифікації у вашому браузері.",
+    "message": "Автентифікатор генерує коди двофакторної аутентифікації у вашому браузері. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

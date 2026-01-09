@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator genererar 2-stegs verifieringskoder i din webbläsare.",
+    "message": "Authenticator genererar 2-stegs verifieringskoder i din webbläsare. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

@@ -127,7 +127,11 @@ export default Vue.extend({
       },
       set(autolock: number) {
         this.$store.commit("menu/setAutolock", autolock);
-        chrome.runtime.sendMessage({ action: "resetAutolock" });
+        chrome.runtime.sendMessage({ action: "resetAutolock" }, () => {
+          if (chrome.runtime.lastError) {
+            return;
+          }
+        });
       },
     },
     storageArea() {
@@ -197,9 +201,16 @@ export default Vue.extend({
             this.enableContextMenu = false;
             return;
           }
-          chrome.runtime.sendMessage({
-            action: "updateContextMenu",
-          });
+          chrome.runtime.sendMessage(
+            {
+              action: "updateContextMenu",
+            },
+            () => {
+              if (chrome.runtime.lastError) {
+                return;
+              }
+            }
+          );
         }
       );
     },

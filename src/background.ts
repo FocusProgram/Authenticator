@@ -51,6 +51,8 @@ chrome.runtime.onMessage.addListener(async (message, sender) => {
     contentTab = message.data;
   } else if (message.action === "updateContextMenu") {
     updateContextMenu();
+  } else if (message.action === "webdavRequest") {
+    return handleWebDAVRequest(message);
   }
 
   // https://stackoverflow.com/a/56483156
@@ -595,3 +597,55 @@ async function updateContextMenu() {
 }
 
 updateContextMenu();
+
+async function handleWebDAVRequest(message: {
+  method: string;
+  url: string;
+  headers: Record<string, string>;
+  body?: string;
+  timeout?: number;
+}): Promise<WebDAVResponse> {
+  const controller = new AbortController();
+  const timeout = message.timeout || 15000;
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(message.url, {
+      method: message.method,
+      headers: message.headers,
+      body: message.body,
+      signal: controller.signal,
+    });
+    const responseText = await response.text();
+    const headerLines: string[] = [];
+    response.headers.forEach((value, key) => {
+      headerLines.push(`${key}: ${value}`);
+    });
+    return {
+      status: response.status,
+      statusText: response.statusText,
+      headers: headerLines.join("\r\n"),
+      responseText,
+    };
+  } catch (error) {
+    const messageText =
+      error instanceof DOMException && error.name === "AbortError"
+        ? "Timeout"
+        : (error as Error).message || "Network Error";
+    return {
+      status: 0,
+      statusText: messageText,
+      headers: "",
+      responseText: "",
+    };
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+type WebDAVResponse = {
+  status: number;
+  statusText: string;
+  headers: string;
+  responseText: string;
+};

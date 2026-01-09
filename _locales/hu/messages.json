@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "A Hitelesítő kétlépcsős ellenőrző kódokat generál a böngészőben.",
+    "message": "A Hitelesítő kétlépcsős ellenőrző kódokat generál a böngészőben. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

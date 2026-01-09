@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Autentifikatorius generuoja dviejų veiksnių autentifikavimo kodus naršyklėje.",
+    "message": "Autentifikatorius generuoja dviejų veiksnių autentifikavimo kodus naršyklėje. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

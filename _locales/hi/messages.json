@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "ऑथेंटिकेटर आपके ब्राउज़र में \"टू-फैक्टर ऑथेंटिकेशन\" कोड जेनरेट करता है।",
+    "message": "ऑथेंटिकेटर आपके ब्राउज़र में \"टू-फैक्टर ऑथेंटिकेशन\" कोड जेनरेट करता है। (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

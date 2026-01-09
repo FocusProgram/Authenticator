@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator genererer to-faktor autentiseringskoder i nettleseren din.",
+    "message": "Authenticator genererer to-faktor autentiseringskoder i nettleseren din. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

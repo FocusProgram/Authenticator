@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator menghasilkan kode verifikasi 2 langkah di browser anda.",
+    "message": "Authenticator menghasilkan kode verifikasi 2 langkah di browser anda. (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {

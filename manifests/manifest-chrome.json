@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "__MSG_extName__",
     "short_name": "__MSG_extShortName__",
-    "version": "8.0.2",
+    "version": "1.0.0",
     "default_locale": "en",
     "description": "__MSG_extDesc__",
     "icons": {
@@ -65,10 +65,11 @@
         "https://www.googleapis.com/*",
         "https://accounts.google.com/o/oauth2/revoke",
         "https://graph.microsoft.com/me/*",
-        "https://login.microsoftonline.com/common/oauth2/v2.0/token"
+        "https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        "<all_urls>"
     ],
     "content_security_policy": {
-        "extension_pages": "script-src 'self'; font-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src https://www.google.com/ https://*.dropboxapi.com https://www.googleapis.com/ https://accounts.google.com/o/oauth2/revoke https://login.microsoftonline.com/common/oauth2/v2.0/token https://graph.microsoft.com/; default-src 'none'",
+        "extension_pages": "script-src 'self'; font-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; connect-src https://www.google.com/ https://*.dropboxapi.com https://www.googleapis.com/ https://accounts.google.com/o/oauth2/revoke https://login.microsoftonline.com/common/oauth2/v2.0/token https://graph.microsoft.com/ https://* http://*; default-src 'none'",
         "sandbox": "sandbox allow-scripts; script-src 'self' 'unsafe-eval';"
     }
-  }
+}

@@ -8,7 +8,7 @@
     "description": "Extension Short Name."
   },
   "extDesc": {
-    "message": "Authenticator สำหรับสร้างรหัสยืนยัน 2 ชั้นบนเบราว์เซอร์",
+    "message": "Authenticator สำหรับสร้างรหัสยืนยัน 2 ชั้นบนเบราว์เซอร์ (fork-authenticator)",
     "description": "Extension Description."
   },
   "added": {
