@@ -45,6 +45,7 @@ interface StyleState {
   style: {
     timeout: boolean;
     isEditing: boolean;
+    isSelecting: boolean;
     slidein: boolean;
     slideout: boolean;
     fadein: boolean;

@@ -43,6 +43,8 @@
         v-bind:notSearched="!isSearchedEntry(entry)"
         v-bind:entry="entry"
         v-bind:tabindex="getTabindex(entry)"
+        v-bind:selected="selectedHashes.has(entry.hash)"
+        v-on:toggle-select="toggleSelect(entry.hash)"
       />
       <div class="no-entry" v-if="entries.length === 0 && initComplete">
         <IconKey />
@@ -53,6 +55,26 @@
           }}</a>
         </p>
       </div>
+    </div>
+    <!-- Batch action bar -->
+    <div class="batch-bar" v-if="style.isSelecting">
+      <div class="batch-select-all" v-on:click="toggleSelectAll()">
+        <div v-bind:class="{ 'checkbox-inner': true, checked: isAllSelected }">
+          <IconCheck v-if="isAllSelected" />
+        </div>
+        <span>{{
+          isAllSelected
+            ? i18n.deselect_all || "Deselect all"
+            : i18n.select_all || "Select all"
+        }}</span>
+      </div>
+      <button
+        class="batch-delete-btn"
+        v-bind:disabled="selectedHashes.size === 0"
+        v-on:click="batchDelete()"
+      >
+        {{ (i18n.delete || "Delete") + " (" + selectedHashes.size + ")" }}
+      </button>
     </div>
   </div>
 </template>
@@ -66,14 +88,18 @@ import EntryComponent from "./EntryComponent.vue";
 
 // import IconPlus from "../../../svg/plus.svg";
 import IconKey from "../../../svg/key-solid.svg";
+import IconCheck from "../../../svg/check.svg";
 
 const computed: {
   filter: () => boolean;
   showSearch: () => boolean;
   shouldFilter: () => boolean;
   entries: () => OTPEntry[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  style: () => any;
 } = {
   ...mapState("accounts", ["filter", "showSearch", "initComplete"]),
+  ...mapState("style", ["style"]),
   ...mapGetters("accounts", ["shouldFilter", "entries"]),
 };
 
@@ -81,6 +107,7 @@ export default Vue.extend({
   data: function () {
     return {
       searchText: "",
+      selectedHashes: new Set() as Set<string>,
     };
   },
   computed: {
@@ -90,6 +117,14 @@ export default Vue.extend({
     },
     totalEntriesCount(): number {
       return this.entries.length;
+    },
+    isAllSelected(): boolean {
+      return (
+        this.entries.length > 0 &&
+        this.entries.every((entry) =>
+          (this.selectedHashes as Set<string>).has(entry.hash)
+        )
+      );
     },
   },
   methods: {
@@ -120,6 +155,46 @@ export default Vue.extend({
     },
     clearFilter() {
       this.$store.dispatch("accounts/clearFilter");
+    },
+    toggleSelect(hash: string) {
+      const newSet = new Set(this.selectedHashes);
+      if (newSet.has(hash)) {
+        newSet.delete(hash);
+      } else {
+        newSet.add(hash);
+      }
+      this.selectedHashes = newSet;
+    },
+    toggleSelectAll() {
+      if (this.isAllSelected) {
+        this.selectedHashes = new Set();
+      } else {
+        this.selectedHashes = new Set(this.entries.map((entry) => entry.hash));
+      }
+    },
+    async batchDelete() {
+      const count = this.selectedHashes.size;
+      if (count === 0) {
+        return;
+      }
+      if (
+        await this.$store.dispatch(
+          "notification/confirm",
+          (this.i18n.confirm_delete || "Delete") + " (" + count + ")"
+        )
+      ) {
+        for (const hash of this.selectedHashes) {
+          const entry = this.entries.find((e) => e.hash === hash);
+          if (entry) {
+            await entry.delete();
+          }
+        }
+        await this.$store.dispatch(
+          "accounts/batchDeleteCode",
+          Array.from(this.selectedHashes)
+        );
+        this.selectedHashes = new Set();
+      }
     },
     isEntryVisible(entry: OTPEntry) {
       return (
@@ -213,6 +288,7 @@ export default Vue.extend({
     EntryComponent,
     // IconPlus,
     IconKey,
+    IconCheck,
   },
 });
 </script>

@@ -25,6 +25,7 @@ import Vue from "vue";
 import {
   decryptBackupData,
   getEntryDataFromOTPAuthPerLine,
+  getEntryDataFromBitwarden,
 } from "../../import";
 import { EntryStorage } from "../../models/storage";
 import { Encryption } from "../../models/encryption";
@@ -60,10 +61,19 @@ export default Vue.extend({
           let failedCount = 0;
           let succeededCount = 0;
           try {
-            importData = JSON.parse(reader.result as string);
-            succeededCount = Object.keys(importData).filter(
-              (key) => ["key", "enc", "hash"].indexOf(key) === -1
-            ).length;
+            const parsed = JSON.parse(reader.result as string);
+            // Detect Bitwarden export format
+            if (Array.isArray(parsed.items) && Array.isArray(parsed.folders)) {
+              const result = await getEntryDataFromBitwarden(parsed);
+              importData = result.exportData;
+              failedCount = result.failedCount;
+              succeededCount = result.succeededCount;
+            } else {
+              importData = parsed;
+              succeededCount = Object.keys(importData).filter(
+                (key) => ["key", "enc", "hash"].indexOf(key) === -1
+              ).length;
+            }
           } catch (e) {
             console.warn(e);
             const result = await getEntryDataFromOTPAuthPerLine(

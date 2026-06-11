@@ -10,6 +10,7 @@ import { EntryStorage } from "./models/storage";
 export {
   decryptBackupData,
   getEntryDataFromOTPAuthPerLine,
+  getEntryDataFromBitwarden,
 } from "./models/import-utils";
 
 async function init() {

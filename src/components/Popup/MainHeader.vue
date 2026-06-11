@@ -7,7 +7,7 @@
         id="i-menu"
         v-bind:title="i18n.settings"
         v-on:click="showMenu()"
-        v-show="!style.isEditing"
+        v-show="!style.isEditing && !style.isSelecting"
       >
         <IconCog />
       </div>
@@ -24,7 +24,7 @@
         id="i-lock"
         v-bind:title="i18n.lock"
         v-on:click="lock()"
-        v-show="!style.isEditing && !!defaultEncryption"
+        v-show="!style.isEditing && !style.isSelecting && !!defaultEncryption"
       >
         <IconLock />
       </div>
@@ -33,7 +33,7 @@
         id="i-backup"
         v-bind:title="i18n.backup"
         v-on:click="showBackup()"
-        v-show="!style.isEditing"
+        v-show="!style.isEditing && !style.isSelecting"
       >
         <IconBackup />
       </div>
@@ -44,7 +44,9 @@
           left: !!defaultEncryption ? '120px' : '95px',
         }"
         v-show="
-          (dropboxToken || driveToken || oneDriveToken) && !style.isEditing
+          (dropboxToken || driveToken || oneDriveToken) &&
+          !style.isEditing &&
+          !style.isSelecting
         "
       >
         <IconSync />
@@ -53,7 +55,7 @@
         class="icon"
         id="i-qr"
         v-bind:title="i18n.add_qr"
-        v-show="!style.isEditing"
+        v-show="!style.isEditing && !style.isSelecting"
         v-on:click="beginCapture()"
       >
         <IconScan />
@@ -62,19 +64,19 @@
         class="icon"
         id="i-edit"
         v-bind:title="i18n.edit"
-        v-if="!style.isEditing"
-        v-on:click="editEntry()"
+        v-if="!style.isSelecting"
+        v-on:click="toggleSelect()"
       >
         <IconPencil />
       </div>
       <div
         class="icon"
         id="i-edit"
-        v-bind:title="i18n.edit"
+        v-bind:title="i18n.cancel || 'Cancel'"
         v-else
-        v-on:click="editEntry()"
+        v-on:click="toggleSelect()"
       >
-        <IconCheck />
+        <IconXCircle />
       </div>
     </div>
   </div>
@@ -90,9 +92,9 @@ import IconLock from "../../../svg/lock.svg";
 import IconSync from "../../../svg/sync.svg";
 import IconScan from "../../../svg/scan.svg";
 import IconPencil from "../../../svg/pencil.svg";
-import IconCheck from "../../../svg/check.svg";
 import IconPlus from "../../../svg/plus.svg";
 import IconBackup from "../../../svg/sync.svg";
+import IconXCircle from "../../../svg/x-circle.svg";
 import { isFirefox } from "../../browser";
 
 const computedPrototype = [
@@ -150,6 +152,10 @@ export default Vue.extend({
     },
     editEntry() {
       this.$store.commit("style/toggleEdit");
+      this.$store.commit("accounts/stopFilter");
+    },
+    toggleSelect() {
+      this.$store.commit("style/toggleSelect");
       this.$store.commit("accounts/stopFilter");
     },
     lock() {
@@ -223,9 +229,9 @@ export default Vue.extend({
     IconSync,
     IconScan,
     IconPencil,
-    IconCheck,
     IconPlus,
     IconBackup,
+    IconXCircle,
   },
 });
 </script>

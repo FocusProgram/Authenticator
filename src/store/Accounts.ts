@@ -203,6 +203,25 @@ export class Accounts implements Module {
             keys: await BrowserStorage.getKeys(),
           });
         },
+        batchDeleteCode: async (
+          state: ActionContext<AccountsState, object>,
+          hashes: string[]
+        ) => {
+          const hashSet = new Set(hashes);
+          for (let i = state.state.entries.length - 1; i >= 0; i--) {
+            if (hashSet.has(state.state.entries[i].hash)) {
+              state.state.entries.splice(i, 1);
+            }
+          }
+          state.commit(
+            "updateExport",
+            await EntryStorage.getExport(state.state.entries)
+          );
+          state.commit("updateEncExport", {
+            entries: await EntryStorage.getExport(state.state.entries, true),
+            keys: await BrowserStorage.getKeys(),
+          });
+        },
         addCode: async (
           state: ActionContext<AccountsState, object>,
           entry: OTPEntryInterface

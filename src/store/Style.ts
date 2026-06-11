@@ -5,6 +5,7 @@ export class Style implements Module {
         style: {
           timeout: false,
           isEditing: false,
+          isSelecting: false,
           slidein: false, // menu
           slideout: false, // menu
           fadein: false, // info
@@ -72,6 +73,11 @@ export class Style implements Module {
         },
         toggleEdit(state: StyleState) {
           state.style.isEditing = !state.style.isEditing;
+          state.style.isSelecting = false;
+        },
+        toggleSelect(state: StyleState) {
+          state.style.isSelecting = !state.style.isSelecting;
+          state.style.isEditing = false;
         },
         toggleHotpDisabled(state: StyleState) {
           state.style.hotpDisabled = !state.style.hotpDisabled;

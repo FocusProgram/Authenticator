@@ -7,11 +7,21 @@
       entry: true,
       pinnedEntry: entry.pinned,
       'no-copy': noCopy(entry.code),
+      'select-mode': style.isSelecting,
     }"
-    v-on:click="copyCode(entry)"
-    v-on:keydown.enter="copyCode(entry)"
+    v-on:click="onEntryClick(entry)"
+    v-on:keydown.enter="onEntryClick(entry)"
   >
-    <div class="deleteAction" v-on:click="removeEntry(entry)">
+    <div
+      class="select-checkbox"
+      v-if="style.isSelecting"
+      v-on:click.stop="$emit('toggle-select')"
+    >
+      <div v-bind:class="{ 'checkbox-inner': true, checked: selected }">
+        <IconCheck v-if="selected" />
+      </div>
+    </div>
+    <div class="deleteAction" v-on:click.stop="removeEntry(entry)">
       <IconMinusCircle />
     </div>
     <div
@@ -34,7 +44,7 @@
     <div
       v-bind:class="{ counter: true, disabled: style.hotpDiabled }"
       v-if="entry.type === OTPType.hotp || entry.type === OTPType.hhex"
-      v-on:click="nextCode(entry)"
+      v-on:click.stop="nextCode(entry)"
     >
       <IconRedo />
     </div>
@@ -97,6 +107,7 @@ import IconRedo from "../../../svg/redo.svg";
 import IconQr from "../../../svg/qrcode.svg";
 import IconBars from "../../../svg/bars.svg";
 import IconPin from "../../../svg/pin.svg";
+import IconCheck from "../../../svg/check.svg";
 
 const computedPrototype = [
   mapState("accounts", [
@@ -121,6 +132,7 @@ export default Vue.extend({
   props: {
     entry: OTPEntry,
     tabindex: Number,
+    selected: Boolean,
   },
   methods: {
     noCopy(code: string) {
@@ -159,6 +171,14 @@ export default Vue.extend({
       }
 
       return new Array(entry.digits).fill("&bull;").join("");
+    },
+    onEntryClick(entry: OTPEntry) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((this as any).style.isSelecting) {
+        this.$emit("toggle-select");
+        return;
+      }
+      this.copyCode(entry);
     },
     async removeEntry(entry: OTPEntry) {
       if (
@@ -231,7 +251,6 @@ export default Vue.extend({
                     code: entry.code,
                   },
                   () => {
-                    // Ignore errors - autofill may not work on all pages
                     if (chrome.runtime.lastError) {
                       return;
                     }
@@ -263,10 +282,10 @@ export default Vue.extend({
     IconQr,
     IconBars,
     IconPin,
+    IconCheck,
   },
 });
 
-// TODO: move most of this to a models file and reuse for backup stuff
 function getQrUrl(entry: OTPEntry) {
   const label = entry.issuer
     ? entry.issuer + ":" + entry.account
