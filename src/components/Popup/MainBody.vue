@@ -22,9 +22,7 @@
         tabindex="-1"
       />
       <div id="searchHint" v-if="searchText === ''">
-        <div></div>
         <div id="searchHintBorder">/</div>
-        <div></div>
       </div>
     </div>
     <!-- Entries -->

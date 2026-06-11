@@ -25,7 +25,10 @@
       <IconMinusCircle />
     </div>
     <div
-      class="sector"
+      v-bind:class="{
+        sector: true,
+        timeout: entry.period - (second % entry.period) < 5,
+      }"
       v-if="entry.type !== OTPType.hotp && entry.type !== OTPType.hhex"
       v-show="sectorStart"
     >
@@ -40,6 +43,9 @@
           }"
         />
       </svg>
+      <span class="countdown">{{
+        entry.period - (second % entry.period)
+      }}</span>
     </div>
     <div
       v-bind:class="{ counter: true, disabled: style.hotpDiabled }"
