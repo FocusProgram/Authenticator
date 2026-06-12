@@ -32,11 +32,13 @@
       v-if="entry.type !== OTPType.hotp && entry.type !== OTPType.hhex"
       v-show="sectorStart"
     >
-      <svg viewBox="0 0 16 16">
+      <svg viewBox="0 0 36 36">
+        <circle class="sector-bg" cx="18" cy="18" r="15.9" />
         <circle
-          cx="8"
-          cy="8"
-          r="4"
+          class="sector-fg"
+          cx="18"
+          cy="18"
+          r="15.9"
           v-bind:style="{
             animationDuration: entry.period + 's',
             animationDelay: (sectorOffset % entry.period) + 's',

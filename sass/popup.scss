@@ -538,12 +538,6 @@ svg {
     margin-top: 2px;
   }
 
-  .sector {
-    position: absolute;
-    right: 12px;
-    bottom: 12px;
-  }
-
   .counter {
     width: 20px;
     height: 20px;
@@ -553,43 +547,64 @@ svg {
   }
 
   .sector {
-    display: flex;
-    align-items: center;
-    gap: 3px;
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    width: 32px;
+    height: 32px;
 
     svg {
-      width: 16px;
-      height: 16px;
+      width: 32px;
+      height: 32px;
+      transform: rotate(-90deg);
     }
 
-    circle {
+    .sector-bg {
       fill: none;
-      transform: rotate(-90deg);
-      transform-origin: 50% 50%;
       @include themify($themes) {
-        stroke: themed("grey-1");
+        stroke: themed("grey-2");
       }
-      stroke-width: 8px;
-      stroke-dasharray: 25.12;
-      animation-name: timer;
+      stroke-width: 3;
+    }
+
+    .sector-fg {
+      fill: none;
+      stroke-dasharray: 100;
+      stroke-dashoffset: 100;
+      stroke-linecap: round;
+      @include themify($themes) {
+        stroke: themed("blue-1");
+      }
+      stroke-width: 3;
+      animation-name: countdown-ring;
       animation-iteration-count: infinite;
       animation-timing-function: linear;
     }
 
     .countdown {
-      font-size: 12px;
-      font-weight: 600;
-      min-width: 14px;
-      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 10px;
+      font-weight: 700;
       font-variant-numeric: tabular-nums;
       @include themify($themes) {
         color: themed("grey-1");
       }
     }
 
-    &.timeout .countdown {
-      @include themify($themes) {
-        color: themed("red-1");
+    &.timeout {
+      .sector-fg {
+        @include themify($themes) {
+          stroke: themed("red-1");
+        }
+      }
+
+      .countdown {
+        @include themify($themes) {
+          color: themed("red-1");
+        }
       }
     }
   }
@@ -1167,6 +1182,15 @@ svg {
 @keyframes timer {
   to {
     stroke-dashoffset: -25.12;
+  }
+}
+
+@keyframes countdown-ring {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 100;
   }
 }
 
