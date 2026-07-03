@@ -11,6 +11,12 @@
         <p v-bind:title="i18n.advisor" v-on:click="showInfo('AdvisorPage')">
           <span><IconAdvisor /></span>{{ i18n.advisor }}
         </p>
+        <p
+          v-bind:title="i18n.group || 'Groups'"
+          v-on:click="showInfo('GroupsPage')"
+        >
+          <span><IconDatabase /></span>{{ i18n.group || "Groups" }}
+        </p>
         <a
           href="permissions.html"
           target="_blank"

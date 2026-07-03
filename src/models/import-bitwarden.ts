@@ -1,6 +1,13 @@
 interface BitwardenItem {
+  folderId?: string | null;
   name?: string;
   login?: { totp?: string; username?: string };
+  notes?: string;
+}
+
+interface BitwardenFolder {
+  id?: string;
+  name?: string;
 }
 
 /**
@@ -8,10 +15,27 @@ interface BitwardenItem {
  */
 export async function getEntryDataFromBitwarden(data: {
   items?: BitwardenItem[];
+  folders?: BitwardenFolder[];
 }) {
   const exportData: { [hash: string]: RawOTPStorage } = {};
+  const groups: { [id: string]: GroupStorageRecord } = {};
   let failedCount = 0;
   let succeededCount = 0;
+
+  for (const folder of data.folders || []) {
+    const id = (folder.id || "").trim();
+    const name = (folder.name || "").trim();
+    if (!id || !name) {
+      continue;
+    }
+
+    groups[id] = {
+      dataType: "Group",
+      id,
+      name,
+      index: Object.keys(groups).length,
+    };
+  }
 
   for (const item of data.items || []) {
     const totp = item.login?.totp;
@@ -61,10 +85,19 @@ export async function getEntryDataFromBitwarden(data: {
       hash,
       index: 0,
       issuer,
+      note: (item.notes || "").trim(),
       secret,
       type,
       pinned: false,
     };
+
+    const folderId = (item.folderId || "").trim();
+    if (folderId) {
+      // Preserve folder binding even if the folders array is missing or stale.
+      // When the matching group record is imported, the association will still work.
+      entry.groupId = folderId;
+    }
+
     if (period) {
       entry.period = period;
     }
@@ -79,7 +112,7 @@ export async function getEntryDataFromBitwarden(data: {
     succeededCount++;
   }
 
-  return { exportData, failedCount, succeededCount };
+  return { exportData, groups, failedCount, succeededCount };
 }
 
 function parseOtpauthUri(uri: string) {

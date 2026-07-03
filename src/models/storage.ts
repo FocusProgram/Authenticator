@@ -132,7 +132,15 @@ export class BrowserStorage {
     if (storageLocation === StorageLocation.Local) {
       await chrome.storage.local.set(data);
     } else if (storageLocation === StorageLocation.Sync) {
-      await chrome.storage.sync.set(data);
+      const entries = Object.entries(data);
+      const chunkSize = 25;
+
+      for (let index = 0; index < entries.length; index += chunkSize) {
+        const chunk = Object.fromEntries(
+          entries.slice(index, index + chunkSize)
+        );
+        await chrome.storage.sync.set(chunk);
+      }
     }
     return;
   }
@@ -191,6 +199,32 @@ function isKey(key: unknown): key is Key {
   );
 }
 
+export function isGroupRecord(group: unknown): group is GroupStorageRecord {
+  return Boolean(
+    group &&
+      typeof group === "object" &&
+      "dataType" in group &&
+      "id" in group &&
+      "name" in group &&
+      "index" in group &&
+      group.dataType === DataType.Group &&
+      typeof group.id === "string" &&
+      typeof group.name === "string" &&
+      typeof group.index === "number"
+  );
+}
+
+function normalizeGroups(groups: OTPGroupInterface[]): OTPGroupInterface[] {
+  return groups
+    .filter((group) => group && group.id && group.name.trim())
+    .sort((a, b) => a.index - b.index)
+    .map((group, index) => ({
+      id: group.id,
+      name: group.name.trim(),
+      index,
+    }));
+}
+
 export class EntryStorage {
   private static getOTPStorageFromEntry(
     entry: OTPEntry,
@@ -247,6 +281,14 @@ export class EntryStorage {
 
     if (entry.account) {
       storageItem.account = entry.account;
+    }
+
+    if (entry.note) {
+      storageItem.note = entry.note;
+    }
+
+    if (entry.groupId) {
+      storageItem.groupId = entry.groupId;
     }
 
     if (entry.digits && entry.digits !== 6) {
@@ -377,65 +419,66 @@ export class EntryStorage {
   }
 
   static async backupGetExport(encryption: Encryption, encrypted?: boolean) {
-    const _data = await BrowserStorage.get();
-    for (const hash of Object.keys(_data)) {
-      if (
-        hash === "UserSettings" ||
-        (_data[hash] as { dataType: string }).dataType === "Key" ||
-        !this.isValidEntry(_data, hash)
-      ) {
-        delete _data[hash];
+    const rawData = await BrowserStorage.get();
+    const exportData: {
+      [hash: string]: OTPStorage | Key | OldKey | GroupStorageRecord;
+    } = {};
+
+    for (const hash of Object.keys(rawData)) {
+      const storageItem = rawData[hash];
+
+      if (isGroupRecord(storageItem)) {
+        exportData[hash] = { ...storageItem };
         continue;
       }
 
-      const entry = _data[hash];
-
-      // Handle EncOTPStorage (v3 encryption)
-      if (entry.dataType === "EncOTPStorage") {
-        if (encrypted) {
-          // For encrypted export, keep as is
-          continue;
-        } else {
-          // For unencrypted export, try to decrypt
-          if (encryption && encryption.getEncryptionStatus()) {
-            try {
-              // Create a temporary entry object for decryption
-              const tempEntry = ({
-                encData: entry.data,
-                keyId: entry.keyId,
-              } as unknown) as OTPEntryInterface;
-              const decrypted = encryption.decryptEncSecret(tempEntry);
-              if (decrypted && decrypted.secret) {
-                const plainData = {
-                  ...decrypted,
-                  encrypted: false,
-                  dataType: DataType.OTPStorage,
-                };
-                // Remove keyId from plain text export
-                delete plainData.keyId;
-                _data[hash] = plainData;
-                continue;
-              }
-            } catch (error) {
-              console.error("Failed to decrypt EncOTPStorage:", error);
-            }
-          }
-          // If decryption fails or no encryption, remove from export
-          delete _data[hash];
-          continue;
-        }
+      if (
+        hash === "UserSettings" ||
+        (storageItem as { dataType?: string }).dataType === DataType.Key ||
+        !this.isValidEntry(rawData, hash)
+      ) {
+        continue;
       }
 
-      // If encrypted export is requested and data is currently unencrypted, encrypt it
+      if (storageItem.dataType === DataType.EncOTPStorage) {
+        if (encrypted) {
+          exportData[hash] = { ...storageItem };
+          continue;
+        }
+
+        if (encryption && encryption.getEncryptionStatus()) {
+          try {
+            const tempEntry = ({
+              encData: storageItem.data,
+              keyId: storageItem.keyId,
+            } as unknown) as OTPEntryInterface;
+            const decrypted = encryption.decryptEncSecret(tempEntry);
+            if (decrypted && decrypted.secret) {
+              const plainData = {
+                ...decrypted,
+                encrypted: false,
+                dataType: DataType.OTPStorage,
+              };
+              delete plainData.keyId;
+              exportData[hash] = plainData;
+            }
+          } catch (error) {
+            console.error("Failed to decrypt EncOTPStorage:", error);
+          }
+        }
+        continue;
+      }
+
+      const entry = { ...storageItem };
+
       if (
         encrypted &&
         encryption &&
         encryption.getEncryptionStatus() &&
-        entry.dataType === "OTPStorage" &&
+        entry.dataType === DataType.OTPStorage &&
         !entry.encrypted
       ) {
         try {
-          // Convert string type to OTPType number
           const typeNum =
             typeof entry.type === "string"
               ? (parseInt(entry.type) as OTPType) ||
@@ -443,7 +486,6 @@ export class EntryStorage {
                 OTPType.totp
               : entry.type;
 
-          // Convert algorithm if it's a string
           let algorithmNum = OTPAlgorithm.SHA1;
           if (entry.algorithm) {
             algorithmNum =
@@ -463,12 +505,10 @@ export class EntryStorage {
             encrypted: false as const,
           };
 
-          // Create OTPEntry from storage data to encrypt it
           const otpEntry = new OTPEntry(entryData, encryption);
           const encryptedStorage = this.getOTPStorageFromEntry(otpEntry);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if ((encryptedStorage as any).dataType === "EncOTPStorage") {
-            _data[hash] = encryptedStorage;
+          if (encryptedStorage.dataType === DataType.EncOTPStorage) {
+            exportData[hash] = encryptedStorage;
             continue;
           }
         } catch (error) {
@@ -476,7 +516,6 @@ export class EntryStorage {
         }
       }
 
-      // remove unnecessary fields
       if (
         !(entry.type === OTPType[OTPType.hotp]) &&
         !(entry.type === OTPType[OTPType.hhex])
@@ -496,6 +535,14 @@ export class EntryStorage {
         delete entry.account;
       }
 
+      if (!entry.note) {
+        delete entry.note;
+      }
+
+      if (!entry.groupId) {
+        delete entry.groupId;
+      }
+
       if (entry.digits === 6) {
         delete entry.digits;
       }
@@ -507,10 +554,8 @@ export class EntryStorage {
       delete entry.pinned;
 
       if (!encrypted) {
-        // For plain text export, remove keyId to prevent requiring password on restore
         delete entry.keyId;
 
-        // decrypt the data to export
         if (entry.encrypted) {
           const decryptedSecret = encryption.decryptSecretString(entry.secret);
           if (decryptedSecret !== entry.secret && decryptedSecret !== null) {
@@ -518,25 +563,25 @@ export class EntryStorage {
             entry.encrypted = false;
           }
         }
-        // we need correct hash
-        if (hash !== entry.hash) {
-          _data[entry.hash] = entry;
-          delete _data[hash];
-        }
+
+        exportData[entry.hash || hash] = entry;
+      } else {
+        exportData[hash] = entry;
       }
     }
-    // Only include encryption keys for encrypted exports
+
     if (encrypted && encryption.getEncryptionStatus()) {
       const keys = await BrowserStorage.getKeys();
       if (isOldKey(keys)) {
-        Object.assign(_data, { key: keys });
+        Object.assign(exportData, { key: keys });
       } else {
         for (const key of keys) {
-          Object.assign(_data, { [key.id]: key });
+          Object.assign(exportData, { [key.id]: key });
         }
       }
     }
-    return _data;
+
+    return exportData;
   }
 
   static async import(
@@ -558,6 +603,8 @@ export class EntryStorage {
         encrypted: false;
         index: number;
         issuer: string;
+        note?: string;
+        groupId?: string;
         secret: string;
         type: OTPType;
         counter: number;
@@ -570,6 +617,8 @@ export class EntryStorage {
         type: (parseInt(data[hash].type) as OTPType) || OTPType[OTPType.totp],
         index: data[hash].index || 0,
         issuer: data[hash].issuer || "",
+        note: data[hash].note || "",
+        groupId: data[hash].groupId,
         account: data[hash].account || "",
         encrypted: false,
         secret: data[hash].secret,
@@ -687,7 +736,7 @@ export class EntryStorage {
         continue;
       }
 
-      const entryData = _data[hash];
+      const entryData = _data[hash] as RawOTPStorage | EncOTPStorage;
 
       if (entryData.dataType === "EncOTPStorage") {
         data.push(
@@ -739,6 +788,8 @@ export class EntryStorage {
       const entry = new OTPEntry({
         account: entryData.account,
         encrypted: entryData.encrypted,
+        note: entryData.note,
+        groupId: entryData.groupId,
         hash: entryData.hash,
         index: entryData.index,
         issuer: entryData.issuer,
@@ -774,6 +825,134 @@ export class EntryStorage {
     _data = this.ensureUniqueIndex(_data);
     await BrowserStorage.remove(entry.hash);
     await BrowserStorage.set(_data);
+  }
+}
+
+export class GroupStorage {
+  private static getStorageRecord(
+    group: OTPGroupInterface
+  ): GroupStorageRecord {
+    return {
+      dataType: DataType.Group,
+      id: group.id,
+      name: group.name.trim(),
+      index: group.index,
+    };
+  }
+
+  static async get() {
+    const data = await BrowserStorage.get();
+    const groups: OTPGroupInterface[] = [];
+
+    for (const recordKey of Object.keys(data)) {
+      const record = data[recordKey];
+      if (isGroupRecord(record)) {
+        groups.push({
+          id: record.id,
+          name: record.name,
+          index: record.index,
+        });
+      }
+    }
+
+    return normalizeGroups(groups);
+  }
+
+  static async add(group: OTPGroupInterface) {
+    const groups = await this.get();
+    groups.push(group);
+    await this.set(groups);
+  }
+
+  static async update(group: OTPGroupInterface) {
+    const groups = await this.get();
+    const index = groups.findIndex((item) => item.id === group.id);
+    if (index === -1) {
+      throw new Error("Group to change does not exist.");
+    }
+
+    groups[index] = {
+      ...groups[index],
+      ...group,
+      name: group.name.trim(),
+    };
+    await this.set(groups);
+  }
+
+  static async set(groups: OTPGroupInterface[]) {
+    const currentData = await BrowserStorage.get();
+    const existingGroupKeys = Object.keys(currentData).filter((key) =>
+      isGroupRecord(currentData[key])
+    );
+
+    if (existingGroupKeys.length) {
+      await BrowserStorage.remove(existingGroupKeys);
+    }
+
+    const normalizedGroups = normalizeGroups(groups);
+    const payload = normalizedGroups.reduce(
+      (acc: { [id: string]: GroupStorageRecord }, group) => {
+        acc[group.id] = this.getStorageRecord(group);
+        return acc;
+      },
+      {}
+    );
+
+    if (Object.keys(payload).length) {
+      await BrowserStorage.set(payload);
+    }
+  }
+
+  static async delete(groupId: string) {
+    await BrowserStorage.remove(groupId);
+
+    const entries = await EntryStorage.get();
+    let changed = false;
+    for (const entry of entries) {
+      if (entry.groupId === groupId) {
+        entry.groupId = undefined;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      await EntryStorage.set(entries);
+    }
+
+    const groups = await this.get();
+    if (groups.length) {
+      await this.set(groups);
+    }
+  }
+
+  static async import(groups: { [id: string]: GroupStorageRecord }) {
+    const importedGroups: OTPGroupInterface[] = await this.get();
+    const existingIds = new Set(importedGroups.map((group) => group.id));
+
+    for (const groupId of Object.keys(groups)) {
+      const group = groups[groupId];
+      if (!isGroupRecord(group)) {
+        continue;
+      }
+
+      const normalizedGroup = {
+        id: group.id || groupId,
+        name: group.name.trim(),
+        index: Number(group.index) || 0,
+      };
+
+      if (existingIds.has(normalizedGroup.id)) {
+        const index = importedGroups.findIndex(
+          (item) => item.id === normalizedGroup.id
+        );
+        importedGroups[index] = normalizedGroup;
+      } else {
+        importedGroups.push(normalizedGroup);
+        existingIds.add(normalizedGroup.id);
+      }
+    }
+
+    await this.set(importedGroups);
   }
 }
 

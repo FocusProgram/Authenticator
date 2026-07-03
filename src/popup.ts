@@ -17,6 +17,7 @@ import { Menu } from "./store/Menu";
 import { Notification } from "./store/Notification";
 import { Qr } from "./store/Qr";
 import { Advisor } from "./store/Advisor";
+import { Groups } from "./store/Groups";
 import { Dropbox, Drive, OneDrive } from "./models/backup";
 import {
   uploadWebDAVBackup,
@@ -59,6 +60,7 @@ async function init() {
       advisor: await new Advisor().getModule(),
       backup: await new Backup().getModule(),
       currentView: new CurrentView().getModule(),
+      groups: await new Groups().getModule(),
       menu: await new Menu().getModule(),
       notification: new Notification().getModule(),
       qr: new Qr().getModule(),

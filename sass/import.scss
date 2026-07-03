@@ -35,6 +35,32 @@ body {
   margin: 10px 20px 20px 20px;
 }
 
+.import-help-card {
+  margin: 0 20px 24px;
+  padding: 16px 18px;
+  border: 1px solid #e5e5ea;
+  border-radius: 14px;
+  background: #fbfbfd;
+}
+
+.import-help-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1d1d1f;
+}
+
+.import-help-list {
+  margin: 0;
+  padding-left: 18px;
+  color: #4f4f55;
+
+  li {
+    margin: 6px 0;
+    line-height: 1.6;
+  }
+}
+
 .import_tab {
   text-align: center;
   font-size: 0;
@@ -108,6 +134,116 @@ button,
   }
 }
 
+.import-inline-option {
+  width: min(680px, calc(100% - 40px));
+  margin: 14px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #4f4f55;
+
+  input {
+    margin: 0;
+  }
+
+  label {
+    cursor: pointer;
+  }
+}
+
+.import-result-card {
+  width: min(680px, calc(100% - 40px));
+  margin: 24px auto 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid #e5e5ea;
+  text-align: left;
+  background: #fbfbfd;
+
+  &.success {
+    border-color: rgba(52, 199, 89, 0.28);
+    background: rgba(52, 199, 89, 0.08);
+  }
+
+  &.warning {
+    border-color: rgba(255, 159, 10, 0.3);
+    background: rgba(255, 159, 10, 0.08);
+  }
+
+  &.error {
+    border-color: rgba(255, 59, 48, 0.26);
+    background: rgba(255, 59, 48, 0.08);
+  }
+}
+
+.import-result-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #1d1d1f;
+}
+
+.import-result-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #3a3a3c;
+}
+
+.import-progress-card {
+  width: min(680px, calc(100% - 40px));
+  margin: 24px auto 0;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid #e5e5ea;
+  background: #fbfbfd;
+
+  &.active .import-progress-fill {
+    transition: width 0.25s ease;
+  }
+}
+
+.import-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.import-progress-title,
+.import-progress-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1d1d1f;
+}
+
+.import-progress-bar {
+  width: 100%;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9edf5;
+}
+
+.import-progress-fill {
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7aa7ff 0%, #0a84ff 100%);
+}
+
+.import-progress-label {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #6e6e73;
+  line-height: 1.5;
+}
+
 .import_encrypted {
   margin-bottom: 20px;
 
@@ -116,21 +252,61 @@ button,
   }
 }
 
+.import-text-layout {
+  width: calc(100% - 40px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+}
+
 .import_code {
-  float: left;
-  margin-left: 30px;
-  margin-right: 40px;
+  width: 100%;
 
   textarea {
-    width: 250px;
-    height: 400px;
-    padding: 10px;
+    width: 100%;
+    min-height: 320px;
+    height: 320px;
+    padding: 12px 14px;
     outline: none;
-    resize: none;
+    resize: vertical;
     box-sizing: border-box;
     border-radius: 12px;
     border: 1px solid #e5e5ea;
     background: #fbfbfd;
+    line-height: 1.6;
+  }
+}
+
+.import-actions-stack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
+}
+
+.import-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+
+  .import_encrypted {
+    margin-bottom: 0;
+  }
+
+  button {
+    width: 260px !important;
+  }
+}
+
+.import-actions-stack {
+  .text-input,
+  .input,
+  .a-text-input {
+    width: 100% !important;
   }
 }
 
@@ -159,4 +335,31 @@ button,
 .import_file_passphrase_input {
   display: inline-grid;
   grid-template-rows: min-content min-content;
+}
+
+@media (max-width: 920px) {
+  #import {
+    width: calc(100% - 32px);
+    margin: 16px auto;
+  }
+
+  .import_tab label {
+    width: calc(33.333% - 20px);
+    min-width: 180px;
+    margin: 12px 10px;
+  }
+
+  .import-text-layout {
+    width: calc(100% - 40px);
+    gap: 18px;
+  }
+
+  .import-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+      width: 100% !important;
+    }
+  }
 }

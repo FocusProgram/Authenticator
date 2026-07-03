@@ -16,7 +16,8 @@ export async function decryptBackupData(
     const unknownStorageItem = backupData[hash];
     if (
       typeof unknownStorageItem !== "object" ||
-      unknownStorageItem.dataType === "Key"
+      unknownStorageItem.dataType === "Key" ||
+      unknownStorageItem.dataType === "Group"
     ) {
       continue;
     }
@@ -88,6 +89,32 @@ export async function decryptBackupData(
     decryptedBackupData[hash] = storageItem;
   }
   return decryptedBackupData;
+}
+
+export function normalizeImportedEntryGroupIds(
+  entries: { [hash: string]: RawOTPStorage },
+  groups: OTPGroupInterface[] | { [id: string]: GroupStorageRecord }
+) {
+  const validGroupIds = new Set(
+    Array.isArray(groups)
+      ? groups.map((group) => group.id)
+      : Object.keys(groups).filter((groupId) => Boolean(groups[groupId]?.name))
+  );
+  let normalizedCount = 0;
+
+  for (const hash of Object.keys(entries)) {
+    const entry = entries[hash];
+    if (!entry?.groupId) {
+      continue;
+    }
+
+    if (!validGroupIds.has(entry.groupId)) {
+      delete entry.groupId;
+      normalizedCount++;
+    }
+  }
+
+  return normalizedCount;
 }
 
 async function findAndUnlockKey(

@@ -273,8 +273,13 @@ import * as CryptoJS from "crypto-js";
 import {
   decryptBackupData,
   getEntryDataFromOTPAuthPerLine,
+  normalizeImportedEntryGroupIds,
 } from "../../models/import-utils";
-import { EntryStorage } from "../../models/storage";
+import {
+  EntryStorage,
+  GroupStorage,
+  isGroupRecord,
+} from "../../models/storage";
 import { Encryption } from "../../models/encryption";
 import {
   downloadWebDAVBackup,
@@ -545,7 +550,10 @@ export default Vue.extend({
       encryption: Encryption,
       clearFirst: boolean
     ) {
-      let importData = {} as Record<string, RawOTPStorage | Key> & {
+      let importData = {} as Record<
+        string,
+        RawOTPStorage | Key | GroupStorageRecord
+      > & {
         key?: { enc: string; hash: string };
         enc?: string;
         hash?: string;
@@ -565,6 +573,7 @@ export default Vue.extend({
       }
 
       let key: { enc: string } | null = null;
+      const groups: { [id: string]: GroupStorageRecord } = {};
       if (importData.key) {
         key = importData.key;
         delete importData.key;
@@ -572,6 +581,14 @@ export default Vue.extend({
         key = { enc: importData.enc };
         delete importData.hash;
         delete importData.enc;
+      }
+
+      for (const recordId in importData) {
+        const possibleGroup = importData[recordId];
+        if (isGroupRecord(possibleGroup)) {
+          groups[recordId] = possibleGroup;
+          delete importData[recordId];
+        }
       }
 
       let decryptedFileData: { [hash: string]: RawOTPStorage } = {};
@@ -620,6 +637,14 @@ export default Vue.extend({
 
       // Use empty encryption to prevent re-encrypting already decrypted backup data
       const emptyEncryption = new Encryption("", "");
+      if (Object.keys(groups).length) {
+        await GroupStorage.import(groups);
+        await this.$store.dispatch("groups/refreshGroups");
+      }
+      normalizeImportedEntryGroupIds(
+        decryptedFileData,
+        await GroupStorage.get()
+      );
       await EntryStorage.import(emptyEncryption, decryptedFileData);
       await this.$store.dispatch("accounts/updateEntries");
 

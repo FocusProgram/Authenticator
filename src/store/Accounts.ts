@@ -1,7 +1,7 @@
 import { EntryStorage, BrowserStorage, isOldKey } from "../models/storage";
 import { Encryption } from "../models/encryption";
 import * as CryptoJS from "crypto-js";
-import { OTPType, OTPAlgorithm } from "../models/otp";
+import { OTPType, OTPAlgorithm, OTPEntry } from "../models/otp";
 import { ActionContext } from "vuex";
 import { getSiteName, getMatchedEntriesHash } from "../utils";
 import { isChromium } from "../browser";
@@ -221,6 +221,20 @@ export class Accounts implements Module {
             entries: await EntryStorage.getExport(state.state.entries, true),
             keys: await BrowserStorage.getKeys(),
           });
+        },
+        assignGroupBatch: async (
+          state: ActionContext<AccountsState, object>,
+          args: { hashes: string[]; groupId?: string }
+        ) => {
+          const hashSet = new Set(args.hashes);
+          for (const entry of state.state.entries) {
+            if (hashSet.has(entry.hash)) {
+              entry.groupId = args.groupId;
+            }
+          }
+
+          await EntryStorage.set(state.state.entries as OTPEntry[]);
+          await state.dispatch("updateEntries");
         },
         addCode: async (
           state: ActionContext<AccountsState, object>,
@@ -676,6 +690,9 @@ export class Accounts implements Module {
           // state.state.encryption.clear();
           // state.state.defaultEncryption = "";
           await state.dispatch("updateEntries");
+          await state.dispatch("groups/refreshGroups", undefined, {
+            root: true,
+          });
           // Don't lock the app to keep password unlocked
           // chrome.runtime.sendMessage({ action: "lock" }, () => {
           //   // Ignore errors

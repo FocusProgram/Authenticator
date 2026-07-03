@@ -11,6 +11,7 @@ export {
   decryptBackupData,
   getEntryDataFromOTPAuthPerLine,
   getEntryDataFromBitwarden,
+  normalizeImportedEntryGroupIds,
 } from "./models/import-utils";
 
 async function init() {

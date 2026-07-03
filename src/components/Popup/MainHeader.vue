@@ -93,7 +93,7 @@ import IconSync from "../../../svg/sync.svg";
 import IconScan from "../../../svg/scan.svg";
 import IconPencil from "../../../svg/pencil.svg";
 import IconPlus from "../../../svg/plus.svg";
-import IconBackup from "../../../svg/sync.svg";
+import IconBackup from "../../../svg/exchange.svg";
 import IconXCircle from "../../../svg/x-circle.svg";
 import { isFirefox } from "../../browser";
 

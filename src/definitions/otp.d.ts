@@ -4,6 +4,8 @@ interface OTPEntryInterface {
   issuer: string;
   secret: string | null;
   account: string;
+  note?: string;
+  groupId?: string;
   hash: string;
   counter: number;
   code: string;
@@ -37,10 +39,12 @@ interface RawOTPStorage {
   dataType?: "OTPStorage";
   account?: string;
   encrypted: boolean;
+  groupId?: string;
   keyId?: string;
   hash: string;
   index: number;
   issuer?: string;
+  note?: string;
   secret: string;
   type: string;
   counter?: number;
@@ -57,7 +61,20 @@ interface EncOTPStorage {
   index: number;
 }
 
-type OTPStorage = RawOTPStorage | EncOTPStorage;
+interface GroupStorageRecord {
+  dataType: "Group";
+  id: string;
+  name: string;
+  index: number;
+}
+
+interface OTPGroupInterface {
+  id: string;
+  name: string;
+  index: number;
+}
+
+type OTPStorage = RawOTPStorage | EncOTPStorage | GroupStorageRecord;
 
 interface OldKey {
   enc: string;

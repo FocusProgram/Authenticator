@@ -79,6 +79,11 @@ interface AccountsState {
   initComplete: boolean;
 }
 
+interface GroupsState {
+  groups: OTPGroupInterface[];
+  activeGroupId: string;
+}
+
 interface NotificationState {
   message: Array<string>;
   confirmMessage: string;

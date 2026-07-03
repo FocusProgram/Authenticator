@@ -28,6 +28,7 @@ export enum DataType {
   OTPStorage = "OTPStorage",
   EncOTPStorage = "EncOTPStorage",
   Key = "Key",
+  Group = "Group",
 }
 
 export interface OTPAlgorithmSpec {
@@ -47,12 +48,45 @@ export class OTPUtil {
   }
 }
 
+export function normalizeOtpSecretForType(secret: string, type: OTPType) {
+  const normalizedSecret = secret.replace(/ /g, "");
+  const isBase32Secret = /^[a-z2-7]+=*$/i.test(normalizedSecret);
+  const isHexSecret = /^[0-9a-f]+$/i.test(normalizedSecret);
+
+  if (normalizedSecret.length < 16 || (!isBase32Secret && !isHexSecret)) {
+    return null;
+  }
+
+  let normalizedType = type;
+
+  if (
+    type === OTPType.totp ||
+    type === OTPType.hex ||
+    type === OTPType.hotp ||
+    type === OTPType.hhex
+  ) {
+    const isHotpFamily = type === OTPType.hotp || type === OTPType.hhex;
+    if (isHexSecret && !isBase32Secret) {
+      normalizedType = isHotpFamily ? OTPType.hhex : OTPType.hex;
+    } else {
+      normalizedType = isHotpFamily ? OTPType.hotp : OTPType.totp;
+    }
+  }
+
+  return {
+    secret: normalizedSecret,
+    type: normalizedType,
+  };
+}
+
 export class OTPEntry implements OTPEntryInterface {
   type: OTPType;
   index: number;
   issuer: string;
   secret: string | null;
   account: string;
+  note?: string;
+  groupId?: string;
   hash: string;
   counter: number;
   period: number;
@@ -72,6 +106,8 @@ export class OTPEntry implements OTPEntryInterface {
           encrypted: boolean;
           index: number;
           issuer?: string;
+          note?: string;
+          groupId?: string;
           secret: string;
           type: OTPType;
           counter?: number;
@@ -103,6 +139,8 @@ export class OTPEntry implements OTPEntryInterface {
       this.type = OTPType.totp;
       this.issuer = "";
       this.account = "";
+      this.note = "";
+      this.groupId = undefined;
       this.counter = 0;
       this.period = 30;
       this.digits = 6;
@@ -128,6 +166,8 @@ export class OTPEntry implements OTPEntryInterface {
     } else {
       this.account = "";
     }
+    this.note = entry.note || "";
+    this.groupId = entry.groupId;
     if (entry.hash) {
       this.hash = entry.hash;
     } else {
@@ -220,6 +260,8 @@ export class OTPEntry implements OTPEntryInterface {
     this.counter = decryptedData.counter || 0;
     this.digits = decryptedData.digits || 6;
     this.issuer = decryptedData.issuer || "";
+    this.note = decryptedData.note || "";
+    this.groupId = decryptedData.groupId;
     this.period = decryptedData.period || 30;
     this.pinned = decryptedData.pinned || false;
     this.secret = decryptedData.secret;

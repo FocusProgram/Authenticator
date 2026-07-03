@@ -14,6 +14,23 @@
         :label="i18n.accountName"
         v-model="newAccount.account"
       ></a-text-input>
+      <a-text-input
+        :label="i18n.note || 'Note'"
+        v-model="newAccount.note"
+      ></a-text-input>
+      <a-select-input
+        :label="i18n.group || 'Group'"
+        v-model="newAccount.groupId"
+      >
+        <option value="">{{ i18n.group_ungrouped || "Ungrouped" }}</option>
+        <option v-for="group in groups" :key="group.id" :value="group.id">
+          {{ group.name }}
+        </option>
+      </a-select-input>
+      <a-text-input
+        :label="i18n.group_new || 'New group'"
+        v-model="newGroupName"
+      ></a-text-input>
       <label>{{ i18n.period }}</label>
       <input
         type="number"
@@ -46,65 +63,81 @@
 <script lang="ts">
 import Vue from "vue";
 import { mapState } from "vuex";
-import { OTPType, OTPEntry, OTPAlgorithm } from "../../models/otp";
+import {
+  OTPType,
+  OTPEntry,
+  OTPAlgorithm,
+  normalizeOtpSecretForType,
+} from "../../models/otp";
 
 export default Vue.extend({
   data: function (): {
     newAccount: {
       issuer: string;
       account: string;
+      note: string;
+      groupId: string;
       secret: string;
       type: OTPType;
       period: number | undefined;
       digits: number;
       algorithm: OTPAlgorithm;
     };
+    newGroupName: string;
   } {
     return {
       newAccount: {
         issuer: "",
         account: "",
+        note: "",
+        groupId: "",
         secret: "",
         type: OTPType.totp,
         period: undefined,
         digits: 6,
         algorithm: OTPAlgorithm.SHA1,
       },
+      newGroupName: "",
     };
   },
-  computed: mapState("accounts", ["OTPType", "OTPAlgorithm"]),
+  computed: {
+    ...mapState("accounts", ["OTPType", "OTPAlgorithm"]),
+    groups(): OTPGroupInterface[] {
+      return this.$store.state.groups.groups;
+    },
+  },
   methods: {
+    async resolveGroupId() {
+      const newGroupName = this.newGroupName.trim();
+      if (!newGroupName) {
+        return this.newAccount.groupId || undefined;
+      }
+
+      const existingGroup = this.groups.find(
+        (group) => group.name.toLowerCase() === newGroupName.toLowerCase()
+      );
+      if (existingGroup) {
+        return existingGroup.id;
+      }
+
+      const createdGroup = await this.$store.dispatch(
+        "groups/createGroup",
+        newGroupName
+      );
+      return createdGroup?.id;
+    },
     async addNewAccount() {
-      this.newAccount.secret = this.newAccount.secret.replace(/ /g, "");
+      const normalizedSecretData = normalizeOtpSecretForType(
+        this.newAccount.secret,
+        this.newAccount.type
+      );
 
-      if (this.newAccount.secret.length < 16) {
+      if (!normalizedSecretData) {
         this.$store.commit("notification/alert", this.i18n.errorsecret);
         return;
       }
 
-      if (
-        !/^[a-z2-7]+=*$/i.test(this.newAccount.secret) &&
-        !/^[0-9a-f]+$/i.test(this.newAccount.secret)
-      ) {
-        this.$store.commit("notification/alert", this.i18n.errorsecret);
-        return;
-      }
-      let type: OTPType;
-      if (
-        !/^[a-z2-7]+=*$/i.test(this.newAccount.secret) &&
-        /^[0-9a-f]+$/i.test(this.newAccount.secret) &&
-        this.newAccount.type === OTPType.totp
-      ) {
-        type = OTPType.hex;
-      } else if (
-        !/^[a-z2-7]+=*$/i.test(this.newAccount.secret) &&
-        /^[0-9a-f]+$/i.test(this.newAccount.secret) &&
-        this.newAccount.type === OTPType.hotp
-      ) {
-        type = OTPType.hhex;
-      } else {
-        type = this.newAccount.type;
-      }
+      const { secret, type } = normalizedSecretData;
 
       if (type === OTPType.hhex || type === OTPType.hotp) {
         this.newAccount.period = undefined;
@@ -119,6 +152,7 @@ export default Vue.extend({
       const encryption = this.$store.state.accounts.encryption[
         defaultEncyptionKey
       ];
+      const groupId = await this.resolveGroupId();
 
       const entry = new OTPEntry(
         {
@@ -126,8 +160,10 @@ export default Vue.extend({
           index: 0,
           issuer: this.newAccount.issuer,
           account: this.newAccount.account,
+          note: this.newAccount.note,
+          groupId,
           encrypted: false,
-          secret: this.newAccount.secret,
+          secret,
           counter: 0,
           period: this.newAccount.period,
           digits: this.newAccount.digits,
