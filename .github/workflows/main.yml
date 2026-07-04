@@ -39,23 +39,26 @@ jobs:
 
       - name: Build
         run: npm run ${{ matrix.platform }}
-  run-tests:
-    runs-on: ubuntu-latest
-    name: Run tests
-    needs: [build]
 
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2.1.2
-
-      - name: Install dependencies
-        run: npm ci
-        env:
-          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
-
-      - name: Test code
-        uses: mymindstorm/puppeteer-headful@8f745c770f7f4c0f9f332d7c43a775f90e53779a
-        with:
-          args: npm test
+  # Tests are disabled until they no longer depend on a stable/published
+  # chrome-extension:// ID in the CI browser.
+  # run-tests:
+  #   runs-on: ubuntu-latest
+  #   name: Run tests
+  #   needs: [build]
+  #
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #
+  #     - name: Setup Node.js environment
+  #       uses: actions/setup-node@v2.1.2
+  #
+  #     - name: Install dependencies
+  #       run: npm ci
+  #       env:
+  #         PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+  #
+  #     - name: Test code
+  #       uses: mymindstorm/puppeteer-headful@8f745c770f7f4c0f9f332d7c43a775f90e53779a
+  #       with:
+  #         args: npm test
