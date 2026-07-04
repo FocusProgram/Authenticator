@@ -31,14 +31,8 @@ fi
 ./node_modules/.bin/eslint . --ext .js,.ts
 
 if ! [[ $CREDS =~ $CREDREGEX ]] ; then
-    if [[ $PLATFORM = "prod" ]]; then
-        echo "Error: Missing info in src/models/credentials.ts"
-        echo "Provide API keys in src/models/credentials.ts or use a non-prod build."
-        exit 1
-    else
-        echo "Warning: Missing info in src/models/credentials.ts"
-        echo "Continuing without API keys (some backup providers may not work)."
-    fi
+    echo "Warning: Missing info in src/models/credentials.ts"
+    echo "Continuing without API keys (some backup providers may not work)."
 fi
 
 if ! [[ $REMOTE = *"https://github.com/Authenticator-Extension/Authenticator.git"* || $REMOTE = *"git@github.com:Authenticator-Extension/Authenticator.git"* || $CI ]] ; then

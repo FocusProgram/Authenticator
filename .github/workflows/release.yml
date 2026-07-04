@@ -2,6 +2,10 @@ name: Release
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag, for example v1.1.0'
+        required: true
   push:
     tags: 
       - 'v*'
@@ -22,8 +26,6 @@ jobs:
       
       - name: Build
         run: bash scripts/release.sh
-        env:
-          CREDS_FILE_PASSWORD: ${{ secrets.CREDS_FILE_PASSWORD }}
       
       - name: Create a release
         id: create_release
@@ -31,8 +33,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          release_name: Release ${{ github.event.inputs.tag || github.ref_name }}
+          commitish: ${{ github.sha }}
           draft: false
           prerelease: false
       - name: Upload Release Asset
