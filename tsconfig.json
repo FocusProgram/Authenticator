@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "lib": ["ES2020.Promise", "es6", "dom"],
+    "lib": ["ES2020", "DOM"],
     "target": "es6",
     "strict": true,
     "module": "es2015",
