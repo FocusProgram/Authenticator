@@ -1,6 +1,6 @@
 {
   "name": "authenticator-extension",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Authenticator generates 2-Step Verification codes in your browser.",
   "scripts": {
     "compile": "bash scripts/build.sh firefox",
@@ -9,6 +9,8 @@
     "firefox": "bash scripts/build.sh firefox",
     "edge": "bash scripts/build.sh edge",
     "prod": "bash scripts/build.sh prod",
+    "format": "prettier --write \"src/**/*.{js,ts,vue}\" \"sass/**/*.scss\" \"scripts/**/*.ts\" \"_locales/{en,zh_CN}/messages.json\" \"package*.json\"",
+    "format:check": "prettier --check \"src/**/*.{js,ts,vue}\" \"sass/**/*.scss\" \"scripts/**/*.ts\" \"_locales/{en,zh_CN}/messages.json\" \"package*.json\"",
     "pretest": "bash scripts/build.sh test",
     "test": "node scripts/test-runner.js"
   },
@@ -71,7 +73,6 @@
     "qrcode-generator": "^1.4.4",
     "qrcode-reader": "^1.0.4",
     "vue": "^2.7.16",
-    "vue2-dragula": "^2.5.4",
     "vuex": "^3.4.0"
   }
 }

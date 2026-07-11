@@ -10,7 +10,6 @@ PLATFORM=$1
 REMOTE=$(git config --get remote.origin.url)
 CREDS=$(cat ./src/models/credentials.ts | tr -d '\n')
 CREDREGEX='^.*".+".*".+".*".+".*".+".*".+".*$'
-STYLEFILES="./src/* ./src/**/* ./src/**/**/* ./src/**/**/**/* ./sass/*.scss"
 set -e
 
 if [[ $PLATFORM != "chrome" ]] && [[ $PLATFORM != "firefox" ]] && [[ $PLATFORM != "edge" ]] && [[ $PLATFORM != "prod" ]] && [[ $PLATFORM != "test" ]]; then
@@ -22,11 +21,7 @@ echo "Removing old build files..."
 rm -rf build dist
 rm -rf firefox chrome edge release test
 echo "Checking style..."
-if ./node_modules/.bin/prettier --check $STYLEFILES 1> /dev/null ; then
-    true
-else
-    ./node_modules/.bin/prettier --check $STYLEFILES --write
-fi
+npm run format:check --silent
 
 ./node_modules/.bin/eslint . --ext .js,.ts
 
@@ -42,8 +37,10 @@ if ! [[ $REMOTE = *"https://github.com/Authenticator-Extension/Authenticator.git
     echo -e "Thanks for forking Authenticator! If you plan on redistributing your own version of Authenticator please generate your own API keys and put them in ./src/models/credentials.ts and ./manifest-chrome.json"
     echo "Clear this warning by commenting it out in ./scripts/build.sh"
     echo
-    read -rsp $'Press any key to continue...\n' -n1 key
-    echo
+    if [[ -t 0 ]]; then
+        read -rsp $'Press any key to continue...\n' -n1 key
+        echo
+    fi
 fi
 
 echo "Compiling..."
