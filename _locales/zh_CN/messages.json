@@ -145,6 +145,14 @@
     "message": "密码不匹配。",
     "description": "Passphrase Not Match."
   },
+  "ui_additional_password_required": {
+    "message": "部分 OTP 使用了另一个加密密码，请继续输入对应密码以完成合并。",
+    "description": "UI text."
+  },
+  "ui_remaining_encryption_keys": {
+    "message": "仍待解锁的加密密钥",
+    "description": "UI text."
+  },
   "encrypted": {
     "message": "已加密",
     "description": "Encrypted."
@@ -680,9 +688,1081 @@
     "message": "未知权限。如果您看到此消息，请发送错误报告。"
   },
   "phrase_wrong": {
-    "message": "Password incorrect"
+    "message": "当前密码不正确。"
   },
   "activate_auto_filter": {
-    "message": "Warning: Smart filter loosely matches the domain name to an account. Always verify that you are on the correct website before entering a code!"
+    "message": "提示：智能过滤会根据域名匹配账号。填写验证码前，请确认当前网站地址正确。"
+  },
+  "back": {
+    "message": "返回",
+    "description": "UI text."
+  },
+  "cancel": {
+    "message": "取消",
+    "description": "UI text."
+  },
+  "save": {
+    "message": "保存",
+    "description": "UI text."
+  },
+  "delete": {
+    "message": "删除",
+    "description": "UI text."
+  },
+  "note": {
+    "message": "备注",
+    "description": "UI text."
+  },
+  "group_all": {
+    "message": "全部",
+    "description": "UI text."
+  },
+  "group_ungrouped": {
+    "message": "未分组",
+    "description": "UI text."
+  },
+  "group_move": {
+    "message": "移动",
+    "description": "UI text."
+  },
+  "group_empty": {
+    "message": "这个分组中还没有条目。",
+    "description": "UI text."
+  },
+  "select_all": {
+    "message": "全选",
+    "description": "UI text."
+  },
+  "deselect_all": {
+    "message": "取消全选",
+    "description": "UI text."
+  },
+  "no_results": {
+    "message": "没有找到匹配的条目。",
+    "description": "UI text."
+  },
+  "ui_items": {
+    "message": "项",
+    "description": "UI text."
+  },
+  "ui_otp_codes": {
+    "message": "验证码",
+    "description": "UI text."
+  },
+  "ui_no_selection": {
+    "message": "尚未选择验证码",
+    "description": "UI text."
+  },
+  "ui_selected": {
+    "message": "已选择",
+    "description": "UI text."
+  },
+  "ui_clear_search": {
+    "message": "清空搜索",
+    "description": "UI text."
+  },
+  "ui_target_group": {
+    "message": "目标分组",
+    "description": "UI text."
+  },
+  "ui_show_qr": {
+    "message": "显示二维码",
+    "description": "UI text."
+  },
+  "ui_copy_otp_link": {
+    "message": "复制 OTP 链接",
+    "description": "UI text."
+  },
+  "ui_copy_otp_link_success": {
+    "message": "已复制 OTP 链接",
+    "description": "UI text."
+  },
+  "ui_pin": {
+    "message": "置顶",
+    "description": "UI text."
+  },
+  "ui_unpin": {
+    "message": "取消置顶",
+    "description": "UI text."
+  },
+  "ui_view_otp": {
+    "message": "查看 OTP 信息",
+    "description": "UI text."
+  },
+  "ui_edit_otp": {
+    "message": "编辑 OTP 信息",
+    "description": "UI text."
+  },
+  "ui_delete_otp": {
+    "message": "删除 OTP",
+    "description": "UI text."
+  },
+  "ui_add_method_title": {
+    "message": "添加验证码",
+    "description": "UI text."
+  },
+  "ui_add_method_subtitle": {
+    "message": "扫描二维码、手动填写密钥，或从已有数据中导入。",
+    "description": "UI text."
+  },
+  "ui_add_method_section": {
+    "message": "选择添加方式",
+    "description": "UI text."
+  },
+  "ui_scan_page_desc": {
+    "message": "扫描当前网页中的 OTP 二维码",
+    "description": "UI text."
+  },
+  "ui_manual_entry_desc": {
+    "message": "填写名称、账号和 OTP 密钥",
+    "description": "UI text."
+  },
+  "ui_import_qr_desc": {
+    "message": "从本地图片中识别一个或多个二维码",
+    "description": "UI text."
+  },
+  "ui_import_links_desc": {
+    "message": "批量导入 otpauth 标准链接",
+    "description": "UI text."
+  },
+  "ui_import_backup_file_desc": {
+    "message": "从 JSON 或 TXT 备份文件恢复 OTP 和分组",
+    "description": "UI text."
+  },
+  "ui_manual_subtitle": {
+    "message": "填写验证码名称、用户和密钥，其他参数可按需调整。",
+    "description": "UI text."
+  },
+  "ui_basic_info": {
+    "message": "基本信息",
+    "description": "UI text."
+  },
+  "ui_name_example": {
+    "message": "例如：GitHub",
+    "description": "UI text."
+  },
+  "ui_account_example": {
+    "message": "例如：name@example.com",
+    "description": "UI text."
+  },
+  "ui_secret_placeholder": {
+    "message": "输入 Base32 或十六进制密钥",
+    "description": "UI text."
+  },
+  "ui_optional": {
+    "message": "可选",
+    "description": "UI text."
+  },
+  "ui_group_section": {
+    "message": "分组",
+    "description": "UI text."
+  },
+  "ui_select_group": {
+    "message": "选择已有分组",
+    "description": "UI text."
+  },
+  "ui_create_group": {
+    "message": "新建分组",
+    "description": "UI text."
+  },
+  "ui_create_group_placeholder": {
+    "message": "填写后将自动创建，可选",
+    "description": "UI text."
+  },
+  "ui_advanced_options": {
+    "message": "高级选项",
+    "description": "UI text."
+  },
+  "ui_otp_parameters": {
+    "message": "验证码参数",
+    "description": "UI text."
+  },
+  "ui_otp_parameters_desc": {
+    "message": "类型、周期、位数和加密算法",
+    "description": "UI text."
+  },
+  "ui_seconds": {
+    "message": "秒",
+    "description": "UI text."
+  },
+  "ui_add_otp": {
+    "message": "添加验证码",
+    "description": "UI text."
+  },
+  "ui_advisor_subtitle": {
+    "message": "检查当前设置，并提供提升数据安全性的建议。",
+    "description": "UI text."
+  },
+  "ui_check_results": {
+    "message": "检查结果",
+    "description": "UI text."
+  },
+  "ui_show_ignored": {
+    "message": "显示已忽略建议",
+    "description": "UI text."
+  },
+  "ui_settings_good": {
+    "message": "当前设置状态良好",
+    "description": "UI text."
+  },
+  "ui_group_title": {
+    "message": "分组管理",
+    "description": "UI text."
+  },
+  "ui_group_subtitle": {
+    "message": "新增、重命名、排序或删除验证码分组。",
+    "description": "UI text."
+  },
+  "ui_add_group_section": {
+    "message": "新增分组",
+    "description": "UI text."
+  },
+  "ui_new_group_placeholder": {
+    "message": "输入分组名称",
+    "description": "UI text."
+  },
+  "ui_add_group": {
+    "message": "新增分组",
+    "description": "UI text."
+  },
+  "ui_existing_groups": {
+    "message": "现有分组",
+    "description": "UI text."
+  },
+  "ui_edit_group": {
+    "message": "编辑分组",
+    "description": "UI text."
+  },
+  "ui_edit_group_name": {
+    "message": "编辑分组名称",
+    "description": "UI text."
+  },
+  "ui_move_up": {
+    "message": "上移",
+    "description": "UI text."
+  },
+  "ui_move_down": {
+    "message": "下移",
+    "description": "UI text."
+  },
+  "ui_no_groups": {
+    "message": "还没有分组",
+    "description": "UI text."
+  },
+  "ui_no_groups_desc": {
+    "message": "创建分组后，可按账号或用途整理验证码。",
+    "description": "UI text."
+  },
+  "ui_group_duplicate": {
+    "message": "分组名称已存在。",
+    "description": "UI text."
+  },
+  "ui_group_delete_confirm": {
+    "message": "确定删除这个分组吗？分组内的验证码不会被删除。",
+    "description": "UI text."
+  },
+  "ui_preferences_title": {
+    "message": "偏好设置",
+    "description": "UI text."
+  },
+  "ui_preferences_subtitle": {
+    "message": "调整显示方式、快捷操作、同步和自动锁定行为。",
+    "description": "UI text."
+  },
+  "ui_appearance": {
+    "message": "外观",
+    "description": "UI text."
+  },
+  "ui_theme_desc": {
+    "message": "选择扩展的颜色与显示风格",
+    "description": "UI text."
+  },
+  "ui_scale_desc": {
+    "message": "缩放整个扩展窗口",
+    "description": "UI text."
+  },
+  "ui_quick_actions": {
+    "message": "快捷操作",
+    "description": "UI text."
+  },
+  "ui_autofill_desc": {
+    "message": "在支持的网站中快速填入验证码",
+    "description": "UI text."
+  },
+  "ui_smart_filter_desc": {
+    "message": "根据当前网站优先显示相关账号",
+    "description": "UI text."
+  },
+  "ui_context_menu_desc": {
+    "message": "通过网页右键菜单打开验证器",
+    "description": "UI text."
+  },
+  "ui_storage_security": {
+    "message": "存储与安全",
+    "description": "UI text."
+  },
+  "ui_browser_sync_desc": {
+    "message": "在同一浏览器账号的设备间同步数据",
+    "description": "UI text."
+  },
+  "ui_autolock_desc": {
+    "message": "闲置指定时间后重新要求输入密码",
+    "description": "UI text."
+  },
+  "ui_autolock_minutes": {
+    "message": "自动锁定分钟数",
+    "description": "UI text."
+  },
+  "ui_window": {
+    "message": "窗口",
+    "description": "UI text."
+  },
+  "ui_popout_desc": {
+    "message": "在可持续显示的独立窗口中打开",
+    "description": "UI text."
+  },
+  "ui_security_title": {
+    "message": "安全设置",
+    "description": "UI text."
+  },
+  "ui_security_subtitle": {
+    "message": "使用主密码加密本地验证码数据，并控制解锁保护。",
+    "description": "UI text."
+  },
+  "ui_password_protection": {
+    "message": "密码保护",
+    "description": "UI text."
+  },
+  "ui_password_warning_title": {
+    "message": "请妥善保管主密码",
+    "description": "UI text."
+  },
+  "ui_change_master_password": {
+    "message": "修改主密码",
+    "description": "UI text."
+  },
+  "ui_set_master_password": {
+    "message": "设置主密码",
+    "description": "UI text."
+  },
+  "ui_master_password": {
+    "message": "主密码",
+    "description": "UI text."
+  },
+  "ui_backup_title": {
+    "message": "备份",
+    "description": "UI text."
+  },
+  "ui_backup_subtitle": {
+    "message": "导出、导入或自动备份您的 OTP 数据。",
+    "description": "UI text."
+  },
+  "ui_local_backup": {
+    "message": "本地备份",
+    "description": "UI text."
+  },
+  "ui_export_backup": {
+    "message": "导出备份",
+    "description": "UI text."
+  },
+  "ui_export_backup_desc": {
+    "message": "选择 JSON、TXT 或 CSV 格式",
+    "description": "UI text."
+  },
+  "ui_import_backup_desc": {
+    "message": "从备份文件、文本或二维码恢复",
+    "description": "UI text."
+  },
+  "ui_automatic_backup": {
+    "message": "自动备份",
+    "description": "UI text."
+  },
+  "ui_webdav_desc": {
+    "message": "配置服务器并管理自动备份",
+    "description": "UI text."
+  },
+  "ui_data_management": {
+    "message": "数据管理",
+    "description": "UI text."
+  },
+  "ui_clear_data_desc": {
+    "message": "清空前建议先导出一份备份",
+    "description": "UI text."
+  },
+  "ui_export_subtitle": {
+    "message": "选择适合的文件格式，并决定是否使用主密码加密。",
+    "description": "UI text."
+  },
+  "ui_export_options": {
+    "message": "导出选项",
+    "description": "UI text."
+  },
+  "ui_export_format": {
+    "message": "导出格式",
+    "description": "UI text."
+  },
+  "ui_json_full_backup": {
+    "message": "JSON（完整备份）",
+    "description": "UI text."
+  },
+  "ui_txt_standard_links": {
+    "message": "TXT（标准链接）",
+    "description": "UI text."
+  },
+  "ui_csv_table_data": {
+    "message": "CSV（表格数据）",
+    "description": "UI text."
+  },
+  "ui_encrypt_master": {
+    "message": "使用主密码加密",
+    "description": "UI text."
+  },
+  "ui_this_export": {
+    "message": "本次导出",
+    "description": "UI text."
+  },
+  "ui_code_count": {
+    "message": "个验证码",
+    "description": "UI text."
+  },
+  "ui_group_count": {
+    "message": "个分组",
+    "description": "UI text."
+  },
+  "ui_export_tips": {
+    "message": "导出提示",
+    "description": "UI text."
+  },
+  "ui_no_master_password": {
+    "message": "当前未设置主密码",
+    "description": "UI text."
+  },
+  "ui_no_master_password_desc": {
+    "message": "只能导出未加密备份。如需加密，请先前往“安全设置”创建主密码。",
+    "description": "UI text."
+  },
+  "ui_unsupported_format": {
+    "message": "部分账号不支持当前格式",
+    "description": "UI text."
+  },
+  "ui_locked_accounts": {
+    "message": "存在尚未解锁的账号",
+    "description": "UI text."
+  },
+  "ui_exporting": {
+    "message": "正在导出…",
+    "description": "UI text."
+  },
+  "ui_txt_csv_no_encryption": {
+    "message": "TXT 和 CSV 格式不支持加密",
+    "description": "UI text."
+  },
+  "ui_create_password_first": {
+    "message": "请先在安全设置中创建主密码",
+    "description": "UI text."
+  },
+  "ui_json_encryption_only": {
+    "message": "仅 JSON 完整备份支持加密",
+    "description": "UI text."
+  },
+  "ui_encrypted_json_backup": {
+    "message": "加密 JSON 完整备份",
+    "description": "UI text."
+  },
+  "ui_json_backup": {
+    "message": "JSON 完整备份",
+    "description": "UI text."
+  },
+  "ui_txt_backup": {
+    "message": "TXT 标准链接备份",
+    "description": "UI text."
+  },
+  "ui_csv_backup": {
+    "message": "CSV 表格备份",
+    "description": "UI text."
+  },
+  "ui_export_prefix": {
+    "message": "导出",
+    "description": "UI text."
+  },
+  "ui_json_encrypted_summary": {
+    "message": "导出为加密 JSON，适合完整备份与恢复。",
+    "description": "UI text."
+  },
+  "ui_json_summary": {
+    "message": "导出为 JSON，包含 OTP、备注和分组信息。",
+    "description": "UI text."
+  },
+  "ui_txt_summary": {
+    "message": "导出为 otpauth 文本，适合导入其他验证器。",
+    "description": "UI text."
+  },
+  "ui_csv_summary": {
+    "message": "导出为 CSV，适合表格查看、筛选和归档。",
+    "description": "UI text."
+  },
+  "ui_unlock_before_encrypted_export": {
+    "message": "请先解锁并确认主密码后再导出加密备份。",
+    "description": "UI text."
+  },
+  "ui_webdav_title": {
+    "message": "WebDAV 备份",
+    "description": "UI text."
+  },
+  "ui_webdav_subtitle": {
+    "message": "配置远程服务器，手动或自动备份并恢复验证码数据。",
+    "description": "UI text."
+  },
+  "ui_server_connection": {
+    "message": "服务器连接",
+    "description": "UI text."
+  },
+  "ui_webdav_connection_info": {
+    "message": "连接信息仅保存在当前浏览器中。请填写完整的 WebDAV 目录地址。",
+    "description": "UI text."
+  },
+  "ui_backup_storage": {
+    "message": "备份存储方式",
+    "description": "UI text."
+  },
+  "ui_testing": {
+    "message": "正在测试…",
+    "description": "UI text."
+  },
+  "ui_saving": {
+    "message": "正在保存…",
+    "description": "UI text."
+  },
+  "ui_retention_count": {
+    "message": "保留备份数量",
+    "description": "UI text."
+  },
+  "ui_retention_desc": {
+    "message": "设置为 0 时不限制备份数量",
+    "description": "UI text."
+  },
+  "ui_copies": {
+    "message": "份",
+    "description": "UI text."
+  },
+  "ui_backing_up": {
+    "message": "正在备份…",
+    "description": "UI text."
+  },
+  "ui_refreshing": {
+    "message": "正在刷新…",
+    "description": "UI text."
+  },
+  "ui_restore_backup": {
+    "message": "恢复备份",
+    "description": "UI text."
+  },
+  "ui_select_backup": {
+    "message": "选择备份文件",
+    "description": "UI text."
+  },
+  "ui_restoring": {
+    "message": "正在恢复…",
+    "description": "UI text."
+  },
+  "ui_incorrect_backup_password": {
+    "message": "备份密码不正确，或加密备份内容已经损坏。",
+    "description": "UI text."
+  },
+  "ui_menu_account": {
+    "message": "账户管理",
+    "description": "UI text."
+  },
+  "ui_advisor_desc": {
+    "message": "检查可能影响数据安全的设置",
+    "description": "UI text."
+  },
+  "ui_groups_desc": {
+    "message": "新增、编辑和调整验证码分组",
+    "description": "UI text."
+  },
+  "ui_permissions_desc": {
+    "message": "查看和撤销可选浏览器权限",
+    "description": "UI text."
+  },
+  "ui_menu_security_data": {
+    "message": "安全与数据",
+    "description": "UI text."
+  },
+  "ui_backup_desc": {
+    "message": "导入、导出或配置自动备份",
+    "description": "UI text."
+  },
+  "ui_security_desc": {
+    "message": "设置或修改数据加密主密码",
+    "description": "UI text."
+  },
+  "ui_clock_desc": {
+    "message": "通过网络时间修正验证码计时",
+    "description": "UI text."
+  },
+  "ui_preferences_desc": {
+    "message": "调整主题、缩放、同步和快捷操作",
+    "description": "UI text."
+  },
+  "ui_help_about": {
+    "message": "帮助与关于",
+    "description": "UI text."
+  },
+  "ui_feedback_desc": {
+    "message": "报告问题或提交功能建议",
+    "description": "UI text."
+  },
+  "ui_translate_desc": {
+    "message": "帮助完善扩展的多语言内容",
+    "description": "UI text."
+  },
+  "ui_source_desc": {
+    "message": "访问项目源代码和开发信息",
+    "description": "UI text."
+  },
+  "ui_about_desc": {
+    "message": "查看版本、许可和开源组件",
+    "description": "UI text."
+  },
+  "ui_version": {
+    "message": "版本",
+    "description": "UI text."
+  },
+  "ui_permissions_title": {
+    "message": "权限管理",
+    "description": "UI text."
+  },
+  "ui_permissions_subtitle": {
+    "message": "查看身份验证器正在使用的浏览器权限，并撤销不再需要的可选权限。",
+    "description": "UI text."
+  },
+  "ui_display_scope": {
+    "message": "显示范围",
+    "description": "UI text."
+  },
+  "ui_show_required_desc": {
+    "message": "开启后同时显示扩展运行所必需、无法撤销的权限",
+    "description": "UI text."
+  },
+  "ui_authorized_permissions": {
+    "message": "已授权权限",
+    "description": "UI text."
+  },
+  "ui_optional_permission": {
+    "message": "可撤销",
+    "description": "UI text."
+  },
+  "ui_required_permission": {
+    "message": "必要权限",
+    "description": "UI text."
+  },
+  "ui_no_permissions": {
+    "message": "没有可显示的权限",
+    "description": "UI text."
+  },
+  "ui_no_permissions_desc": {
+    "message": "当前没有已授权的可选权限，或权限状态尚未加载完成。",
+    "description": "UI text."
+  },
+  "ui_import_help": {
+    "message": "使用说明",
+    "description": "UI text."
+  },
+  "ui_import_file_help": {
+    "message": "文件导入支持 Authenticator 的 JSON/TXT 备份，以及 Bitwarden 导出的 JSON 文件。",
+    "description": "UI text."
+  },
+  "ui_import_clear_help": {
+    "message": "可选在导入前清空现有 OTP 和分组数据。",
+    "description": "UI text."
+  },
+  "ui_import_qr_help": {
+    "message": "二维码导入支持 PNG、JPG、JPEG、WEBP、GIF、BMP 等常见图片格式。",
+    "description": "UI text."
+  },
+  "ui_import_text_help": {
+    "message": "文本导入支持 otpauth 链接、JSON 备份文本和普通 TXT 内容。",
+    "description": "UI text."
+  },
+  "ui_import_csv_unsupported": {
+    "message": "CSV 当前仅支持导出，暂不支持导入。",
+    "description": "UI text."
+  },
+  "ui_import_result_help": {
+    "message": "导入进度和结果会直接显示在当前页面。",
+    "description": "UI text."
+  },
+  "ui_clear_before_import": {
+    "message": "导入前清空现有数据",
+    "description": "UI text."
+  },
+  "ui_import_progress": {
+    "message": "导入进度",
+    "description": "UI text."
+  },
+  "ui_importing_backup": {
+    "message": "正在导入备份",
+    "description": "UI text."
+  },
+  "ui_importing_qr": {
+    "message": "正在导入二维码备份",
+    "description": "UI text."
+  },
+  "ui_import_complete": {
+    "message": "导入完成",
+    "description": "UI text."
+  },
+  "ui_import_partial": {
+    "message": "部分导入成功",
+    "description": "UI text."
+  },
+  "ui_import_failed": {
+    "message": "导入失败",
+    "description": "UI text."
+  },
+  "ui_import_cancelled": {
+    "message": "已取消导入",
+    "description": "UI text."
+  },
+  "ui_no_data_changed": {
+    "message": "未对现有数据进行更改。",
+    "description": "UI text."
+  },
+  "ui_no_file": {
+    "message": "未选择文件",
+    "description": "UI text."
+  },
+  "ui_no_image": {
+    "message": "未选择图片",
+    "description": "UI text."
+  },
+  "ui_import_error": {
+    "message": "导入过程中出现错误",
+    "description": "UI text."
+  },
+  "ui_no_importable_content": {
+    "message": "未识别到可导入内容",
+    "description": "UI text."
+  },
+  "ui_scanned_images": {
+    "message": "扫描图片",
+    "description": "UI text."
+  },
+  "ui_decoded_images": {
+    "message": "识别成功",
+    "description": "UI text."
+  },
+  "ui_decode_failures": {
+    "message": "识别失败",
+    "description": "UI text."
+  },
+  "ui_imported_entries": {
+    "message": "导入条目",
+    "description": "UI text."
+  },
+  "ui_imported_groups": {
+    "message": "导入分组",
+    "description": "UI text."
+  },
+  "ui_grouped_entries": {
+    "message": "带分组条目",
+    "description": "UI text."
+  },
+  "ui_failed_entries": {
+    "message": "失败条目",
+    "description": "UI text."
+  },
+  "ui_removed_group_links": {
+    "message": "移除无效分组关联",
+    "description": "UI text."
+  },
+  "ui_cleared_otp": {
+    "message": "清空历史 OTP",
+    "description": "UI text."
+  },
+  "ui_cleared_groups": {
+    "message": "清空历史分组",
+    "description": "UI text."
+  },
+  "ui_batch_edit": {
+    "message": "批量编辑",
+    "description": "UI text."
+  },
+  "ui_unlock_to_edit": {
+    "message": "请先解锁后再编辑此条目。",
+    "description": "UI text."
+  },
+  "ui_unlock_to_view": {
+    "message": "请先解锁后再查看此条目。",
+    "description": "UI text."
+  },
+  "ui_saved": {
+    "message": "保存成功",
+    "description": "UI text."
+  },
+  "ui_settings_desc": {
+    "message": "管理验证码分组、安全保护、数据备份和扩展偏好。",
+    "description": "UI text."
+  },
+  "ui_backup_restore": {
+    "message": "备份与恢复",
+    "description": "UI text."
+  },
+  "ui_about_authenticator": {
+    "message": "关于 Authenticator",
+    "description": "UI text."
+  },
+  "ui_permission_name_active_tab": {
+    "message": "当前标签页",
+    "description": "UI text."
+  },
+  "ui_permission_name_storage": {
+    "message": "浏览器存储",
+    "description": "UI text."
+  },
+  "ui_permission_name_identity": {
+    "message": "第三方服务登录",
+    "description": "UI text."
+  },
+  "ui_permission_name_alarms": {
+    "message": "定时任务",
+    "description": "UI text."
+  },
+  "ui_permission_name_scripting": {
+    "message": "页面脚本",
+    "description": "UI text."
+  },
+  "ui_permission_name_clipboard": {
+    "message": "写入剪贴板",
+    "description": "UI text."
+  },
+  "ui_permission_name_context_menu": {
+    "message": "右键菜单",
+    "description": "UI text."
+  },
+  "ui_permission_name_clock": {
+    "message": "时间同步",
+    "description": "UI text."
+  },
+  "ui_permission_name_dropbox": {
+    "message": "Dropbox 备份",
+    "description": "UI text."
+  },
+  "ui_permission_name_drive": {
+    "message": "Google Drive 备份",
+    "description": "UI text."
+  },
+  "ui_permission_name_drive_login": {
+    "message": "Google Drive 登录",
+    "description": "UI text."
+  },
+  "ui_permission_name_onedrive": {
+    "message": "OneDrive 备份",
+    "description": "UI text."
+  },
+  "ui_permission_name_onedrive_login": {
+    "message": "OneDrive 登录",
+    "description": "UI text."
+  },
+  "ui_permission_name_other": {
+    "message": "其他浏览器权限",
+    "description": "UI text."
+  },
+  "ui_progress_file_selected": {
+    "message": "已选择文件，准备读取",
+    "description": "UI text."
+  },
+  "ui_progress_reading_file": {
+    "message": "正在读取备份文件",
+    "description": "UI text."
+  },
+  "ui_progress_downloading_backup": {
+    "message": "正在下载备份",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_backup": {
+    "message": "正在解析备份内容",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_bitwarden": {
+    "message": "正在解析 Bitwarden 备份",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_text": {
+    "message": "正在解析文本备份",
+    "description": "UI text."
+  },
+  "ui_progress_organizing_records": {
+    "message": "正在整理备份记录",
+    "description": "UI text."
+  },
+  "ui_progress_waiting_password": {
+    "message": "等待输入备份密码",
+    "description": "UI text."
+  },
+  "ui_progress_decrypting": {
+    "message": "正在解密备份内容",
+    "description": "UI text."
+  },
+  "ui_progress_replacing_data": {
+    "message": "正在安全替换现有数据",
+    "description": "UI text."
+  },
+  "ui_progress_merging_data": {
+    "message": "正在合并分组和 OTP 条目",
+    "description": "UI text."
+  },
+  "ui_progress_refreshing": {
+    "message": "正在刷新列表",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_backup_text": {
+    "message": "正在解析备份文本",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_otpauth": {
+    "message": "正在解析 otpauth 文本",
+    "description": "UI text."
+  },
+  "ui_progress_preparing_import": {
+    "message": "正在准备导入内容",
+    "description": "UI text."
+  },
+  "ui_progress_waiting_qr": {
+    "message": "等待读取二维码图片",
+    "description": "UI text."
+  },
+  "ui_progress_scanning_qr": {
+    "message": "正在识别二维码",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_otp": {
+    "message": "正在解析 OTP 数据",
+    "description": "UI text."
+  },
+  "ui_error_passphrase_required": {
+    "message": "该备份已加密，请输入正确的备份密码后重试。",
+    "description": "UI text."
+  },
+  "ui_error_incorrect_passphrase": {
+    "message": "备份密码不正确，或加密备份内容已经损坏。",
+    "description": "UI text."
+  },
+  "ui_error_invalid_backup": {
+    "message": "文件内容不是受支持的 JSON、Bitwarden 或 otpauth 备份格式。",
+    "description": "UI text."
+  },
+  "ui_error_no_entries": {
+    "message": "未识别到可导入的 OTP 条目。",
+    "description": "UI text."
+  },
+  "ui_error_sync_quota": {
+    "message": "当前正在使用浏览器同步存储，导入数据已超过同步容量限制。请到「设置 → 偏好」关闭浏览器同步，切换为本地存储后重试。",
+    "description": "UI text."
+  },
+  "ui_error_local_quota": {
+    "message": "导入数据已超过浏览器可用存储限制，请减少导入内容后重试。",
+    "description": "UI text."
+  },
+  "ui_reason": {
+    "message": "原因",
+    "description": "UI text."
+  },
+  "ui_error_read_backup": {
+    "message": "读取备份文件失败。",
+    "description": "UI text."
+  },
+  "ui_error_backup_aborted": {
+    "message": "读取备份文件已取消。",
+    "description": "UI text."
+  },
+  "ui_error_backup_too_large": {
+    "message": "备份内容超过 100 MB 导入限制。",
+    "description": "UI text."
+  },
+  "ui_cancel_import": {
+    "message": "取消导入",
+    "description": "UI text."
+  },
+  "ui_error_backup_parse_timeout": {
+    "message": "备份解析超时，请减小文件大小或重新尝试。",
+    "description": "UI text."
+  },
+  "ui_error_backup_worker": {
+    "message": "无法启动后台备份解析器。",
+    "description": "UI text."
+  },
+  "ui_error_webdav_timeout": {
+    "message": "WebDAV 传输超时，请检查网络连接后重试。",
+    "description": "UI text."
+  },
+  "ui_error_too_many_qr_files": {
+    "message": "每次最多导入 100 张二维码图片。",
+    "description": "UI text."
+  },
+  "ui_unlock_before_group_delete": {
+    "message": "请先解锁 OTP 再删除分组，以便安全更新条目的分组关联。",
+    "description": "UI text."
+  },
+  "ui_backup_password_title": {
+    "message": "输入备份密码",
+    "description": "UI text."
+  },
+  "ui_backup_password_desc": {
+    "message": "该 WebDAV 备份已加密，请输入备份密码后继续恢复。",
+    "description": "UI text."
+  },
+  "ui_error_qr_timeout": {
+    "message": "二维码识别超时。",
+    "description": "UI text."
+  },
+  "ui_error_read_qr": {
+    "message": "读取二维码图片失败。",
+    "description": "UI text."
+  },
+  "ui_error_qr_aborted": {
+    "message": "读取二维码图片已取消。",
+    "description": "UI text."
+  },
+  "ui_error_load_qr": {
+    "message": "无法加载二维码图片。",
+    "description": "UI text."
+  },
+  "ui_backups_found": {
+    "message": "份备份",
+    "description": "UI text."
+  },
+  "ui_latest_backup": {
+    "message": "最近备份",
+    "description": "UI text."
+  },
+  "ui_error_system_key_conflict": {
+    "message": "导入数据包含与系统存储冲突的标识。",
+    "description": "UI text."
+  },
+  "ui_error_unknown_record": {
+    "message": "导入数据包含无法识别的存储记录。",
+    "description": "UI text."
+  },
+  "ui_error_type_conflict": {
+    "message": "导入数据与现有 OTP 或分组标识冲突。",
+    "description": "UI text."
+  },
+  "ui_error_incomplete_write": {
+    "message": "导入数据未能完整写入存储。",
+    "description": "UI text."
+  },
+  "ui_error_batch_id_conflict": {
+    "message": "导入的 OTP 与分组使用了相同标识。",
+    "description": "UI text."
+  },
+  "ui_error_invalid_group_id": {
+    "message": "导入数据包含无效或保留的分组标识。",
+    "description": "UI text."
+  },
+  "backup_set_password_alert": {
+    "message": "请先在「设置 → 安全」中设置主密码，才能创建加密备份。",
+    "description": "Prompt before encrypted backup."
   }
 }

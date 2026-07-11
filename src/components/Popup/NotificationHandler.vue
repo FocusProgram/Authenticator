@@ -1,25 +1,52 @@
 <template>
   <div>
     <!-- MESSAGE -->
-    <div class="message-box" v-show="message.length && messageIdle">
-      <div>{{ message.length ? message[0] : "" }}</div>
-      <a-button type="small" @click="closeAlert()">{{ i18n.ok }}</a-button>
+    <div
+      class="message-box"
+      role="alertdialog"
+      aria-modal="true"
+      v-show="message.length && messageIdle"
+    >
+      <div class="notification-dialog-message">
+        {{ message.length ? message[0] : "" }}
+      </div>
+      <div class="notification-dialog-actions">
+        <button
+          type="button"
+          class="subpage-button primary"
+          @click="closeAlert()"
+        >
+          {{ i18n.ok }}
+        </button>
+      </div>
     </div>
 
     <!-- CONFIRM -->
-    <div class="message-box" v-show="confirmMessage !== ''">
-      <div>{{ confirmMessage }}</div>
-      <div class="buttons">
-        <a-button type="small" @click="confirmOK()">{{ i18n.yes }}</a-button>
-        <a-button type="small" @click="confirmCancel()">
+    <div
+      class="message-box"
+      role="alertdialog"
+      aria-modal="true"
+      v-show="confirmMessage !== ''"
+    >
+      <div class="notification-dialog-message">{{ confirmMessage }}</div>
+      <div class="notification-dialog-actions">
+        <button type="button" class="subpage-button" @click="confirmCancel()">
           {{ i18n.no }}
-        </a-button>
+        </button>
+        <button
+          type="button"
+          class="subpage-button primary"
+          @click="confirmOK()"
+        >
+          {{ i18n.yes }}
+        </button>
       </div>
     </div>
 
     <!-- OVERLAY -->
     <div
       id="overlay"
+      class="notification-overlay"
       v-show="(message.length && messageIdle) || confirmMessage !== ''"
     ></div>
   </div>

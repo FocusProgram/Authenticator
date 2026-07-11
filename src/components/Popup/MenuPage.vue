@@ -1,79 +1,221 @@
 <template>
-  <div>
+  <div class="settings-shell">
     <div class="header">
-      <span id="menuName">{{ i18n.settings }}</span>
-      <div class="icon" id="i-close" v-on:click="hideMenu()">
-        <IconArrowLeft />
+      <div class="header-actions header-actions-left">
+        <button
+          type="button"
+          class="header-icon settings-back-button"
+          :title="i18n.back"
+          :aria-label="i18n.back"
+          @click="hideMenu"
+        >
+          <IconArrowLeft />
+        </button>
       </div>
+      <span id="menuName" class="header-title">{{ i18n.settings }}</span>
     </div>
-    <div id="menuBody">
-      <div class="menuList">
-        <p v-bind:title="i18n.advisor" v-on:click="showInfo('AdvisorPage')">
-          <span><IconAdvisor /></span>{{ i18n.advisor }}
-        </p>
-        <p
-          v-bind:title="i18n.group || 'Groups'"
-          v-on:click="showInfo('GroupsPage')"
-        >
-          <span><IconDatabase /></span>{{ i18n.group || "Groups" }}
-        </p>
-        <a
-          href="permissions.html"
-          target="_blank"
-          style="text-decoration: none"
-        >
-          <p v-bind:title="i18n.permissions">
-            <span><IconClipboardCheck /></span>{{ i18n.permissions }}
-          </p>
-        </a>
+
+    <div id="menuBody" class="settings-page">
+      <div class="settings-page-description">
+        {{ i18n.ui_settings_desc }}
       </div>
-      <div class="menuList">
-        <p v-bind:title="i18n.backup" v-on:click="showInfo('BackupPage')">
-          <span><IconExchange /></span>{{ i18n.backup }}
-        </p>
-        <p
-          v-bind:title="i18n.security"
-          v-on:click="showInfo('SetPasswordPage')"
-        >
-          <span><IconLock /></span>{{ i18n.security }}
-        </p>
-        <p
-          v-bind:title="i18n.sync_clock"
-          v-on:click="syncClock()"
-          v-if="isSupported"
-        >
-          <span><IconSync /></span>{{ i18n.sync_clock }}
-        </p>
-        <p
-          v-bind:title="i18n.resize_popup_page"
-          v-on:click="showInfo('PreferencesPage')"
-        >
-          <span><IconWrench /></span>{{ i18n.resize_popup_page }}
-        </p>
-      </div>
-      <div class="menuList">
-        <p v-bind:title="i18n.feedback" v-on:click="openHelp()">
-          <span><IconComments /></span>{{ i18n.feedback }}
-        </p>
-        <p
-          v-bind:title="i18n.translate"
-          v-on:click="openLink('https://otp.ee/translate')"
-        >
-          <span><IconGlobe /></span>{{ i18n.translate }}
-        </p>
-        <p
-          v-bind:title="i18n.source"
-          v-on:click="openLink('https://otp.ee/sourcecode')"
-        >
-          <span><IconCode /></span>{{ i18n.source }}
-        </p>
-        <a href="licenses.html" target="_blank" style="text-decoration: none">
-          <p v-bind:title="i18n.about">
-            <span><IconInfo /></span>{{ i18n.about }}
-          </p>
-        </a>
-      </div>
-      <div id="version">Version {{ version }}</div>
+
+      <section class="subpage-section">
+        <div class="subpage-section-head">
+          <div class="subpage-section-title">{{ i18n.ui_menu_account }}</div>
+        </div>
+        <div class="subpage-list-card settings-list">
+          <button
+            type="button"
+            class="subpage-row settings-row"
+            :title="i18n.advisor"
+            @click="showInfo('AdvisorPage')"
+          >
+            <span class="subpage-row-icon"><IconAdvisor /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{ i18n.advisor }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_advisor_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+
+          <button
+            type="button"
+            class="subpage-row settings-row"
+            :title="i18n.ui_group_title"
+            @click="showInfo('GroupsPage')"
+          >
+            <span class="subpage-row-icon"><IconBars /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{ i18n.ui_group_title }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_groups_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+
+          <a
+            class="subpage-row settings-row"
+            href="permissions.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            :title="i18n.ui_permissions_title"
+          >
+            <span class="subpage-row-icon"><IconClipboardCheck /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{
+                i18n.ui_permissions_title
+              }}</span>
+              <span class="subpage-row-desc">{{
+                i18n.ui_permissions_desc
+              }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </a>
+        </div>
+      </section>
+
+      <section class="subpage-section">
+        <div class="subpage-section-head">
+          <div class="subpage-section-title">
+            {{ i18n.ui_menu_security_data }}
+          </div>
+        </div>
+        <div class="subpage-list-card settings-list">
+          <button
+            type="button"
+            class="subpage-row settings-row"
+            :title="i18n.ui_backup_restore"
+            @click="showBackup"
+          >
+            <span class="subpage-row-icon"><IconExchange /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{
+                i18n.ui_backup_restore
+              }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_backup_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+
+          <button
+            type="button"
+            class="subpage-row settings-row"
+            :title="i18n.ui_security_title"
+            @click="showInfo('SetPasswordPage')"
+          >
+            <span class="subpage-row-icon"><IconLock /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{
+                i18n.ui_security_title
+              }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_security_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+
+          <button
+            v-if="isSupported"
+            type="button"
+            class="subpage-row settings-row"
+            :title="i18n.sync_clock"
+            @click="syncClock"
+          >
+            <span class="subpage-row-icon"><IconSync /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{ i18n.sync_clock }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_clock_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+
+          <button
+            type="button"
+            class="subpage-row settings-row"
+            :title="i18n.ui_preferences_title"
+            @click="showInfo('PreferencesPage')"
+          >
+            <span class="subpage-row-icon"><IconWrench /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{
+                i18n.ui_preferences_title
+              }}</span>
+              <span class="subpage-row-desc">{{
+                i18n.ui_preferences_desc
+              }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+        </div>
+      </section>
+
+      <section class="subpage-section">
+        <div class="subpage-section-head">
+          <div class="subpage-section-title">{{ i18n.ui_help_about }}</div>
+        </div>
+        <div class="subpage-list-card settings-list">
+          <button
+            type="button"
+            class="subpage-row settings-row"
+            data-test="feedback"
+            :title="i18n.feedback"
+            @click="openHelp"
+          >
+            <span class="subpage-row-icon"><IconComments /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{ i18n.feedback }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_feedback_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+
+          <button
+            type="button"
+            class="subpage-row settings-row"
+            :title="i18n.translate"
+            @click="openLink('https://otp.ee/translate')"
+          >
+            <span class="subpage-row-icon"><IconGlobe /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{ i18n.translate }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_translate_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+
+          <button
+            type="button"
+            class="subpage-row settings-row"
+            :title="i18n.source"
+            @click="openLink('https://otp.ee/sourcecode')"
+          >
+            <span class="subpage-row-icon"><IconCode /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{ i18n.source }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_source_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </button>
+
+          <a
+            class="subpage-row settings-row"
+            href="licenses.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            :title="i18n.about"
+          >
+            <span class="subpage-row-icon"><IconInfo /></span>
+            <span class="subpage-row-copy">
+              <span class="subpage-row-title">{{
+                i18n.ui_about_authenticator
+              }}</span>
+              <span class="subpage-row-desc">{{ i18n.ui_about_desc }}</span>
+            </span>
+            <IconArrowLeft class="subpage-row-arrow" />
+          </a>
+        </div>
+      </section>
+
+      <div id="version">{{ i18n.ui_version }} {{ version }}</div>
     </div>
   </div>
 </template>
@@ -84,7 +226,7 @@ import { syncTimeWithGoogle } from "../../syncTime";
 import IconArrowLeft from "../../../svg/arrow-left.svg";
 import IconInfo from "../../../svg/info.svg";
 import IconExchange from "../../../svg/exchange.svg";
-import IconDatabase from "../../../svg/database.svg";
+import IconBars from "../../../svg/bars.svg";
 import IconLock from "../../../svg/lock.svg";
 import IconSync from "../../../svg/sync.svg";
 import IconWrench from "../../../svg/wrench.svg";
@@ -93,7 +235,7 @@ import IconComments from "../../../svg/comments.svg";
 import IconGlobe from "../../../svg/globe.svg";
 import IconCode from "../../../svg/code.svg";
 import IconClipboardCheck from "../../../svg/clipboard-check.svg";
-import { isFirefox, isSafari } from "../../browser";
+import { isSafari } from "../../browser";
 import { UserSettings } from "../../models/settings";
 
 export default Vue.extend({
@@ -101,7 +243,7 @@ export default Vue.extend({
     IconArrowLeft,
     IconInfo,
     IconExchange,
-    IconDatabase,
+    IconBars,
     IconLock,
     IconSync,
     IconWrench,
@@ -155,6 +297,9 @@ export default Vue.extend({
       this.$store.commit("style/showInfo");
       this.$store.commit("currentView/changeView", tab);
       return;
+    },
+    showBackup() {
+      this.$store.commit("style/showBackupPanel");
     },
     syncClock() {
       chrome.permissions.request(

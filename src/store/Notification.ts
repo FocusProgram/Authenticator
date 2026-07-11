@@ -34,15 +34,19 @@ export class Notification implements Module {
         ) => {
           return new Promise((resolve: (value: boolean) => void) => {
             state.commit("setConfirm", message);
-            window.addEventListener("confirm", (event) => {
-              state.commit("setConfirm", "");
-              if (!this.isCustomEvent(event)) {
-                resolve(false);
+            window.addEventListener(
+              "confirm",
+              (event) => {
+                state.commit("setConfirm", "");
+                if (!this.isCustomEvent(event)) {
+                  resolve(false);
+                  return;
+                }
+                resolve(event.detail);
                 return;
-              }
-              resolve(event.detail);
-              return;
-            });
+              },
+              { once: true }
+            );
           });
         },
         ephermalMessage: (

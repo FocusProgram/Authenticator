@@ -1,7 +1,6 @@
 // Vue
 import Vue from "vue";
 import Vuex from "vuex";
-import { Vue2Dragula } from "vue2-dragula";
 
 // Components
 import Popup from "./components/Popup.vue";
@@ -19,10 +18,13 @@ import { Qr } from "./store/Qr";
 import { Advisor } from "./store/Advisor";
 import { Groups } from "./store/Groups";
 import { Dropbox, Drive, OneDrive } from "./models/backup";
+import { Encryption } from "./models/encryption";
 import {
-  uploadWebDAVBackup,
   getWebDAVConfig,
   getWebDAVOrigin,
+  isWebDAVBackupDue,
+  pruneWebDAVBackups,
+  uploadWebDAVBackup,
 } from "./models/webdav";
 import type { WebDAVConfig } from "./models/webdav";
 import { syncTimeWithGoogle } from "./syncTime";
@@ -46,7 +48,6 @@ async function init() {
 
   // Load modules
   Vue.use(Vuex);
-  Vue.use(Vue2Dragula);
 
   // Load common components globally
   for (const component of CommonComponents) {
@@ -97,7 +98,7 @@ async function init() {
   }
 
   // Auto focus on first entry
-  document.querySelector<HTMLAnchorElement>("a.entry[tabindex='0']")?.focus();
+  document.querySelector<HTMLElement>(".entry[tabindex='0']")?.focus();
 
   // Set document title
   try {
@@ -115,7 +116,7 @@ async function init() {
   }
 
   // Backup reminder / run backup
-  const backupReminder = setInterval(() => {
+  const backupReminder = setInterval(async () => {
     if (instance.$store.state.accounts.entries.length === 0) {
       return;
     }
@@ -127,6 +128,18 @@ async function init() {
     clearInterval(backupReminder);
 
     const clientTime = Math.floor(new Date().getTime() / 1000 / 3600 / 24);
+    let webdavAutoConfig: WebDAVAutoConfig | null = null;
+    try {
+      webdavAutoConfig = await getWebDAVAutoConfig();
+    } catch (error) {
+      console.error("Unable to read WebDAV auto-backup settings", error);
+    }
+    if (webdavAutoConfig) {
+      window.setTimeout(() => {
+        maybeWebDAVAutoBackup(clientTime, instance, webdavAutoConfig!);
+      }, 2000);
+    }
+
     if (!UserSettings.items.lastRemindingBackupTime) {
       UserSettings.items.lastRemindingBackupTime = clientTime;
       UserSettings.commitItems();
@@ -134,7 +147,7 @@ async function init() {
       clientTime - Number(UserSettings.items.lastRemindingBackupTime) >= 30 ||
       clientTime - Number(UserSettings.items.lastRemindingBackupTime) < 0
     ) {
-      runScheduledBackup(clientTime, instance);
+      runScheduledBackup(clientTime, instance, Boolean(webdavAutoConfig));
     }
     return;
   }, 5000);
@@ -208,9 +221,11 @@ async function init() {
 
 init();
 
-async function runScheduledBackup(clientTime: number, instance: Vue) {
-  const webdavAutoConfig = await getWebDAVAutoConfig();
-
+async function runScheduledBackup(
+  clientTime: number,
+  instance: Vue,
+  hasWebDAVAutoConfig: boolean
+) {
   if (instance.$store.state.backup.dropboxToken) {
     chrome.permissions.contains(
       { origins: ["https://*.dropboxapi.com/*"] },
@@ -335,22 +350,11 @@ async function runScheduledBackup(clientTime: number, instance: Vue) {
     );
   }
 
-  if (webdavAutoConfig) {
-    // Delay WebDAV backup to give background time to initialize
-    setTimeout(async () => {
-      try {
-        await maybeWebDAVAutoBackup(clientTime, instance, webdavAutoConfig);
-      } catch (error) {
-        // Silently fail - don't disrupt user experience
-      }
-    }, 2000);
-  }
-
   if (
     !instance.$store.state.backup.driveToken &&
     !instance.$store.state.backup.dropboxToken &&
     !instance.$store.state.backup.oneDriveToken &&
-    !webdavAutoConfig
+    !hasWebDAVAutoConfig
   ) {
     instance.$store.commit("notification/alert", instance.i18n.remind_backup);
     UserSettings.items.lastRemindingBackupTime = clientTime;
@@ -361,6 +365,7 @@ async function runScheduledBackup(clientTime: number, instance: Vue) {
 type WebDAVAutoConfig = {
   config: WebDAVConfig;
   lastBackupDay: number;
+  maxBackups: number;
 };
 
 async function getWebDAVAutoConfig(): Promise<WebDAVAutoConfig | null> {
@@ -383,6 +388,7 @@ async function getWebDAVAutoConfig(): Promise<WebDAVAutoConfig | null> {
   return {
     config,
     lastBackupDay: Number(UserSettings.items.webdavLastBackupTime || 0),
+    maxBackups: Number(UserSettings.items.webdavMaxBackups || 0),
   };
 }
 
@@ -391,14 +397,17 @@ async function maybeWebDAVAutoBackup(
   instance: Vue,
   autoConfig: WebDAVAutoConfig
 ) {
-  const delta = clientTime - autoConfig.lastBackupDay;
-  if (delta >= 0 && delta < 7) {
+  if (!isWebDAVBackupDue(clientTime, autoConfig.lastBackupDay)) {
     return;
   }
-  const encryption = instance.$store.state.accounts.encryption.get(
-    instance.$store.state.accounts.defaultEncryption
-  );
-  if (!encryption) {
+  const defaultEncryptionId = instance.$store.state.accounts.defaultEncryption;
+  const encryption = defaultEncryptionId
+    ? instance.$store.state.accounts.encryption.get(defaultEncryptionId)
+    : new Encryption("", "");
+  if (
+    !encryption ||
+    (autoConfig.config.encrypted && !encryption.getEncryptionStatus())
+  ) {
     return;
   }
   try {
@@ -409,6 +418,7 @@ async function maybeWebDAVAutoBackup(
     if (success) {
       UserSettings.items.webdavLastBackupTime = clientTime;
       await UserSettings.commitItems();
+      await pruneWebDAVBackups(autoConfig.maxBackups);
     }
   } catch (error) {
     console.error("WebDAV auto backup failed", error);

@@ -44,10 +44,11 @@ interface MenuState {
 interface StyleState {
   style: {
     timeout: boolean;
-    isEditing: boolean;
     isSelecting: boolean;
     slidein: boolean;
     slideout: boolean;
+    backupSlidein: boolean;
+    backupSlideout: boolean;
     fadein: boolean;
     fadeout: boolean;
     show: boolean;
@@ -76,6 +77,7 @@ interface AccountsState {
   exportEncData: { [k: string]: OTPEntryInterface | Key };
   keys: OldKey | Key[];
   wrongPassword: boolean;
+  unresolvedKeyCount: number;
   initComplete: boolean;
 }
 

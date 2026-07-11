@@ -22,6 +22,7 @@ body {
 
 #import {
   width: 900px;
+  box-sizing: border-box;
   position: relative;
   margin: 30px auto;
   padding: 24px 28px;
@@ -76,7 +77,8 @@ body {
   }
 
   label {
-    width: 250px;
+    width: 240px;
+    box-sizing: border-box;
     height: 50px;
     font-size: 18px;
     text-align: center;
@@ -154,7 +156,8 @@ button,
 }
 
 .import-result-card {
-  width: min(680px, calc(100% - 40px));
+  width: calc(100% - 40px);
+  box-sizing: border-box;
   margin: 24px auto 0;
   padding: 16px 18px;
   border-radius: 14px;
@@ -195,7 +198,8 @@ button,
 }
 
 .import-progress-card {
-  width: min(680px, calc(100% - 40px));
+  width: calc(100% - 40px);
+  box-sizing: border-box;
   margin: 24px auto 0;
   padding: 16px 18px;
   border-radius: 14px;
@@ -213,6 +217,36 @@ button,
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 10px;
+}
+
+.import-progress-actions {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.import-cancel-button {
+  width: auto !important;
+  height: 28px;
+  min-height: 24px;
+  border: 0;
+  border-radius: 7px;
+  padding: 0 8px;
+  color: #b42318;
+  background: rgba(217, 45, 32, 0.1);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+  box-shadow: none;
+  transform: none;
+}
+
+.import-cancel-button:hover {
+  color: #b42318;
+  background: rgba(217, 45, 32, 0.16);
+  box-shadow: none;
+  transform: none;
 }
 
 .import-progress-title,
@@ -317,7 +351,7 @@ button,
 }
 
 .import_passphrase input,
-.import_file_passphrase_input input {
+.import_file_passphrase input {
   padding: 10px;
   margin-bottom: 20px;
   width: 250px;
@@ -332,9 +366,18 @@ button,
   justify-content: center;
 }
 
-.import_file_passphrase_input {
-  display: inline-grid;
-  grid-template-rows: min-content min-content;
+.import-passphrase-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+
+  button {
+    width: 120px !important;
+    height: 44px;
+    border-radius: 11px;
+    box-shadow: none;
+  }
 }
 
 @media (max-width: 920px) {

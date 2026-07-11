@@ -4,21 +4,37 @@ window.addEventListener("message", (event) => {
   const message = event.data;
   const source = event.source as Window;
 
-  if (!source) {
+  if (
+    !source ||
+    source !== window.parent ||
+    !message ||
+    typeof message.requestId !== "string"
+  ) {
     return;
   }
 
+  const reply = (payload: { response?: unknown; error?: string }) => {
+    source.postMessage(
+      { ...payload, requestId: message.requestId },
+      event.origin === "null" ? "*" : event.origin
+    );
+  };
+
   switch (message.action) {
     case "hash":
-      Argon.hash(message.value, message.salt).then((hash) => {
-        source.postMessage({ response: hash }, event.origin);
-      });
+      Argon.hash(message.value, message.salt)
+        .then((hash) => {
+          reply({ response: hash });
+        })
+        .catch((error) => reply({ error: String(error) }));
       break;
 
     case "verify":
-      Argon.compareHash(message.hash, message.value).then((result) => {
-        source.postMessage({ response: result }, event.origin);
-      });
+      Argon.compareHash(message.hash, message.value)
+        .then((result) => {
+          reply({ response: result });
+        })
+        .catch((error) => reply({ error: String(error) }));
       break;
 
     default:

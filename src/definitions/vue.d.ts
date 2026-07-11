@@ -5,7 +5,6 @@ declare module "vue/types/vue" {
   interface Vue {
     // Only in Popup
     $store: Store<any>;
-    $dragula: any;
     // Only in Import
     $entries: OTPEntryInterface[];
     $encryption: EncryptionInterface;

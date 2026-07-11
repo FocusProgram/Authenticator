@@ -4,10 +4,11 @@ export class Style implements Module {
       state: {
         style: {
           timeout: false,
-          isEditing: false,
           isSelecting: false,
           slidein: false, // menu
           slideout: false, // menu
+          backupSlidein: false, // full-page backup navigation
+          backupSlideout: false, // full-page backup navigation
           fadein: false, // info
           fadeout: false, // info
           show: false, // info
@@ -28,6 +29,17 @@ export class Style implements Module {
           state.style.slideout = true;
           setTimeout(() => {
             state.style.slideout = false;
+          }, 200);
+        },
+        showBackupPanel(state: StyleState) {
+          state.style.backupSlidein = true;
+          state.style.backupSlideout = false;
+        },
+        hideBackupPanel(state: StyleState) {
+          state.style.backupSlidein = false;
+          state.style.backupSlideout = true;
+          setTimeout(() => {
+            state.style.backupSlideout = false;
           }, 200);
         },
         showInfo(state: StyleState, noAnimate?: boolean) {
@@ -71,22 +83,22 @@ export class Style implements Module {
             }, 200);
           }, 1000);
         },
-        toggleEdit(state: StyleState) {
-          state.style.isEditing = !state.style.isEditing;
-          state.style.isSelecting = false;
-        },
         toggleSelect(state: StyleState) {
           state.style.isSelecting = !state.style.isSelecting;
-          state.style.isEditing = false;
         },
-        toggleHotpDisabled(state: StyleState) {
-          state.style.hotpDisabled = !state.style.hotpDisabled;
+        setHotpDisabled(state: StyleState, disabled: boolean) {
+          state.style.hotpDisabled = disabled;
         },
       },
       getters: {
         // Returns true if menu or info screen shown
         isMenuShown(state: StyleState) {
-          return state.style.fadein || state.style.show || state.style.slidein;
+          return (
+            state.style.fadein ||
+            state.style.show ||
+            state.style.slidein ||
+            state.style.backupSlidein
+          );
         },
       },
       namespaced: true,

@@ -1,25 +1,53 @@
 <template>
-  <div class="advisor">
-    <div v-if="ignoreList.length > 0" class="show-all-insights">
-      <a href="#" v-on:click="clearIgnoreList">{{
-        this.i18n.show_all_insights
-      }}</a>
+  <div class="subpage advisor-page">
+    <div class="subpage-head">
+      <div class="subpage-title">{{ i18n.advisor }}</div>
+      <div class="subpage-subtitle">
+        {{ i18n.ui_advisor_subtitle }}
+      </div>
     </div>
-    <div v-if="insights.length === 0" class="no-insight">
-      {{ this.i18n.no_insight_available }}
-    </div>
-    <AdvisorInsight
-      class="insight"
-      v-for="insight in insights"
-      :key="insight.id"
-      v-bind:insight="insight"
-      v-bind:level="insight.level"
-    />
+
+    <section class="subpage-section">
+      <div class="subpage-section-head">
+        <div class="subpage-section-title">{{ i18n.ui_check_results }}</div>
+        <button
+          v-if="ignoreList.length > 0"
+          type="button"
+          class="subpage-section-action"
+          @click="clearIgnoreList"
+        >
+          {{ i18n.ui_show_ignored }}
+        </button>
+        <span v-else class="subpage-section-meta">
+          {{ insights.length }} {{ i18n.ui_items }}
+        </span>
+      </div>
+
+      <div v-if="insights.length > 0" class="subpage-list-card">
+        <AdvisorInsight
+          v-for="insight in insights"
+          :key="insight.id"
+          :insight="insight"
+        />
+      </div>
+
+      <div v-else class="subpage-empty">
+        <span class="subpage-row-icon success"><IconCheck /></span>
+        <div class="subpage-empty-title">{{ i18n.ui_settings_good }}</div>
+        <div class="subpage-empty-desc">
+          {{
+            i18n.no_insight_available ||
+            "No security recommendations need attention."
+          }}
+        </div>
+      </div>
+    </section>
   </div>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import AdvisorInsight from "./AdvisorInsight.vue";
+import IconCheck from "../../../svg/check.svg";
 
 export default Vue.extend({
   mounted: function () {
@@ -35,6 +63,7 @@ export default Vue.extend({
   },
   components: {
     AdvisorInsight,
+    IconCheck,
   },
   methods: {
     clearIgnoreList: function () {

@@ -1,0 +1,555 @@
+.subpage {
+  min-width: 0;
+  padding: 0 8px 14px;
+  font-size: 12px;
+}
+
+.subpage-head {
+  padding: 0 2px 12px;
+}
+
+.subpage-title {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.2px;
+  @include themify($themes) {
+    color: themed("black-1");
+  }
+}
+
+.subpage-subtitle {
+  margin-top: 3px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+}
+
+.subpage-section + .subpage-section {
+  margin-top: 14px;
+}
+
+.subpage-section-head {
+  min-height: 22px;
+  margin: 0 2px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.subpage-section-title {
+  min-width: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 1.3;
+  @include themify($themes) {
+    color: themed("black-1");
+  }
+}
+
+.subpage-section-meta,
+.subpage-section-action {
+  flex: 0 0 auto;
+  font-size: 10.5px;
+  line-height: 1.3;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+}
+
+.subpage-section-action {
+  min-height: 26px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.14s ease, color 0.14s ease;
+
+  &:hover {
+    @include themify($themes) {
+      color: themed("blue-1");
+      background: themed("blue-menu");
+    }
+  }
+}
+
+.subpage-section-desc {
+  margin: -2px 2px 7px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+}
+
+.subpage-card,
+.subpage-list-card {
+  min-width: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  @include themify($themes) {
+    border: 1px solid themed("grey-2");
+    background: themed("white-1");
+  }
+}
+
+.subpage-row {
+  width: 100%;
+  min-width: 0;
+  min-height: 54px;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  color: inherit;
+}
+
+.subpage-row + .subpage-row {
+  @include themify($themes) {
+    border-top: 1px solid themed("grey-2");
+  }
+}
+
+button.subpage-row {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.14s ease;
+
+  &:hover {
+    @include themify($themes) {
+      background: themed("blue-menu");
+    }
+  }
+}
+
+.subpage-row-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  @include themify($themes) {
+    color: themed("blue-1");
+    background: themed("blue-menu");
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+  }
+
+  &.neutral {
+    @include themify($themes) {
+      color: themed("grey-1");
+      background: themed("grey-3");
+    }
+  }
+
+  &.warning {
+    color: #b76500;
+    @include themify($themes) {
+      background: themed("yellow-2");
+    }
+  }
+
+  &.danger {
+    @include themify($themes) {
+      color: themed("red-1");
+      background: themed("red-2");
+    }
+  }
+
+  &.success {
+    color: #248a3d;
+    background: rgba(52, 199, 89, 0.12);
+  }
+}
+
+.subpage-row-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.subpage-row-title {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  @include themify($themes) {
+    color: themed("black-1");
+  }
+}
+
+.subpage-row-desc {
+  min-width: 0;
+  margin-top: 2px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: 10px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+}
+
+.subpage-row-arrow {
+  width: 10px;
+  height: 10px;
+  transform: rotate(180deg);
+  @include themify($themes) {
+    fill: themed("grey-1");
+  }
+}
+
+.subpage-control {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.subpage-select,
+.subpage-number-input,
+.subpage-text-input {
+  min-width: 0;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  padding: 0 9px;
+  outline: none;
+  font: inherit;
+  font-size: 11.5px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease;
+  @include themify($themes) {
+    color: themed("black-1");
+    border-color: themed("grey-2");
+    background: themed("grey-3");
+  }
+
+  &:focus-visible {
+    @include themify($themes) {
+      border-color: themed("blue-1");
+    }
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.16);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.52;
+  }
+}
+
+.subpage-select {
+  width: 104px;
+  padding-right: 24px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.subpage-number-input {
+  width: 52px;
+  padding: 0 6px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.subpage-control-unit {
+  font-size: 10.5px;
+  white-space: nowrap;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+}
+
+.subpage-switch {
+  position: relative;
+  width: 34px;
+  height: 20px;
+  flex: 0 0 34px;
+  display: inline-flex;
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .subpage-switch-track {
+    position: relative;
+    width: 34px;
+    height: 20px;
+    border-radius: 999px;
+    transition: background-color 0.16s ease, opacity 0.16s ease;
+    @include themify($themes) {
+      background: themed("grey-search");
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+      transition: transform 0.16s ease;
+    }
+  }
+
+  input:checked + .subpage-switch-track {
+    @include themify($themes) {
+      background: themed("blue-1");
+    }
+
+    &::after {
+      transform: translateX(14px);
+    }
+  }
+
+  input:focus-visible + .subpage-switch-track {
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.2);
+  }
+
+  input:disabled + .subpage-switch-track {
+    cursor: not-allowed;
+    opacity: 0.42;
+  }
+}
+
+.subpage-form-card {
+  padding: 11px;
+}
+
+.subpage-field {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.subpage-field + .subpage-field {
+  margin-top: 10px;
+}
+
+.subpage-field-label {
+  display: block;
+  margin: 0 0 5px;
+  font-size: 10.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  @include themify($themes) {
+    color: themed("black-1");
+  }
+}
+
+.subpage-field .subpage-text-input,
+.subpage-field .subpage-select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.subpage-field-help,
+.subpage-card-message {
+  margin-top: 6px;
+  font-size: 10px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+}
+
+.subpage-card-message {
+  margin: 9px 1px 0;
+}
+
+.subpage-actions {
+  margin-top: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.subpage-button {
+  min-width: 0;
+  min-height: 32px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.14s ease, border-color 0.14s ease,
+    color 0.14s ease, opacity 0.14s ease;
+  @include themify($themes) {
+    color: themed("black-1");
+    border-color: themed("grey-2");
+    background: themed("white-1");
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+    fill: currentColor;
+  }
+
+  &:hover:not(:disabled) {
+    @include themify($themes) {
+      background: themed("grey-3");
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(10, 132, 255, 0.7);
+    outline-offset: 1px;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+  }
+
+  &.primary {
+    color: #ffffff;
+    @include themify($themes) {
+      border-color: themed("blue-1");
+      background: themed("blue-1");
+    }
+
+    &:hover:not(:disabled) {
+      filter: brightness(0.94);
+      @include themify($themes) {
+        background: themed("blue-1");
+      }
+    }
+  }
+
+  &.danger {
+    @include themify($themes) {
+      color: themed("red-1");
+      border-color: themed("red-2");
+      background: themed("red-2");
+    }
+  }
+}
+
+.subpage-notice {
+  min-width: 0;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  align-items: center;
+  gap: 9px;
+  border-radius: 12px;
+  @include themify($themes) {
+    border: 1px solid themed("grey-2");
+    background: themed("white-1");
+  }
+}
+
+.subpage-notice-title {
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  @include themify($themes) {
+    color: themed("black-1");
+  }
+}
+
+.subpage-notice-desc {
+  margin-top: 2px;
+  font-size: 10px;
+  line-height: 1.45;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+}
+
+.subpage-empty {
+  padding: 18px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 12px;
+  @include themify($themes) {
+    border: 1px solid themed("grey-2");
+    background: themed("white-1");
+  }
+}
+
+.subpage-empty .subpage-row-icon {
+  margin-bottom: 8px;
+}
+
+.subpage-empty-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  line-height: 1.35;
+  @include themify($themes) {
+    color: themed("black-1");
+  }
+}
+
+.subpage-empty-desc {
+  margin-top: 4px;
+  max-width: 220px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+}
+
+.theme-dark .subpage-row-icon.success {
+  color: #30d158;
+  background: rgba(48, 209, 88, 0.14);
+}
+
+.theme-accessibility .subpage-row-icon.success {
+  color: yellow;
+  background: black;
+  border: 1px solid white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subpage *,
+  .subpage *::before,
+  .subpage *::after {
+    transition-duration: 0.01ms !important;
+  }
+}

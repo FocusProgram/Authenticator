@@ -6,7 +6,11 @@
     <label for="checkbox">{{ i18n.confirm_delete_all }}</label>
     <br />
     <br />
-    <button v-on:click="deleteEverything()" v-bind:disabled="!deleteConfirm">
+    <button
+      type="button"
+      v-on:click="deleteEverything()"
+      v-bind:disabled="!deleteConfirm"
+    >
       {{ i18n.delete_all }}
     </button>
     <br />

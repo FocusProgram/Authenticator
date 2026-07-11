@@ -1,20 +1,117 @@
 <template>
-  <div>
-    <a-button @click="beginCapture()">{{ i18n.add_qr }}</a-button>
-    <a-button @click="showInfo('AddAccountPage')">
-      {{ i18n.add_secret }}
-    </a-button>
-    <a-button-link href="import.html?QrImport">{{
-      i18n.import_qr_images
-    }}</a-button-link>
-    <a-button-link href="import.html?TextImport">{{
-      i18n.import_otp_urls
-    }}</a-button-link>
+  <div class="subpage add-method-page">
+    <div class="subpage-head">
+      <div class="subpage-title">{{ i18n.ui_add_method_title }}</div>
+      <div class="subpage-subtitle">
+        {{ i18n.ui_add_method_subtitle }}
+      </div>
+    </div>
+
+    <section class="subpage-section">
+      <div class="subpage-section-head">
+        <div class="subpage-section-title">
+          {{ i18n.ui_add_method_section }}
+        </div>
+      </div>
+      <div class="subpage-list-card">
+        <button
+          type="button"
+          class="subpage-row add-method-row"
+          @click="beginCapture"
+        >
+          <span class="subpage-row-icon"><IconScan /></span>
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">
+              {{ i18n.add_qr || "Scan QR code" }}
+            </span>
+            <span class="subpage-row-desc">{{ i18n.ui_scan_page_desc }}</span>
+          </span>
+          <IconArrowLeft class="subpage-row-arrow" />
+        </button>
+
+        <button
+          type="button"
+          class="subpage-row add-method-row"
+          @click="showInfo('AddAccountPage')"
+        >
+          <span class="subpage-row-icon"><IconKey /></span>
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">
+              {{ i18n.add_secret || "Manual entry" }}
+            </span>
+            <span class="subpage-row-desc">{{
+              i18n.ui_manual_entry_desc
+            }}</span>
+          </span>
+          <IconArrowLeft class="subpage-row-arrow" />
+        </button>
+
+        <a
+          class="subpage-row add-method-row"
+          href="import.html?QrImport"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="subpage-row-icon"><IconQr /></span>
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">
+              {{ i18n.import_qr_images || "Import QR images" }}
+            </span>
+            <span class="subpage-row-desc">{{ i18n.ui_import_qr_desc }}</span>
+          </span>
+          <IconArrowLeft class="subpage-row-arrow" />
+        </a>
+
+        <a
+          class="subpage-row add-method-row"
+          href="import.html?TextImport"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="subpage-row-icon"><IconClipboardCheck /></span>
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">
+              {{ i18n.import_otp_urls || "Import OTP links" }}
+            </span>
+            <span class="subpage-row-desc">{{
+              i18n.ui_import_links_desc
+            }}</span>
+          </span>
+          <IconArrowLeft class="subpage-row-arrow" />
+        </a>
+
+        <a
+          data-test="import-backup-file"
+          class="subpage-row add-method-row"
+          href="import.html?FileImport"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <span class="subpage-row-icon"><IconRedo /></span>
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">
+              {{ i18n.import_backup_file }}
+            </span>
+            <span class="subpage-row-desc">
+              {{ i18n.ui_import_backup_file_desc }}
+            </span>
+          </span>
+          <IconArrowLeft class="subpage-row-arrow" />
+        </a>
+      </div>
+    </section>
   </div>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import { getCurrentTab, okToInjectContentScript } from "../../utils";
+import IconArrowLeft from "../../../svg/arrow-left.svg";
+import IconClipboardCheck from "../../../svg/clipboard-check.svg";
+import IconKey from "../../../svg/key-solid.svg";
+import IconQr from "../../../svg/qrcode.svg";
+import IconRedo from "../../../svg/redo.svg";
+import IconScan from "../../../svg/scan.svg";
+
 export default Vue.extend({
   methods: {
     showInfo(page: string) {
@@ -22,7 +119,6 @@ export default Vue.extend({
         this.$store.commit("notification/alert", this.i18n.phrase_incorrect);
         return;
       }
-      this.$store.commit("style/showInfo");
       this.$store.commit("currentView/changeView", page);
     },
     async beginCapture() {
@@ -64,6 +160,14 @@ export default Vue.extend({
         });
       }
     },
+  },
+  components: {
+    IconArrowLeft,
+    IconClipboardCheck,
+    IconKey,
+    IconQr,
+    IconRedo,
+    IconScan,
   },
 });
 </script>

@@ -1,4 +1,7 @@
 @import "ui";
+@import "popup-groups";
+@import "subpage-core";
+@import "popup-subpages";
 
 // Structure
 
@@ -56,12 +59,15 @@ svg {
 
 // Header
 .header {
-  height: 44px;
-  line-height: 44px;
+  height: 48px;
   position: relative;
+  padding: 0 10px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   text-align: center;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   @include themify($themes) {
     color: themed("black-1");
     background: themed("white-1");
@@ -70,91 +76,120 @@ svg {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
   z-index: 5;
 
-  .icon {
-    @include hover-black;
+  > span {
+    grid-column: 2;
+  }
+
+  .header-title {
+    max-width: 112px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: -0.1px;
+  }
+
+  .header-actions {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .header-actions-left {
+    grid-column: 1;
+    justify-content: flex-start;
+  }
+
+  .header-actions-right {
+    grid-column: 3;
+    justify-content: flex-end;
+  }
+
+  .header-icon {
+    position: relative;
+    width: 26px;
+    height: 26px;
+    border: 0;
+    border-radius: 8px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
     cursor: pointer;
+    transition: background-color 0.14s ease, transform 0.14s ease;
+    @include themify($themes) {
+      color: themed("grey-1");
+      fill: themed("grey-1");
+    }
 
     svg {
-      vertical-align: sub;
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    &:hover {
+      @include themify($themes) {
+        color: themed("black-1");
+        background: themed("grey-3");
+      }
+    }
+
+    &:active {
+      transform: scale(0.94);
+    }
+
+    &:focus-visible {
+      outline-width: 2px;
+      outline-style: solid;
+      outline-offset: 1px;
+      @include themify($themes) {
+        outline-color: themed("blue-1");
+      }
     }
   }
-}
 
-#i-menu {
-  position: absolute;
-  left: 20px;
-  bottom: 0;
-}
+  .header-sync-status {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    @include themify($themes) {
+      background: themed("white-1");
+      color: themed("blue-1");
+    }
 
-#i-lock {
-  position: absolute;
-  left: 45px;
-  bottom: 0;
-}
-
-#i-backup {
-  position: absolute;
-  left: 70px;
-  bottom: 0;
-}
-
-#i-sync {
-  position: absolute;
-  left: 95px;
-  bottom: 0;
-  cursor: default;
-  @include themify($themes) {
-    fill: themed("grey-2");
-  }
-
-  &:hover {
     svg {
-      fill: inherit;
+      width: 8px;
+      height: 8px;
+      fill: currentColor;
     }
   }
-}
-
-#i-plus {
-  position: absolute;
-  right: 70px;
-  bottom: 0;
-}
-
-#i-qr {
-  position: absolute;
-  right: 45px;
-  bottom: 0;
-}
-
-#i-edit {
-  position: absolute;
-  right: 20px;
-  bottom: 0;
-}
-
-#i-close {
-  position: absolute;
-  left: 20px;
-  bottom: 0;
 }
 
 // Search & Filter
 .under-header {
   padding: 0 10px;
-  margin-left: 12px;
-  font-size: 12px;
-  height: 24px;
-  line-height: 24px;
+  font-size: 11px;
+  height: 28px;
+  line-height: 28px;
   text-align: center;
   cursor: pointer;
   display: none;
-  border-radius: 10px;
+  border-radius: 8px;
 }
 
 #filter {
-  margin: 6px 12px;
+  margin: 0 0 8px;
   @include themify($themes) {
-    background: themed("white-transparent");
+    color: themed("blue-1");
+    background: themed("blue-menu");
   }
 
   &:hover {
@@ -165,45 +200,47 @@ svg {
 }
 
 .entry-count {
-  margin: 10px 12px 6px;
-  padding: 0 2px;
+  margin: 0 2px 8px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  font-size: 11px;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.01em;
-  @include themify($themes) {
-    background: transparent;
-    color: themed("grey-1");
+  line-height: 1.3;
+
+  .entry-count-title {
+    @include themify($themes) {
+      color: themed("black-1");
+    }
   }
 
-  &::before,
-  &::after {
-    content: "";
-    flex: 1 1 auto;
-    height: 1px;
+  .entry-count-value {
+    padding: 3px 7px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     @include themify($themes) {
-      background: themed("grey-2");
+      color: themed("grey-1");
+      background: themed("grey-3");
     }
-    opacity: 0.9;
   }
 }
 
 #search {
   position: relative;
-  margin: 8px 12px 0 12px;
+  margin: 0 0 8px;
   @include themify($themes) {
     background: themed("grey-3");
     border: themed("grey-2") 1px solid;
   }
   border-radius: 10px;
-  height: 32px;
+  height: 34px;
   display: flex;
   align-items: center;
-  padding: 0 10px;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  padding: 0 11px;
+  box-shadow: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease,
     background-color 0.2s ease;
 
@@ -218,8 +255,7 @@ svg {
       border-color: themed("blue-1");
       background: themed("white-1");
     }
-    box-shadow: 0 0 0 4px rgba(10, 132, 255, 0.18),
-      inset 0 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.14);
   }
 
   input {
@@ -289,56 +325,42 @@ svg {
 
 // Codes
 #codes {
-  height: 436px;
+  height: 432px;
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
   @include themify($themes) {
-    background: linear-gradient(
-      180deg,
-      themed("grey-background") 0%,
-      themed("white-1") 100%
-    );
+    background: themed("grey-background");
   }
-  padding: 0 12px;
+  padding: 0 8px 14px 10px;
+
+  &.batch-selecting {
+    padding-bottom: 96px;
+  }
 
   &:hover {
-    padding-right: 4px;
-    overflow-y: scroll;
+    padding-right: 8px;
+    overflow-y: auto;
   }
 
-  &.edit {
-    .code {
-      @include themify($themes) {
-        color: themed("grey-2") !important;
-      }
-      user-select: none;
-      cursor: default;
-    }
+  &::-webkit-scrollbar {
+    width: 6px;
+    background: transparent;
+  }
 
-    .issuer,
-    .showqr,
-    .showqr.hidden,
-    .pin,
-    .no-entry {
-      display: none;
-    }
+  &::-webkit-scrollbar-thumb {
+    border: 1px solid transparent;
+    background-clip: padding-box;
+  }
 
-    .issuerEdit,
-    .movehandle,
-    #add {
-      display: block;
+  .vault-controls {
+    margin: 10px 0 10px;
+    padding: 10px;
+    border-radius: 14px;
+    @include themify($themes) {
+      border: 1px solid themed("grey-2");
+      background: themed("white-1");
     }
-
-    .deleteAction {
-      opacity: 1;
-    }
-
-    .sector,
-    .counter {
-      position: absolute;
-      left: -1000px;
-      opacity: 0;
-    }
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.035);
   }
 
   .entry.select-mode {
@@ -347,10 +369,18 @@ svg {
     @include themify($themes) {
       border-color: themed("grey-2");
     }
+
+    &.is-selected {
+      box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.13);
+      @include themify($themes) {
+        border-color: themed("blue-1");
+        background: themed("blue-menu");
+      }
+    }
   }
 
-  &.filter .entry[filtered],
-  &.search .entry[notSearched] {
+  &.filter .entry-swipe-shell[filtered],
+  &.search .entry-swipe-shell[notSearched] {
     height: 0;
     margin: 0;
     padding: 0;
@@ -360,20 +390,14 @@ svg {
     position: absolute;
   }
 
-  &.filter #filter,
-  &.search #search {
-    display: block;
+  &.filter #filter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
-  &:not(.edit) {
-    // Is this used?
-    .entry[unencrypted="true"]:hover .warning {
-      height: 24px;
-    }
-
-    .code.timeout:not(.hotp) {
-      animation: twinkling 1s infinite ease-in-out;
-    }
+  .code.timeout:not(.hotp) {
+    animation: twinkling 1s infinite ease-in-out;
   }
 
   .no-entry {
@@ -402,15 +426,15 @@ svg {
   .group-toolbar {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin: 14px 2px 12px;
+    gap: 7px;
+    margin: 0;
     padding: 0;
   }
 
   .group-filter-label {
     flex: 0 0 auto;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 10.5px;
+    font-weight: 600;
     letter-spacing: 0.01em;
     white-space: nowrap;
     @include themify($themes) {
@@ -421,9 +445,9 @@ svg {
   .group-filter-select {
     flex: 1;
     min-width: 0;
-    height: 32px;
+    height: 34px;
     border-radius: 9px;
-    padding: 0 12px;
+    padding: 0 11px;
     font-size: 12px;
     font-weight: 600;
     box-shadow: none;
@@ -437,8 +461,8 @@ svg {
   .group-manage-btn {
     border: none;
     flex: 0 0 auto;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 9px;
     padding: 0;
     cursor: pointer;
@@ -447,7 +471,7 @@ svg {
     justify-content: center;
     box-shadow: none;
     @include themify($themes) {
-      background: themed("white-1");
+      background: themed("grey-3");
       border: 1px solid themed("grey-2");
       color: themed("blue-1");
     }
@@ -458,7 +482,7 @@ svg {
   }
 
   .entry-list {
-    margin-top: 2px;
+    margin-top: 0;
   }
 
   .empty-state-card {
@@ -483,6 +507,95 @@ svg {
       margin: 0;
       font-size: 12px;
       line-height: 1.5;
+    }
+  }
+}
+
+.entry-swipe-shell {
+  position: relative;
+  margin: 0 0 8px;
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: pan-y;
+  @include themify($themes) {
+    background: themed("grey-3");
+  }
+
+  .entry {
+    position: relative;
+    z-index: 2;
+    margin: 0;
+    will-change: transform;
+    transition: transform 0.2s cubic-bezier(0.32, 0.72, 0, 1),
+      box-shadow 0.16s ease, border-color 0.16s ease,
+      background-color 0.16s ease;
+  }
+
+  &.dragging .entry {
+    transition: none;
+  }
+}
+
+.entry-swipe-actions {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 96px;
+  padding: 6px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.entry-swipe-action {
+  width: 40px;
+  height: 46px;
+  flex: 0 0 40px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  cursor: pointer;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+  }
+
+  &.edit {
+    @include themify($themes) {
+      color: themed("blue-1");
+      background: themed("blue-menu");
+      border-color: themed("grey-2");
+    }
+  }
+
+  &.delete {
+    @include themify($themes) {
+      color: themed("red-1");
+      background: themed("red-2");
+      border-color: themed("grey-2");
+    }
+  }
+
+  &:focus-visible {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-offset: 1px;
+    @include themify($themes) {
+      outline-color: themed("blue-1");
     }
   }
 }
@@ -532,40 +645,59 @@ svg {
   bottom: 0;
   left: 0;
   right: 0;
-  min-height: 74px;
+  min-height: 82px;
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 8px;
-  padding: 8px 10px 10px;
+  gap: 6px;
+  padding: 7px 8px 8px;
+  border-radius: 14px 14px 0 0;
   z-index: 100;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   @include themify($themes) {
-    background: themed("white-transparent");
-    border-top: 1px solid themed("grey-2");
+    background: themed("white-1");
+    border: 1px solid themed("grey-2");
+    border-bottom: 0;
   }
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.12);
 
-  .batch-top-row,
-  .batch-bottom-row {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
+  .batch-summary-row {
     min-width: 0;
   }
 
   .batch-select-all {
-    display: flex;
+    width: 100%;
+    min-width: 0;
+    min-height: 28px;
+    border: 0;
+    border-radius: 10px;
+    padding: 2px 4px;
+    display: grid;
+    grid-template-columns: 22px minmax(0, 1fr) auto;
     align-items: center;
     gap: 8px;
+    background: transparent;
+    font: inherit;
+    text-align: left;
     cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    min-width: 0;
-    flex: 1 1 auto;
     @include themify($themes) {
       color: themed("black-1");
+    }
+
+    &:hover {
+      @include themify($themes) {
+        background: themed("grey-3");
+      }
+    }
+
+    &:focus-visible {
+      outline-width: 2px;
+      outline-style: solid;
+      outline-offset: 1px;
+      @include themify($themes) {
+        outline-color: themed("blue-1");
+      }
     }
 
     .checkbox-inner {
@@ -595,79 +727,118 @@ svg {
     }
   }
 
-  .batch-delete-btn {
-    border: none;
-    border-radius: 10px;
-    padding: 8px 12px;
-    min-width: 84px;
-    font-size: 12px;
+  .batch-selection-copy {
+    min-width: 0;
+
+    strong {
+      overflow: hidden;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.3;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .batch-select-action {
+    padding: 4px 7px;
+    border-radius: 999px;
+    font-size: 10px;
     font-weight: 600;
-    cursor: pointer;
-    letter-spacing: 0.01em;
+    white-space: nowrap;
     @include themify($themes) {
-      background: themed("red-1");
-      color: white;
+      color: themed("blue-1");
+      background: themed("blue-menu");
+    }
+  }
+
+  .batch-actions-line {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 66px 66px;
+    align-items: center;
+    gap: 6px;
+
+    select {
+      width: 100%;
+      min-width: 0;
+      height: 34px;
+      border-radius: 9px;
+      padding: 0 10px;
+      font-size: 11.5px;
+      font-weight: 600;
+      outline: none;
+      @include themify($themes) {
+        border: 1px solid themed("grey-2");
+        background: themed("grey-3");
+        color: themed("black-1");
+      }
+
+      &:focus-visible {
+        @include themify($themes) {
+          border-color: themed("blue-1");
+        }
+        box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.16);
+      }
+    }
+  }
+
+  .batch-action-btn {
+    min-width: 0;
+    height: 34px;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.14s ease, filter 0.14s ease, transform 0.14s ease;
+
+    svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
+    }
+
+    &.move {
+      color: #ffffff;
+      @include themify($themes) {
+        border-color: themed("blue-1");
+        background: themed("blue-1");
+      }
+    }
+
+    &.delete {
+      @include themify($themes) {
+        color: themed("red-1");
+        border-color: themed("red-2");
+        background: themed("red-2");
+      }
+    }
+
+    &:hover:not(:disabled) {
+      filter: brightness(0.95);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.98);
     }
 
     &:disabled {
-      opacity: 0.4;
+      opacity: 0.42;
       cursor: default;
     }
-
-    &:not(:disabled):active {
-      transform: scale(0.97);
-    }
-  }
-
-  .batch-group-move {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-    min-width: 0;
-
-    select {
-      flex: 1 1 auto;
-      min-width: 0;
-      height: 34px;
-      border-radius: 10px;
-      padding: 0 10px;
-      font-size: 12px;
-      @include themify($themes) {
-        border: 1px solid themed("grey-2");
-        background: themed("white-1");
-        color: themed("black-1");
-      }
-    }
-
-    .batch-assign-btn {
-      border: none;
-      border-radius: 10px;
-      padding: 8px 14px;
-      min-width: 64px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      @include themify($themes) {
-        background: themed("blue-1");
-        color: white;
-      }
-
-      &:disabled {
-        opacity: 0.4;
-        cursor: default;
-      }
-    }
-  }
-
-  .batch-bottom-row .batch-delete-btn {
-    flex: 0 0 auto;
   }
 }
 
 .entry {
-  margin: 8px 0;
-  padding: 12px 14px;
+  margin: 0;
+  padding: 11px 12px 10px;
   @include themify($themes) {
     border: themed("grey-2") 1px solid;
     background: themed("white-1");
@@ -676,8 +847,17 @@ svg {
   position: relative;
   display: block;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  outline: none;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035);
+  transition: box-shadow 0.16s ease, border-color 0.16s ease,
+    background-color 0.16s ease;
+
+  &:focus-visible {
+    @include themify($themes) {
+      border-color: themed("blue-1");
+    }
+    box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.16);
+  }
 
   .entry-main {
     min-width: 0;
@@ -686,32 +866,14 @@ svg {
   .entry-identity {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
     padding-right: 0;
   }
 
-  .deleteAction {
-    @include themify($themes) {
-      @include icon-special(18px, themed("grey-2"));
-    }
-    position: absolute;
-    top: -8px;
-    left: -8px;
-    z-index: 10;
-    cursor: pointer;
-    opacity: 0;
-
-    &:hover svg {
-      @include themify($themes) {
-        fill: themed("red-1");
-      }
-    }
-  }
-
   .entry-title {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    padding-right: 118px;
+    padding-right: 102px;
     @include themify($themes) {
       color: themed("black-1");
     }
@@ -722,7 +884,7 @@ svg {
   }
 
   .code {
-    font-size: 30px;
+    font-size: 28px;
     @include themify($themes) {
       color: themed("blue-1");
     }
@@ -730,22 +892,22 @@ svg {
     min-width: 0;
     user-select: text;
     font-family: "Droid Sans Mono";
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     font-weight: 800;
     line-height: 1.12;
   }
 
   .entry-code-row {
-    margin-top: 14px;
+    margin-top: 10px;
     display: flex;
-    align-items: flex-end;
-    gap: 12px;
+    align-items: center;
+    gap: 10px;
     width: 100%;
   }
 
   .account {
-    font-size: 11px;
-    padding-right: 118px;
+    font-size: 10.5px;
+    padding-right: 102px;
     @include themify($themes) {
       color: themed("grey-1");
     }
@@ -757,8 +919,8 @@ svg {
   }
 
   .entry-note {
-    margin-top: 5px;
-    font-size: 11px;
+    margin-top: 6px;
+    font-size: 10.5px;
     line-height: 1.45;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -767,11 +929,11 @@ svg {
     @include themify($themes) {
       color: themed("grey-1");
     }
-    padding-right: 96px;
+    padding-right: 0;
   }
 
   .entry-meta-row {
-    margin-top: 6px;
+    margin-top: 5px;
     display: flex;
     align-items: center;
     min-width: 0;
@@ -785,8 +947,8 @@ svg {
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    align-self: flex-end;
-    min-width: 28px;
+    align-self: center;
+    min-width: 30px;
   }
 
   .entry-group {
@@ -797,25 +959,35 @@ svg {
     flex: 0 1 auto;
     min-width: 0;
     width: auto;
-    max-width: min(100%, 220px);
-    gap: 7px;
-    padding: 4px 10px;
-    min-height: 24px;
+    max-width: 100%;
+    gap: 4px;
+    padding: 1px 0;
+    min-height: 18px;
     box-sizing: border-box;
-    border-radius: 999px;
-    font-size: 11px;
+    font-size: 10.5px;
     font-weight: 600;
     letter-spacing: 0.01em;
     line-height: 1;
     overflow: hidden;
-    border: 1px solid transparent;
+    color: var(--group-accent, #6b7280);
+    background: transparent;
+    border: 0;
+    box-shadow: none;
 
-    .entry-group-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
+    .entry-group-icon {
+      width: 14px;
+      height: 14px;
       flex: 0 0 auto;
-      background: currentColor;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      svg {
+        display: block;
+        width: 15px;
+        height: 10px;
+        fill: currentColor;
+      }
     }
 
     .entry-group-text {
@@ -827,49 +999,35 @@ svg {
       text-overflow: ellipsis;
       white-space: nowrap;
       text-align: left;
-      line-height: 1.2;
+      line-height: 1.35;
     }
 
     &.group-style-amber {
-      color: #c76b00;
-      background: #fff4df;
-      border-color: #f2cf98;
+      --group-accent: #b96700;
     }
 
     &.group-style-green {
-      color: #2f8f3f;
-      background: #edf9ef;
-      border-color: #b7e4bf;
+      --group-accent: #337f43;
     }
 
     &.group-style-rose {
-      color: #d94a4a;
-      background: #fff0f0;
-      border-color: #f4b6b6;
+      --group-accent: #c64d4d;
     }
 
     &.group-style-purple {
-      color: #7b3fe4;
-      background: #f4ecff;
-      border-color: #d4b8fb;
+      --group-accent: #7242c5;
     }
 
     &.group-style-slate {
-      color: #6b7280;
-      background: #f4f5f7;
-      border-color: #d8dbe1;
+      --group-accent: #636a75;
     }
 
     &.group-style-teal {
-      color: #0f8a83;
-      background: #e9fbf9;
-      border-color: #afe8e2;
+      --group-accent: #187c76;
     }
 
     &.group-style-cyan {
-      color: #1273c4;
-      background: #eef7ff;
-      border-color: #b9dcff;
+      --group-accent: #256da9;
     }
 
     &.muted {
@@ -881,40 +1039,15 @@ svg {
 
   .entry-tools {
     position: absolute;
-    right: 12px;
-    top: 12px;
+    right: 9px;
+    top: 9px;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
     flex-wrap: nowrap;
-    gap: 6px;
+    gap: 2px;
     white-space: nowrap;
     z-index: 2;
-  }
-
-  .entry-detail-trigger {
-    border: none;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 14px;
-    height: 14px;
-    line-height: 1;
-    margin: 0;
-    cursor: pointer;
-    padding: 0;
-    border-radius: 8px;
-    flex: 0 0 auto;
-    opacity: 0.84;
-    transition: opacity 0.15s ease, transform 0.15s ease;
-    @include themify($themes) {
-      @include icon-special(14px, themed("grey-1"));
-    }
-
-    &:hover {
-      opacity: 1;
-    }
   }
 
   .counter {
@@ -927,12 +1060,12 @@ svg {
 
   .sector {
     position: relative;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
 
     svg {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       transform: rotate(-90deg);
     }
 
@@ -990,10 +1123,14 @@ svg {
     @include themify($themes) {
       @include icon-special(18px, themed("grey-1"));
     }
+    border: 0;
+    padding: 0;
+    background: transparent;
     text-align: center;
     cursor: pointer;
 
-    .disabled {
+    &.disabled,
+    &:disabled {
       svg {
         @include themify($themes) {
           fill: themed("grey-2");
@@ -1011,59 +1148,43 @@ svg {
     }
   }
 
-  .issuerEdit {
-    display: none;
-
-    input {
-      border: none;
-      height: 14px;
-      width: 70%;
-      font-size: 12px;
-      outline: none;
-      @include themify($themes) {
-        background: themed("grey-3");
-      }
-    }
-  }
-
-  .movehandle {
-    @include themify($themes) {
-      @include icon-special(20px, themed("grey-2"));
-    }
-    height: 90px;
-    line-height: 90px;
-    right: 12px;
-    top: 0;
-    position: absolute;
-    cursor: move;
-    display: none;
-  }
-
   .entry-actions-row {
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 6px;
-    min-height: 18px;
+    gap: 2px;
+    min-height: 22px;
     flex: 0 0 auto;
   }
 
   .entry-actions-row .showqr,
   .entry-actions-row .copyotpauth,
-  .entry-actions-row .pin {
+  .entry-actions-row .pin,
+  .entry-actions-row .entry-view-trigger {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 14px;
-    height: 14px;
+    width: 22px;
+    height: 22px;
+    border: 0;
+    border-radius: 7px;
+    padding: 0;
+    background: transparent;
     @include themify($themes) {
       @include icon-special(14px, themed("grey-1"));
     }
     @include hover-black;
     position: static;
     cursor: pointer;
-    opacity: 0.82;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    opacity: 0.8;
+    transition: opacity 0.15s ease, background-color 0.15s ease;
+
+    &:hover {
+      opacity: 1;
+      @include themify($themes) {
+        background: themed("grey-3");
+      }
+    }
   }
 
   .entry-actions-row .copyotpauth {
@@ -1093,6 +1214,7 @@ svg {
   .entry-actions-row .showqr,
   .entry-actions-row .copyotpauth,
   .entry-actions-row .pin,
+  .entry-actions-row .entry-view-trigger,
   .entry-timer-slot .sector,
   .entry-timer-slot .counter {
     display: flex;
@@ -1105,6 +1227,65 @@ svg {
     padding-top: 14px;
     @include themify($themes) {
       border-top: 1px solid themed("grey-2");
+    }
+  }
+
+  .entry-detail-view {
+    overflow: hidden;
+    border-radius: 10px;
+    @include themify($themes) {
+      border: 1px solid themed("grey-2");
+      background: themed("grey-3");
+    }
+  }
+
+  .entry-detail-view-row {
+    min-height: 34px;
+    padding: 8px 10px;
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: start;
+    gap: 8px;
+
+    & + .entry-detail-view-row {
+      @include themify($themes) {
+        border-top: 1px solid themed("grey-2");
+      }
+    }
+  }
+
+  .entry-detail-view-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    line-height: 1.45;
+    @include themify($themes) {
+      color: themed("grey-1");
+    }
+  }
+
+  .entry-detail-view-value {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 11px;
+    line-height: 1.45;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    user-select: text;
+    @include themify($themes) {
+      color: themed("black-1");
+    }
+
+    &.multiline,
+    &.secret {
+      overflow-wrap: anywhere;
+      white-space: normal;
+    }
+
+    &.secret {
+      font-family: "Droid Sans Mono";
+      font-size: 10px;
+      letter-spacing: 0.02em;
     }
   }
 
@@ -1174,229 +1355,28 @@ svg {
   }
 
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    @include themify($themes) {
+      border-color: themed("grey-1");
+    }
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.065);
 
-    .entry-detail-trigger,
-    .deleteAction,
     .entry-actions-row .showqr,
     .entry-actions-row .copyotpauth,
-    .entry-actions-row .pin {
+    .entry-actions-row .pin,
+    .entry-actions-row .entry-view-trigger {
       opacity: 1;
     }
-
-    .movehandle {
-      svg {
-        @include themify($themes) {
-          fill: themed("black-1");
-        }
-      }
-    }
   }
-  /*
-    // Is this used?
-    &[dropOver="true"] {
-        border: $grey-1 1px dashed;
-    }
-
-    // Is this used?
-    &[unencrypted="true"] .warning {
-        position: absolute;
-        height: 0;
-        line-height: 12px;
-        font-size: 12px;
-        padding: 0 10px;
-        margin: 0 4px;
-        width: 250px;
-        bottom: 4px;
-        left: 0;
-        background: #EC6959;
-        color: $white;
-        cursor: pointer;
-        overflow: hidden;
-        border-radius: 2px;
-        transition: height 0.2s;
-    }
-    */
 }
 
 .pinnedEntry {
   .pin {
     opacity: 1;
   }
-
-  .movehandle {
-    display: none !important;
-  }
-}
-
-.group-admin-list {
-  margin-top: 10px;
-}
-
-.group-page {
-  padding: 2px 0 0;
-}
-
-.group-page-head {
-  margin: 4px 12px 10px;
-}
-
-.group-page-title {
-  font-size: 13px;
-  font-weight: 700;
-  @include themify($themes) {
-    color: themed("black-1");
-  }
-}
-
-.group-page-subtitle {
-  margin-top: 2px;
-  font-size: 11px;
-  line-height: 1.4;
-  @include themify($themes) {
-    color: themed("grey-1");
-  }
-}
-
-.group-inline-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-}
-
-.group-create-row {
-  margin: 0 12px 10px;
-}
-
-.group-inline-input {
-  flex: 1;
-  width: auto !important;
-  margin: 0 !important;
-  min-width: 0;
-  padding: 8px 12px !important;
-  height: 34px;
-}
-
-.group-icon-btn {
-  width: 28px;
-  height: 28px;
-  border: none;
-  border-radius: 8px;
-  padding: 0;
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: none;
-  @include themify($themes) {
-    background: themed("white-1");
-    border: 1px solid themed("grey-2");
-    color: themed("grey-1");
-  }
-
-  svg {
-    width: 12px;
-    height: 12px;
-  }
-
-  &.primary {
-    @include themify($themes) {
-      color: themed("blue-1");
-    }
-  }
-
-  &.danger {
-    @include themify($themes) {
-      color: themed("red-1");
-    }
-  }
-
-  &:disabled {
-    opacity: 0.35;
-    cursor: default;
-  }
-}
-
-.group-admin-item {
-  margin: 0 12px;
-  padding: 8px 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  @include themify($themes) {
-    border-bottom: 1px solid themed("grey-2");
-  }
-
-  &:last-child {
-    border-bottom: none;
-  }
-}
-
-.group-row-actions {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: 28px;
-  align-items: center;
-  gap: 4px;
-  flex: 0 0 auto;
-}
-
-.icon-rotate-up {
-  transform: rotate(90deg);
-}
-
-.icon-rotate-down {
-  transform: rotate(-90deg);
-}
-
-.group-name-display {
-  width: 100%;
-  min-width: 0;
-  height: 34px;
-  box-sizing: border-box;
-  border: none;
-  padding: 0 12px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-  cursor: default;
-  @include themify($themes) {
-    background: themed("white-1");
-    border: 1px solid themed("grey-2");
-    color: themed("black-1");
-  }
-}
-
-.group-empty {
-  margin: 16px 10px 0;
-  padding: 14px 16px;
-  border-radius: 14px;
-  font-size: 12px;
-  line-height: 1.5;
-  @include themify($themes) {
-    background: themed("white-1");
-    border: 1px solid themed("grey-2");
-    color: themed("grey-1");
-  }
 }
 
 .no-copy {
   cursor: default;
-}
-
-#add {
-  @extend .button;
-  @include hover-black;
-  margin-right: 0;
-  line-height: 56px;
-  display: none;
 }
 
 // Modals
@@ -1430,36 +1410,33 @@ svg {
 
 .message-box {
   position: absolute;
-  width: 300px;
-  padding: 10px;
+  width: 276px;
+  box-sizing: border-box;
+  padding: 16px;
   @include themify($themes) {
     color: themed("black-1");
     border: themed("grey-1") 1px solid;
     background: themed("white-1");
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
   }
-  border-radius: 16px;
-  left: 10px;
-  top: 150px;
+  border-radius: 14px;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
   z-index: 1000;
-
-  .button-small {
-    margin-top: 10px;
-    margin-bottom: 10px;
-  }
 }
 
-.buttons {
-  display: flex;
-  justify-content: center;
-  text-align: center;
+.notification-dialog-message {
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
 
-  .button-small {
-    display: inline-block;
-    flex-basis: content;
-    margin: 10px;
-    padding: 5px 20px;
-  }
+.notification-dialog-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
 }
 
 #qr {
@@ -1499,6 +1476,12 @@ svg {
   z-index: 900;
 }
 
+#overlay.notification-overlay {
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
 // Info
 #info {
   position: absolute;
@@ -1533,7 +1516,29 @@ svg {
     }
     height: 20px;
     width: 20px;
+    border: 0;
+    border-radius: 6px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
     cursor: pointer;
+
+    &:hover {
+      @include themify($themes) {
+        background: themed("grey-3");
+      }
+    }
+
+    &:focus-visible {
+      outline-width: 2px;
+      outline-style: solid;
+      outline-offset: 1px;
+      @include themify($themes) {
+        outline-color: themed("blue-1");
+      }
+    }
   }
 
   label {
@@ -1632,150 +1637,10 @@ svg {
     margin: 10px 0 0 10px;
   }
 
-  .backup-export-panel {
-    margin: 10px 10px 18px;
-    padding: 14px 14px 16px;
-    border-radius: 14px;
-    @include themify($themes) {
-      border: 1px solid themed("grey-2");
-      background: themed("grey-background");
-    }
-
-    .control-group {
-      margin-top: 4px;
-      gap: 12px;
-      flex-wrap: nowrap;
-    }
-
-    .control-group select {
-      width: 152px;
-      min-width: 152px;
-      font-size: 13px;
-      margin-left: auto;
-    }
-
-    .combo-label {
-      margin: 12px 0;
-      font-size: 14px;
-      font-weight: 600;
-      white-space: nowrap;
-    }
-
-    .button {
-      margin-top: 14px;
-    }
-  }
-
-  .backup-export-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 6px;
-  }
-
-  .backup-export-desc {
-    font-size: 13px;
-    line-height: 1.6;
-    margin-bottom: 10px;
-    @include themify($themes) {
-      color: themed("grey-1");
-    }
-  }
-
-  .backup-export-summary {
-    margin: 8px 0 4px;
-    font-size: 13px;
-    line-height: 1.6;
-    @include themify($themes) {
-      color: themed("grey-1");
-    }
-  }
-
-  .backup-action-row {
-    margin: 0 0 10px;
-  }
-
   .warning {
     @include themify($themes) {
       color: themed("red-1");
     }
-  }
-
-  // Advisor
-  .advisor {
-    .show-all-insights {
-      text-align: right;
-      margin: 5px;
-      margin-bottom: 20px;
-      font-size: 12px;
-    }
-
-    .no-insight {
-      @include themify($themes) {
-        color: themed("grey-1");
-      }
-
-      margin: 20px;
-    }
-
-    .insight {
-      font-size: 14px;
-      border-left: 5px solid;
-      padding-left: 5px;
-      margin: 20px 5px 20px 0;
-
-      h3 {
-        margin-bottom: 5px;
-      }
-
-      p {
-        margin-bottom: 5px !important;
-      }
-
-      .link {
-        text-align: right;
-        font-size: 12px;
-
-        a:not(:first-child) {
-          @include themify($themes) {
-            border-left: 1px solid themed("grey-1");
-          }
-          margin-left: 10px;
-          padding-left: 10px;
-        }
-      }
-    }
-
-    [level="danger"] {
-      border-left-color: firebrick;
-    }
-
-    [level="warning"] {
-      border-left-color: darkorange;
-    }
-
-    [level="info"] {
-      border-left-color: #08c;
-    }
-  }
-
-  // Security
-  @mixin security-button($margin-left) {
-    @extend .button-small;
-    font-size: 12px;
-    margin: 20px 100px;
-    padding: 10px;
-    display: inline-block;
-    width: 80px;
-    margin-left: $margin-left;
-    margin-right: 0;
-  }
-
-  #security-save {
-    @include security-button(40px);
-  }
-
-  #security-remove {
-    @include security-button(30px);
   }
 
   .badInput {
@@ -1824,73 +1689,123 @@ svg {
 
   #menuBody {
     overflow-y: auto;
-    height: 436px;
+    top: 48px;
+    height: 432px;
     width: inherit;
     position: absolute;
+    padding: 10px 8px 18px;
     @include themify($themes) {
       background: themed("grey-background");
     }
   }
 
-  .menuList {
-    margin: 10px;
-    border-radius: 14px;
+  .settings-page-description {
+    margin: 0 2px 13px;
+    font-size: 11.5px;
+    line-height: 1.5;
     @include themify($themes) {
-      border: themed("grey-2") 1px solid;
-      background: themed("white-1");
+      color: themed("grey-1");
     }
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+  }
 
-    p {
-      position: relative;
-      padding: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      display: grid;
-      grid-template-columns: 30px auto;
+  .settings-page .subpage-section + .subpage-section {
+    margin-top: 13px;
+  }
+
+  .settings-page .subpage-section-head {
+    min-height: 20px;
+    margin-bottom: 6px;
+  }
+
+  .settings-list {
+    box-shadow: none;
+  }
+
+  .settings-row {
+    min-height: 56px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.14s ease;
+    @include themify($themes) {
+      color: themed("black-1");
+    }
+
+    &:hover {
       @include themify($themes) {
-        border-bottom: themed("grey-2") 1px solid;
-        color: themed("grey-1");
-      }
-
-      span {
-        display: flex;
-        align-items: center;
-
-        svg {
-          @include themify($themes) {
-            fill: themed("grey-1");
-          }
-          height: 16px;
-          width: 16px;
-        }
-      }
-
-      &:hover {
-        @include themify($themes) {
-          background: themed("blue-menu");
-          color: themed("black-1");
-        }
-
-        svg {
-          @include themify($themes) {
-            fill: themed("black-1");
-          }
-        }
-      }
-
-      &:last-child {
-        border-bottom: none;
+        background: themed("blue-menu");
       }
     }
+
+    &:focus-visible {
+      outline-width: 2px;
+      outline-style: solid;
+      outline-offset: -2px;
+      @include themify($themes) {
+        outline-color: themed("blue-1");
+      }
+    }
+  }
+
+  .settings-row .subpage-row-desc {
+    white-space: normal;
   }
 }
 
 #version {
   text-align: center;
-  margin: 10px;
+  margin: 14px 0 0;
+  font-size: 10.5px;
+  line-height: 1.4;
   @include themify($themes) {
     color: themed("grey-1");
+  }
+}
+
+// Full-page backup navigation
+#backupPanel {
+  width: 320px;
+  height: 480px;
+  position: absolute;
+  left: -1000px;
+  top: 0;
+  z-index: 90;
+
+  &.slidein {
+    left: 0;
+    animation: slidein 0.2s 1 ease-out;
+    opacity: 1;
+  }
+
+  &.slideout {
+    left: -55px;
+    animation: slideout 0.2s 1 ease-in;
+    opacity: 0;
+  }
+
+  #backupPanelBody {
+    width: 100%;
+    height: 432px;
+    position: absolute;
+    top: 48px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 10px 0 18px;
+    @include themify($themes) {
+      background: themed("grey-background");
+    }
+  }
+
+  .backup-page-head {
+    padding-bottom: 10px;
+  }
+
+  .backup-page-subtitle {
+    margin-top: 0;
   }
 }
 
@@ -2033,22 +1948,14 @@ svg {
 
 // Dark overrides
 .theme-dark {
-  #codes {
-    &:not(.edit) {
-      .code.timeout:not(.hotp) {
-        animation: glint 1s infinite;
-      }
-    }
+  #codes .code.timeout:not(.hotp) {
+    animation: glint 1s infinite;
   }
 
   .message-box,
   #info {
     border: #ccc 1px solid;
     box-shadow: 1px 1px 3px black;
-  }
-
-  .entry .issuerEdit input {
-    color: #ccc;
   }
 
   ::-webkit-scrollbar {
@@ -2089,22 +1996,12 @@ svg {
     border-color: white !important;
   }
 
-  &:not(.edit) {
-    .entry:hover {
-      background: #f8f8f8;
-    }
+  .entry:hover {
+    background: #f8f8f8;
   }
 
   .control-group select {
     border-color: white !important;
-  }
-
-  .menuList {
-    border-color: white !important;
-
-    p {
-      border-color: white !important;
-    }
   }
 
   ::-webkit-scrollbar {
@@ -2138,13 +2035,9 @@ svg {
 
 // Compact overrides
 .theme-compact {
-  #codes {
-    &:not(.edit) {
-      .entry {
-        padding: 0 10px;
-        margin: 0 0 0 10px;
-      }
-    }
+  #codes .entry {
+    padding: 0 10px;
+    margin: 0 0 0 10px;
   }
 
   .entry {
@@ -2165,7 +2058,7 @@ svg {
     }
   }
 
-  a.entry {
+  .entry {
     border-bottom: #eee 1px solid !important;
   }
 
@@ -2182,14 +2075,6 @@ svg {
     background-color: black;
   }
   .entry {
-    .issuerEdit {
-      input {
-        color: white;
-        background: black;
-        border: white 1px solid;
-      }
-    }
-
     .showqr,
     .copyotpauth,
     .pin {
@@ -2200,18 +2085,6 @@ svg {
       &:hover {
         svg {
           fill: yellow;
-        }
-      }
-    }
-  }
-
-  #menu {
-    .menuList {
-      p:hover {
-        color: black;
-
-        svg {
-          fill: black;
         }
       }
     }
@@ -2243,12 +2116,8 @@ svg {
     }
   }
 
-  #codes {
-    &:not(.edit) {
-      .code.timeout:not(.hotp) {
-        animation: flash 1s infinite;
-      }
-    }
+  #codes .code.timeout:not(.hotp) {
+    animation: flash 1s infinite;
   }
 
   #info {
@@ -2318,34 +2187,6 @@ svg {
   #menu {
     #menuBody {
       background: #fcfbff;
-
-      .menuList {
-        margin: 10px;
-        border-radius: 8px;
-        border: #f5f4f7 1px solid;
-        background: white;
-
-        p {
-          color: #727272;
-
-          &:not(:last-child) {
-            border-bottom: #f5f4f7 1px solid;
-          }
-
-          span svg {
-            fill: #727272;
-          }
-        }
-      }
-    }
-
-    #version {
-      bottom: 0px;
-      position: relative;
-      margin: 10px auto;
-      width: 100%;
-      color: #727272;
-      font-size: 0.9em;
     }
 
     #info {

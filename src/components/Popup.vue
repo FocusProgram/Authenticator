@@ -21,8 +21,7 @@
     <MainHeader />
     <MainBody
       v-bind:class="{
-        timeout: style.timeout && !style.isEditing,
-        edit: style.isEditing,
+        timeout: style.timeout,
       }"
     />
 
@@ -30,6 +29,16 @@
       id="menu"
       v-show="style.slidein || style.slideout"
       v-bind:class="{ slidein: style.slidein, slideout: style.slideout }"
+    />
+
+    <BackupNavigationPage
+      id="backupPanel"
+      v-show="style.backupSlidein || style.backupSlideout"
+      :active="style.backupSlidein"
+      v-bind:class="{
+        slidein: style.backupSlidein,
+        slideout: style.backupSlideout,
+      }"
     />
 
     <PageHandler
@@ -72,6 +81,7 @@ import { mapState } from "vuex";
 import MainHeader from "./Popup/MainHeader.vue";
 import MainBody from "./Popup/MainBody.vue";
 import MenuPage from "./Popup/MenuPage.vue";
+import BackupNavigationPage from "./Popup/BackupNavigationPage.vue";
 import PageHandler from "./Popup/PageHandler.vue";
 import NotificationHandler from "./Popup/NotificationHandler.vue";
 
@@ -104,6 +114,7 @@ export default Vue.extend({
     MainHeader,
     MainBody,
     MenuPage,
+    BackupNavigationPage,
     PageHandler,
     NotificationHandler,
   },

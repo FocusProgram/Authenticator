@@ -1,6 +1,12 @@
 <template>
   <div v-on:keydown.stop>
-    <div class="text">{{ i18n.passphrase_info }}</div>
+    <div class="text">
+      {{
+        unresolvedKeyCount > 0
+          ? i18n.ui_additional_password_required
+          : i18n.passphrase_info
+      }}
+    </div>
     <a-text-input
       type="password"
       v-model="password"
@@ -11,6 +17,9 @@
     <label class="warning" v-show="wrongPassword">{{
       i18n.phrase_not_match
     }}</label>
+    <label class="warning" v-show="unresolvedKeyCount > 0">
+      {{ i18n.ui_remaining_encryption_keys }}: {{ unresolvedKeyCount }}
+    </label>
     <a-button type="small" @click="applyPassphrase()">{{ i18n.ok }}</a-button>
   </div>
 </template>
@@ -26,6 +35,9 @@ export default Vue.extend({
   computed: {
     wrongPassword() {
       return this.$store.state.accounts.wrongPassword;
+    },
+    unresolvedKeyCount() {
+      return this.$store.state.accounts.unresolvedKeyCount || 0;
     },
   },
   methods: {

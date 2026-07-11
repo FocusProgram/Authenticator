@@ -145,6 +145,14 @@
     "message": "Password does not match.",
     "description": "Passphrase Not Match."
   },
+  "ui_additional_password_required": {
+    "message": "Some OTP entries use another encryption password. Enter the next password to continue consolidating them.",
+    "description": "UI text."
+  },
+  "ui_remaining_encryption_keys": {
+    "message": "Encryption keys still locked",
+    "description": "UI text."
+  },
   "encrypted": {
     "message": "Encrypted",
     "description": "Encrypted."
@@ -684,5 +692,1077 @@
   },
   "activate_auto_filter": {
     "message": "Warning: Smart filter loosely matches the domain name to an account. Always verify that you are on the correct website before entering a code!"
+  },
+  "back": {
+    "message": "Back",
+    "description": "UI text."
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": "UI text."
+  },
+  "save": {
+    "message": "Save",
+    "description": "UI text."
+  },
+  "delete": {
+    "message": "Delete",
+    "description": "UI text."
+  },
+  "note": {
+    "message": "Notes",
+    "description": "UI text."
+  },
+  "group_all": {
+    "message": "All",
+    "description": "UI text."
+  },
+  "group_ungrouped": {
+    "message": "Ungrouped",
+    "description": "UI text."
+  },
+  "group_move": {
+    "message": "Move",
+    "description": "UI text."
+  },
+  "group_empty": {
+    "message": "This group has no entries yet.",
+    "description": "UI text."
+  },
+  "select_all": {
+    "message": "Select all",
+    "description": "UI text."
+  },
+  "deselect_all": {
+    "message": "Deselect all",
+    "description": "UI text."
+  },
+  "no_results": {
+    "message": "No matching entries found.",
+    "description": "UI text."
+  },
+  "ui_items": {
+    "message": "items",
+    "description": "UI text."
+  },
+  "ui_otp_codes": {
+    "message": "Verification codes",
+    "description": "UI text."
+  },
+  "ui_no_selection": {
+    "message": "No verification codes selected",
+    "description": "UI text."
+  },
+  "ui_selected": {
+    "message": "Selected",
+    "description": "UI text."
+  },
+  "ui_clear_search": {
+    "message": "Clear search",
+    "description": "UI text."
+  },
+  "ui_target_group": {
+    "message": "Target group",
+    "description": "UI text."
+  },
+  "ui_show_qr": {
+    "message": "Show QR code",
+    "description": "UI text."
+  },
+  "ui_copy_otp_link": {
+    "message": "Copy OTP link",
+    "description": "UI text."
+  },
+  "ui_copy_otp_link_success": {
+    "message": "OTP link copied",
+    "description": "UI text."
+  },
+  "ui_pin": {
+    "message": "Pin",
+    "description": "UI text."
+  },
+  "ui_unpin": {
+    "message": "Unpin",
+    "description": "UI text."
+  },
+  "ui_view_otp": {
+    "message": "View OTP details",
+    "description": "UI text."
+  },
+  "ui_edit_otp": {
+    "message": "Edit OTP details",
+    "description": "UI text."
+  },
+  "ui_delete_otp": {
+    "message": "Delete OTP",
+    "description": "UI text."
+  },
+  "ui_add_method_title": {
+    "message": "Add verification code",
+    "description": "UI text."
+  },
+  "ui_add_method_subtitle": {
+    "message": "Scan a QR code, enter a secret manually, or import existing data.",
+    "description": "UI text."
+  },
+  "ui_add_method_section": {
+    "message": "Choose a method",
+    "description": "UI text."
+  },
+  "ui_scan_page_desc": {
+    "message": "Scan an OTP QR code on the current page",
+    "description": "UI text."
+  },
+  "ui_manual_entry_desc": {
+    "message": "Enter a name, account, and OTP secret",
+    "description": "UI text."
+  },
+  "ui_import_qr_desc": {
+    "message": "Read one or more QR codes from local images",
+    "description": "UI text."
+  },
+  "ui_import_links_desc": {
+    "message": "Import multiple standard otpauth links",
+    "description": "UI text."
+  },
+  "ui_import_backup_file_desc": {
+    "message": "Restore OTP entries and groups from a JSON or TXT backup",
+    "description": "UI text."
+  },
+  "ui_manual_subtitle": {
+    "message": "Enter the code name, account, and secret. Adjust advanced parameters when needed.",
+    "description": "UI text."
+  },
+  "ui_basic_info": {
+    "message": "Basic information",
+    "description": "UI text."
+  },
+  "ui_name_example": {
+    "message": "For example: GitHub",
+    "description": "UI text."
+  },
+  "ui_account_example": {
+    "message": "For example: name@example.com",
+    "description": "UI text."
+  },
+  "ui_secret_placeholder": {
+    "message": "Enter a Base32 or hexadecimal secret",
+    "description": "UI text."
+  },
+  "ui_optional": {
+    "message": "Optional",
+    "description": "UI text."
+  },
+  "ui_group_section": {
+    "message": "Group",
+    "description": "UI text."
+  },
+  "ui_select_group": {
+    "message": "Select an existing group",
+    "description": "UI text."
+  },
+  "ui_create_group": {
+    "message": "Create group",
+    "description": "UI text."
+  },
+  "ui_create_group_placeholder": {
+    "message": "Optional; a new group will be created automatically",
+    "description": "UI text."
+  },
+  "ui_advanced_options": {
+    "message": "Advanced options",
+    "description": "UI text."
+  },
+  "ui_otp_parameters": {
+    "message": "Verification code parameters",
+    "description": "UI text."
+  },
+  "ui_otp_parameters_desc": {
+    "message": "Type, period, digits, and algorithm",
+    "description": "UI text."
+  },
+  "ui_seconds": {
+    "message": "seconds",
+    "description": "UI text."
+  },
+  "ui_add_otp": {
+    "message": "Add verification code",
+    "description": "UI text."
+  },
+  "ui_advisor_subtitle": {
+    "message": "Review current settings and get recommendations for improving data security.",
+    "description": "UI text."
+  },
+  "ui_check_results": {
+    "message": "Check results",
+    "description": "UI text."
+  },
+  "ui_show_ignored": {
+    "message": "Show ignored recommendations",
+    "description": "UI text."
+  },
+  "ui_settings_good": {
+    "message": "Your current settings look good",
+    "description": "UI text."
+  },
+  "ui_group_title": {
+    "message": "Group management",
+    "description": "UI text."
+  },
+  "ui_group_subtitle": {
+    "message": "Create, rename, reorder, and delete verification code groups.",
+    "description": "UI text."
+  },
+  "ui_add_group_section": {
+    "message": "New group",
+    "description": "UI text."
+  },
+  "ui_new_group_placeholder": {
+    "message": "Enter a group name",
+    "description": "UI text."
+  },
+  "ui_add_group": {
+    "message": "Add group",
+    "description": "UI text."
+  },
+  "ui_existing_groups": {
+    "message": "Existing groups",
+    "description": "UI text."
+  },
+  "ui_edit_group": {
+    "message": "Edit group",
+    "description": "UI text."
+  },
+  "ui_edit_group_name": {
+    "message": "Edit group name",
+    "description": "UI text."
+  },
+  "ui_move_up": {
+    "message": "Move up",
+    "description": "UI text."
+  },
+  "ui_move_down": {
+    "message": "Move down",
+    "description": "UI text."
+  },
+  "ui_no_groups": {
+    "message": "No groups yet",
+    "description": "UI text."
+  },
+  "ui_no_groups_desc": {
+    "message": "Create a group to organize verification codes by account or purpose.",
+    "description": "UI text."
+  },
+  "ui_group_duplicate": {
+    "message": "A group with this name already exists.",
+    "description": "UI text."
+  },
+  "ui_group_delete_confirm": {
+    "message": "Delete this group? Verification codes in it will not be deleted.",
+    "description": "UI text."
+  },
+  "ui_preferences_title": {
+    "message": "Preferences",
+    "description": "UI text."
+  },
+  "ui_preferences_subtitle": {
+    "message": "Adjust appearance, shortcuts, sync, and automatic locking.",
+    "description": "UI text."
+  },
+  "ui_appearance": {
+    "message": "Appearance",
+    "description": "UI text."
+  },
+  "ui_theme_desc": {
+    "message": "Choose the extension color and display style",
+    "description": "UI text."
+  },
+  "ui_scale_desc": {
+    "message": "Scale the entire extension window",
+    "description": "UI text."
+  },
+  "ui_quick_actions": {
+    "message": "Quick actions",
+    "description": "UI text."
+  },
+  "ui_autofill_desc": {
+    "message": "Quickly fill verification codes on supported websites",
+    "description": "UI text."
+  },
+  "ui_smart_filter_desc": {
+    "message": "Prioritize related accounts for the current website",
+    "description": "UI text."
+  },
+  "ui_context_menu_desc": {
+    "message": "Open Authenticator from the webpage context menu",
+    "description": "UI text."
+  },
+  "ui_storage_security": {
+    "message": "Storage and security",
+    "description": "UI text."
+  },
+  "ui_browser_sync_desc": {
+    "message": "Sync data across devices using the same browser account",
+    "description": "UI text."
+  },
+  "ui_autolock_desc": {
+    "message": "Require the password again after the selected idle time",
+    "description": "UI text."
+  },
+  "ui_autolock_minutes": {
+    "message": "Automatic lock time in minutes",
+    "description": "UI text."
+  },
+  "ui_window": {
+    "message": "Window",
+    "description": "UI text."
+  },
+  "ui_popout_desc": {
+    "message": "Open in a separate window that can stay visible",
+    "description": "UI text."
+  },
+  "ui_security_title": {
+    "message": "Security settings",
+    "description": "UI text."
+  },
+  "ui_security_subtitle": {
+    "message": "Encrypt local verification code data with a master password and control unlock protection.",
+    "description": "UI text."
+  },
+  "ui_password_protection": {
+    "message": "Password protection",
+    "description": "UI text."
+  },
+  "ui_password_warning_title": {
+    "message": "Keep your master password safe",
+    "description": "UI text."
+  },
+  "ui_change_master_password": {
+    "message": "Change master password",
+    "description": "UI text."
+  },
+  "ui_set_master_password": {
+    "message": "Set master password",
+    "description": "UI text."
+  },
+  "ui_master_password": {
+    "message": "Master password",
+    "description": "UI text."
+  },
+  "ui_backup_title": {
+    "message": "Backup",
+    "description": "UI text."
+  },
+  "ui_backup_subtitle": {
+    "message": "Export, import, or automatically back up your OTP data.",
+    "description": "UI text."
+  },
+  "ui_local_backup": {
+    "message": "Local backup",
+    "description": "UI text."
+  },
+  "ui_export_backup": {
+    "message": "Export backup",
+    "description": "UI text."
+  },
+  "ui_export_backup_desc": {
+    "message": "Choose JSON, TXT, or CSV format",
+    "description": "UI text."
+  },
+  "ui_import_backup_desc": {
+    "message": "Restore from a backup file, text, or QR code",
+    "description": "UI text."
+  },
+  "ui_automatic_backup": {
+    "message": "Automatic backup",
+    "description": "UI text."
+  },
+  "ui_webdav_desc": {
+    "message": "Configure a server and manage automatic backups",
+    "description": "UI text."
+  },
+  "ui_data_management": {
+    "message": "Data management",
+    "description": "UI text."
+  },
+  "ui_clear_data_desc": {
+    "message": "Export a backup before clearing data",
+    "description": "UI text."
+  },
+  "ui_export_subtitle": {
+    "message": "Choose a file format and whether to encrypt it with the master password.",
+    "description": "UI text."
+  },
+  "ui_export_options": {
+    "message": "Export options",
+    "description": "UI text."
+  },
+  "ui_export_format": {
+    "message": "Export format",
+    "description": "UI text."
+  },
+  "ui_json_full_backup": {
+    "message": "JSON (complete backup)",
+    "description": "UI text."
+  },
+  "ui_txt_standard_links": {
+    "message": "TXT (standard links)",
+    "description": "UI text."
+  },
+  "ui_csv_table_data": {
+    "message": "CSV (table data)",
+    "description": "UI text."
+  },
+  "ui_encrypt_master": {
+    "message": "Encrypt with master password",
+    "description": "UI text."
+  },
+  "ui_this_export": {
+    "message": "This export",
+    "description": "UI text."
+  },
+  "ui_code_count": {
+    "message": "verification codes",
+    "description": "UI text."
+  },
+  "ui_group_count": {
+    "message": "groups",
+    "description": "UI text."
+  },
+  "ui_export_tips": {
+    "message": "Export notes",
+    "description": "UI text."
+  },
+  "ui_no_master_password": {
+    "message": "No master password is set",
+    "description": "UI text."
+  },
+  "ui_no_master_password_desc": {
+    "message": "Only unencrypted backups can be exported. Create a master password in Security settings to enable encryption.",
+    "description": "UI text."
+  },
+  "ui_unsupported_format": {
+    "message": "Some accounts do not support this format",
+    "description": "UI text."
+  },
+  "ui_locked_accounts": {
+    "message": "Some accounts are still locked",
+    "description": "UI text."
+  },
+  "ui_exporting": {
+    "message": "Exporting…",
+    "description": "UI text."
+  },
+  "ui_txt_csv_no_encryption": {
+    "message": "TXT and CSV formats do not support encryption",
+    "description": "UI text."
+  },
+  "ui_create_password_first": {
+    "message": "Create a master password in Security settings first",
+    "description": "UI text."
+  },
+  "ui_json_encryption_only": {
+    "message": "Only complete JSON backups support encryption",
+    "description": "UI text."
+  },
+  "ui_encrypted_json_backup": {
+    "message": "Encrypted JSON complete backup",
+    "description": "UI text."
+  },
+  "ui_json_backup": {
+    "message": "JSON complete backup",
+    "description": "UI text."
+  },
+  "ui_txt_backup": {
+    "message": "TXT standard-link backup",
+    "description": "UI text."
+  },
+  "ui_csv_backup": {
+    "message": "CSV table backup",
+    "description": "UI text."
+  },
+  "ui_export_prefix": {
+    "message": "Export",
+    "description": "UI text."
+  },
+  "ui_json_encrypted_summary": {
+    "message": "Export encrypted JSON for complete backup and restore.",
+    "description": "UI text."
+  },
+  "ui_json_summary": {
+    "message": "Export JSON containing OTP entries, notes, and groups.",
+    "description": "UI text."
+  },
+  "ui_txt_summary": {
+    "message": "Export otpauth text for importing into other authenticators.",
+    "description": "UI text."
+  },
+  "ui_csv_summary": {
+    "message": "Export CSV for viewing, filtering, and archiving in a table.",
+    "description": "UI text."
+  },
+  "ui_unlock_before_encrypted_export": {
+    "message": "Unlock and confirm the master password before exporting an encrypted backup.",
+    "description": "UI text."
+  },
+  "ui_webdav_title": {
+    "message": "WebDAV backup",
+    "description": "UI text."
+  },
+  "ui_webdav_subtitle": {
+    "message": "Configure a remote server, then manually or automatically back up and restore verification code data.",
+    "description": "UI text."
+  },
+  "ui_server_connection": {
+    "message": "Server connection",
+    "description": "UI text."
+  },
+  "ui_webdav_connection_info": {
+    "message": "Connection details are stored only in this browser. Enter the full WebDAV directory URL.",
+    "description": "UI text."
+  },
+  "ui_backup_storage": {
+    "message": "Backup storage",
+    "description": "UI text."
+  },
+  "ui_testing": {
+    "message": "Testing…",
+    "description": "UI text."
+  },
+  "ui_saving": {
+    "message": "Saving…",
+    "description": "UI text."
+  },
+  "ui_retention_count": {
+    "message": "Backup retention",
+    "description": "UI text."
+  },
+  "ui_retention_desc": {
+    "message": "Set to 0 to keep all backups",
+    "description": "UI text."
+  },
+  "ui_copies": {
+    "message": "copies",
+    "description": "UI text."
+  },
+  "ui_backing_up": {
+    "message": "Backing up…",
+    "description": "UI text."
+  },
+  "ui_refreshing": {
+    "message": "Refreshing…",
+    "description": "UI text."
+  },
+  "ui_restore_backup": {
+    "message": "Restore backup",
+    "description": "UI text."
+  },
+  "ui_select_backup": {
+    "message": "Select backup file",
+    "description": "UI text."
+  },
+  "ui_restoring": {
+    "message": "Restoring…",
+    "description": "UI text."
+  },
+  "ui_incorrect_backup_password": {
+    "message": "The backup password is incorrect, or the encrypted backup is damaged.",
+    "description": "UI text."
+  },
+  "ui_menu_account": {
+    "message": "Account management",
+    "description": "UI text."
+  },
+  "ui_advisor_desc": {
+    "message": "Check settings that may affect data security",
+    "description": "UI text."
+  },
+  "ui_groups_desc": {
+    "message": "Create, edit, and reorder verification code groups",
+    "description": "UI text."
+  },
+  "ui_permissions_desc": {
+    "message": "View and revoke optional browser permissions",
+    "description": "UI text."
+  },
+  "ui_menu_security_data": {
+    "message": "Security and data",
+    "description": "UI text."
+  },
+  "ui_backup_desc": {
+    "message": "Import, export, or configure automatic backup",
+    "description": "UI text."
+  },
+  "ui_security_desc": {
+    "message": "Set or change the data-encryption master password",
+    "description": "UI text."
+  },
+  "ui_clock_desc": {
+    "message": "Correct verification code timing using network time",
+    "description": "UI text."
+  },
+  "ui_preferences_desc": {
+    "message": "Adjust theme, scale, sync, and quick actions",
+    "description": "UI text."
+  },
+  "ui_help_about": {
+    "message": "Help and about",
+    "description": "UI text."
+  },
+  "ui_feedback_desc": {
+    "message": "Report an issue or suggest a feature",
+    "description": "UI text."
+  },
+  "ui_translate_desc": {
+    "message": "Help improve the extension translations",
+    "description": "UI text."
+  },
+  "ui_source_desc": {
+    "message": "View source code and development information",
+    "description": "UI text."
+  },
+  "ui_about_desc": {
+    "message": "View version, licenses, and open-source components",
+    "description": "UI text."
+  },
+  "ui_version": {
+    "message": "Version",
+    "description": "UI text."
+  },
+  "ui_permissions_title": {
+    "message": "Permission management",
+    "description": "UI text."
+  },
+  "ui_permissions_subtitle": {
+    "message": "Review the browser permissions used by Authenticator and revoke optional permissions you no longer need.",
+    "description": "UI text."
+  },
+  "ui_display_scope": {
+    "message": "Display scope",
+    "description": "UI text."
+  },
+  "ui_show_required_desc": {
+    "message": "Also show required permissions that cannot be revoked",
+    "description": "UI text."
+  },
+  "ui_authorized_permissions": {
+    "message": "Authorized permissions",
+    "description": "UI text."
+  },
+  "ui_optional_permission": {
+    "message": "Optional",
+    "description": "UI text."
+  },
+  "ui_required_permission": {
+    "message": "Required",
+    "description": "UI text."
+  },
+  "ui_no_permissions": {
+    "message": "No permissions to display",
+    "description": "UI text."
+  },
+  "ui_no_permissions_desc": {
+    "message": "There are no authorized optional permissions, or permission status has not loaded yet.",
+    "description": "UI text."
+  },
+  "ui_import_help": {
+    "message": "How to use",
+    "description": "UI text."
+  },
+  "ui_import_file_help": {
+    "message": "File import supports Authenticator JSON/TXT backups and Bitwarden JSON exports.",
+    "description": "UI text."
+  },
+  "ui_import_clear_help": {
+    "message": "Optionally clear existing OTP entries and groups before importing.",
+    "description": "UI text."
+  },
+  "ui_import_qr_help": {
+    "message": "QR import supports common image formats such as PNG, JPG, JPEG, WEBP, GIF, and BMP.",
+    "description": "UI text."
+  },
+  "ui_import_text_help": {
+    "message": "Text import supports otpauth links, JSON backup text, and plain TXT content.",
+    "description": "UI text."
+  },
+  "ui_import_csv_unsupported": {
+    "message": "CSV is currently available for export only and cannot be imported.",
+    "description": "UI text."
+  },
+  "ui_import_result_help": {
+    "message": "Import progress and results are displayed on this page.",
+    "description": "UI text."
+  },
+  "ui_clear_before_import": {
+    "message": "Clear existing data before import",
+    "description": "UI text."
+  },
+  "ui_import_progress": {
+    "message": "Import progress",
+    "description": "UI text."
+  },
+  "ui_importing_backup": {
+    "message": "Importing backup",
+    "description": "UI text."
+  },
+  "ui_importing_qr": {
+    "message": "Importing QR backup",
+    "description": "UI text."
+  },
+  "ui_import_complete": {
+    "message": "Import complete",
+    "description": "UI text."
+  },
+  "ui_import_partial": {
+    "message": "Partially imported",
+    "description": "UI text."
+  },
+  "ui_import_failed": {
+    "message": "Import failed",
+    "description": "UI text."
+  },
+  "ui_import_cancelled": {
+    "message": "Import cancelled",
+    "description": "UI text."
+  },
+  "ui_no_data_changed": {
+    "message": "No existing data was changed.",
+    "description": "UI text."
+  },
+  "ui_no_file": {
+    "message": "No file selected",
+    "description": "UI text."
+  },
+  "ui_no_image": {
+    "message": "No image selected",
+    "description": "UI text."
+  },
+  "ui_import_error": {
+    "message": "An error occurred during import",
+    "description": "UI text."
+  },
+  "ui_no_importable_content": {
+    "message": "No importable content was found",
+    "description": "UI text."
+  },
+  "ui_scanned_images": {
+    "message": "Images scanned",
+    "description": "UI text."
+  },
+  "ui_decoded_images": {
+    "message": "QR codes decoded",
+    "description": "UI text."
+  },
+  "ui_decode_failures": {
+    "message": "Images not decoded",
+    "description": "UI text."
+  },
+  "ui_imported_entries": {
+    "message": "Entries imported",
+    "description": "UI text."
+  },
+  "ui_imported_groups": {
+    "message": "Groups imported",
+    "description": "UI text."
+  },
+  "ui_grouped_entries": {
+    "message": "Entries with groups",
+    "description": "UI text."
+  },
+  "ui_failed_entries": {
+    "message": "Entries failed",
+    "description": "UI text."
+  },
+  "ui_removed_group_links": {
+    "message": "Invalid group links removed",
+    "description": "UI text."
+  },
+  "ui_cleared_otp": {
+    "message": "Existing OTP entries cleared",
+    "description": "UI text."
+  },
+  "ui_cleared_groups": {
+    "message": "Existing groups cleared",
+    "description": "UI text."
+  },
+  "ui_batch_edit": {
+    "message": "Batch edit",
+    "description": "UI text."
+  },
+  "ui_unlock_to_edit": {
+    "message": "Unlock before editing this entry.",
+    "description": "UI text."
+  },
+  "ui_unlock_to_view": {
+    "message": "Unlock before viewing this entry.",
+    "description": "UI text."
+  },
+  "ui_saved": {
+    "message": "Saved",
+    "description": "UI text."
+  },
+  "ui_settings_desc": {
+    "message": "Manage groups, security, backups, and extension preferences.",
+    "description": "UI text."
+  },
+  "ui_backup_restore": {
+    "message": "Backup and restore",
+    "description": "UI text."
+  },
+  "ui_about_authenticator": {
+    "message": "About Authenticator",
+    "description": "UI text."
+  },
+  "ui_permission_name_active_tab": {
+    "message": "Current tab",
+    "description": "UI text."
+  },
+  "ui_permission_name_storage": {
+    "message": "Browser storage",
+    "description": "UI text."
+  },
+  "ui_permission_name_identity": {
+    "message": "Third-party sign-in",
+    "description": "UI text."
+  },
+  "ui_permission_name_alarms": {
+    "message": "Scheduled tasks",
+    "description": "UI text."
+  },
+  "ui_permission_name_scripting": {
+    "message": "Page scripts",
+    "description": "UI text."
+  },
+  "ui_permission_name_clipboard": {
+    "message": "Clipboard write access",
+    "description": "UI text."
+  },
+  "ui_permission_name_context_menu": {
+    "message": "Context menu",
+    "description": "UI text."
+  },
+  "ui_permission_name_clock": {
+    "message": "Time synchronization",
+    "description": "UI text."
+  },
+  "ui_permission_name_dropbox": {
+    "message": "Dropbox backup",
+    "description": "UI text."
+  },
+  "ui_permission_name_drive": {
+    "message": "Google Drive backup",
+    "description": "UI text."
+  },
+  "ui_permission_name_drive_login": {
+    "message": "Google Drive sign-in",
+    "description": "UI text."
+  },
+  "ui_permission_name_onedrive": {
+    "message": "OneDrive backup",
+    "description": "UI text."
+  },
+  "ui_permission_name_onedrive_login": {
+    "message": "OneDrive sign-in",
+    "description": "UI text."
+  },
+  "ui_permission_name_other": {
+    "message": "Other browser permission",
+    "description": "UI text."
+  },
+  "ui_progress_file_selected": {
+    "message": "File selected; preparing to read",
+    "description": "UI text."
+  },
+  "ui_progress_reading_file": {
+    "message": "Reading backup file",
+    "description": "UI text."
+  },
+  "ui_progress_downloading_backup": {
+    "message": "Downloading backup",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_backup": {
+    "message": "Parsing backup content",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_bitwarden": {
+    "message": "Parsing Bitwarden backup",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_text": {
+    "message": "Parsing text backup",
+    "description": "UI text."
+  },
+  "ui_progress_organizing_records": {
+    "message": "Organizing backup records",
+    "description": "UI text."
+  },
+  "ui_progress_waiting_password": {
+    "message": "Waiting for backup password",
+    "description": "UI text."
+  },
+  "ui_progress_decrypting": {
+    "message": "Decrypting backup content",
+    "description": "UI text."
+  },
+  "ui_progress_replacing_data": {
+    "message": "Safely replacing existing data",
+    "description": "UI text."
+  },
+  "ui_progress_merging_data": {
+    "message": "Merging groups and OTP entries",
+    "description": "UI text."
+  },
+  "ui_progress_refreshing": {
+    "message": "Refreshing the list",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_backup_text": {
+    "message": "Parsing backup text",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_otpauth": {
+    "message": "Parsing otpauth text",
+    "description": "UI text."
+  },
+  "ui_progress_preparing_import": {
+    "message": "Preparing import data",
+    "description": "UI text."
+  },
+  "ui_progress_waiting_qr": {
+    "message": "Waiting to read QR images",
+    "description": "UI text."
+  },
+  "ui_progress_scanning_qr": {
+    "message": "Scanning QR code",
+    "description": "UI text."
+  },
+  "ui_progress_parsing_otp": {
+    "message": "Parsing OTP data",
+    "description": "UI text."
+  },
+  "ui_error_passphrase_required": {
+    "message": "This backup is encrypted. Enter the correct backup password and try again.",
+    "description": "UI text."
+  },
+  "ui_error_incorrect_passphrase": {
+    "message": "The backup password is incorrect, or the encrypted backup is damaged.",
+    "description": "UI text."
+  },
+  "ui_error_invalid_backup": {
+    "message": "The content is not a supported JSON, Bitwarden, or otpauth backup.",
+    "description": "UI text."
+  },
+  "ui_error_no_entries": {
+    "message": "No importable OTP entries were found.",
+    "description": "UI text."
+  },
+  "ui_error_sync_quota": {
+    "message": "The import exceeds browser sync storage limits. Disable browser sync in Settings → Preferences, switch to local storage, and try again.",
+    "description": "UI text."
+  },
+  "ui_error_local_quota": {
+    "message": "The import exceeds available browser storage. Reduce the import data and try again.",
+    "description": "UI text."
+  },
+  "ui_reason": {
+    "message": "Reason",
+    "description": "UI text."
+  },
+  "ui_error_read_backup": {
+    "message": "The backup file could not be read.",
+    "description": "UI text."
+  },
+  "ui_error_backup_aborted": {
+    "message": "Reading the backup file was cancelled.",
+    "description": "UI text."
+  },
+  "ui_error_backup_too_large": {
+    "message": "The backup exceeds the 100 MB import limit.",
+    "description": "UI text."
+  },
+  "ui_cancel_import": {
+    "message": "Cancel",
+    "description": "UI text."
+  },
+  "ui_error_backup_parse_timeout": {
+    "message": "Backup parsing timed out. Reduce the file size or try again.",
+    "description": "UI text."
+  },
+  "ui_error_backup_worker": {
+    "message": "The background backup parser could not be started.",
+    "description": "UI text."
+  },
+  "ui_error_webdav_timeout": {
+    "message": "The WebDAV transfer timed out. Check the connection and try again.",
+    "description": "UI text."
+  },
+  "ui_error_too_many_qr_files": {
+    "message": "You can import up to 100 QR images at a time.",
+    "description": "UI text."
+  },
+  "ui_unlock_before_group_delete": {
+    "message": "Unlock OTP entries before deleting a group so their group links can be updated safely.",
+    "description": "UI text."
+  },
+  "ui_backup_password_title": {
+    "message": "Enter backup password",
+    "description": "UI text."
+  },
+  "ui_backup_password_desc": {
+    "message": "This WebDAV backup is encrypted. Enter its backup password to continue restoring.",
+    "description": "UI text."
+  },
+  "ui_error_qr_timeout": {
+    "message": "QR code decoding timed out.",
+    "description": "UI text."
+  },
+  "ui_error_read_qr": {
+    "message": "The QR image could not be read.",
+    "description": "UI text."
+  },
+  "ui_error_qr_aborted": {
+    "message": "Reading the QR image was cancelled.",
+    "description": "UI text."
+  },
+  "ui_error_load_qr": {
+    "message": "The QR image could not be loaded.",
+    "description": "UI text."
+  },
+  "ui_backups_found": {
+    "message": "backups found",
+    "description": "UI text."
+  },
+  "ui_latest_backup": {
+    "message": "Latest backup",
+    "description": "UI text."
+  },
+  "ui_error_system_key_conflict": {
+    "message": "The import contains an identifier that conflicts with extension storage.",
+    "description": "UI text."
+  },
+  "ui_error_unknown_record": {
+    "message": "The import contains an unrecognized storage record.",
+    "description": "UI text."
+  },
+  "ui_error_type_conflict": {
+    "message": "An imported identifier conflicts with an existing OTP entry or group.",
+    "description": "UI text."
+  },
+  "ui_error_incomplete_write": {
+    "message": "The imported data could not be written completely.",
+    "description": "UI text."
+  },
+  "ui_error_batch_id_conflict": {
+    "message": "An imported OTP entry and group use the same identifier.",
+    "description": "UI text."
+  },
+  "ui_error_invalid_group_id": {
+    "message": "The import contains an invalid or reserved group identifier.",
+    "description": "UI text."
+  },
+  "backup_set_password_alert": {
+    "message": "Set a master password in Settings → Security before creating an encrypted backup.",
+    "description": "Prompt before encrypted backup."
   }
 }
