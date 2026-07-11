@@ -22,14 +22,14 @@ declare global {
 
 export function MochaReporter(runner: Runner) {
   const tests: Test[] = [];
+  let completed = false;
 
-  runner.on("start", () => {
-    window.__mocha_test_results__ = {};
-    window.__mocha_test_results__.total = runner.total;
-    window.__mocha_test_results__.completed = false;
-  });
+  const finish = () => {
+    if (completed) {
+      return;
+    }
+    completed = true;
 
-  runner.on("end", () => {
     const strip = (test: Test) => {
       return {
         title: test.title,
@@ -45,13 +45,30 @@ export function MochaReporter(runner: Runner) {
 
     const event = new Event("testsComplete", { bubbles: true });
     window.dispatchEvent(event);
+  };
+
+  runner.on("start", () => {
+    window.__mocha_test_results__ = {};
+    window.__mocha_test_results__.total = runner.total;
+    window.__mocha_test_results__.completed = false;
   });
 
-  runner.on("pending", (test: Test) => tests.push(test));
+  runner.on("end", finish);
+
+  runner.on("pending", (test: Test) => {
+    tests.push(test);
+  });
+  runner.on("test", (test: Test) => {
+    console.info(`[test:start] ${test.titlePath().join(" > ")}`);
+  });
   runner.on("fail", (test: Test, error: Error) => {
     // For some reason mocha does not put err on the test object?
     test.err = error;
     tests.push(test);
+    console.info(`[test:fail] ${test.titlePath().join(" > ")}`);
   });
-  runner.on("pass", (test: Test) => tests.push(test));
+  runner.on("pass", (test: Test) => {
+    tests.push(test);
+    console.info(`[test:pass] ${test.titlePath().join(" > ")}`);
+  });
 }
