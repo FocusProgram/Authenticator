@@ -27,6 +27,7 @@ export enum OTPAlgorithm {
 export enum DataType {
   OTPStorage = "OTPStorage",
   EncOTPStorage = "EncOTPStorage",
+  EncGroup = "EncGroup",
   Key = "Key",
   Group = "Group",
 }
@@ -49,7 +50,7 @@ export class OTPUtil {
 }
 
 export function normalizeOtpSecretForType(secret: string, type: OTPType) {
-  const normalizedSecret = secret.replace(/ /g, "");
+  const normalizedSecret = secret.replace(/\s+/g, "");
   const isBase32Secret = /^[a-z2-7]+=*$/i.test(normalizedSecret);
   const isHexSecret = /^[0-9a-f]+$/i.test(normalizedSecret);
 
@@ -77,6 +78,20 @@ export function normalizeOtpSecretForType(secret: string, type: OTPType) {
     secret: normalizedSecret,
     type: normalizedType,
   };
+}
+
+const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export function regenerateLegacyEntryHash(
+  entry: Pick<OTPEntryInterface, "hash" | "genUUID">
+) {
+  if (UUID_V4_PATTERN.test(entry.hash)) {
+    return null;
+  }
+
+  const previousHash = entry.hash;
+  entry.genUUID();
+  return previousHash;
 }
 
 export class OTPEntry implements OTPEntryInterface {
@@ -193,7 +208,10 @@ export class OTPEntry implements OTPEntryInterface {
     } else {
       this.pinned = false;
     }
-    if (this.type === OTPType.totp && entry.period) {
+    if (
+      (this.type === OTPType.totp || this.type === OTPType.hex) &&
+      entry.period
+    ) {
       this.period = entry.period;
     } else {
       this.period = 30;

@@ -1,70 +1,55 @@
 <template>
   <div
     id="codes"
-    v-bind:class="{ filter: shouldFilter && filter, search: showSearch }"
+    v-bind:class="{
+      filter: shouldFilter && filter,
+      search: showSearch,
+      'batch-selecting': style.isSelecting,
+    }"
+    v-on:scroll.passive="closeAllSwipe()"
   >
-    <div class="entry-count" v-show="showSearch">
-      {{ i18n.total_entries || "Entries" }}: {{ visibleEntriesCount }} /
-      {{ totalEntriesCount }}
-    </div>
-
-    <div class="under-header" id="filter" v-on:click="clearFilter()">
-      {{ i18n.show_all_entries }}
-    </div>
-    <div class="under-header" id="search">
-      <input
-        id="searchInput"
-        ref="searchInput"
-        v-model="searchText"
-        v-bind:placeholder="i18n.search"
-        type="text"
-        tabindex="-1"
-      />
-      <button
-        v-if="searchText !== ''"
-        type="button"
-        class="search-clear-btn"
-        title="清空搜索"
-        v-on:click.stop="clearSearch()"
-      >
-        <IconXCircle />
-      </button>
-      <div id="searchHint" v-if="searchText === ''">
-        <div id="searchHintBorder">/</div>
+    <div class="vault-controls">
+      <div class="entry-count" v-if="initComplete">
+        <span class="entry-count-title">{{ i18n.ui_otp_codes }}</span>
+        <span class="entry-count-value">{{ entryCountLabel }}</span>
       </div>
-    </div>
 
-    <div class="group-toolbar">
-      <label class="group-filter-label" for="groupFilterSelect">
-        {{ groupLabel }}
-      </label>
-      <select
-        id="groupFilterSelect"
-        class="group-filter-select"
-        :value="activeGroupId"
-        @change="onGroupFilterChange"
-      >
-        <option value="__all__">
-          {{ allGroupsLabel }}（{{ entries.length }}）
-        </option>
-        <option
-          v-if="ungroupedTotalCount > 0 || activeGroupId === '__ungrouped__'"
-          value="__ungrouped__"
+      <div class="under-header" id="filter" v-on:click="clearFilter()">
+        {{ i18n.show_all_entries }}
+      </div>
+      <div class="under-header" id="search" v-show="showSearch">
+        <input
+          id="searchInput"
+          ref="searchInput"
+          v-model="searchText"
+          v-bind:placeholder="i18n.search"
+          type="text"
+          tabindex="0"
+        />
+        <button
+          v-if="searchText !== ''"
+          type="button"
+          class="search-clear-btn"
+          :title="i18n.ui_clear_search"
+          :aria-label="i18n.ui_clear_search"
+          v-on:click.stop="clearSearch()"
         >
-          {{ ungroupedLabel }}（{{ ungroupedTotalCount }}）
-        </option>
-        <option v-for="group in groups" :key="group.id" :value="group.id">
-          {{ group.name }}（{{ getGroupTotal(group.id) }}）
-        </option>
-      </select>
-      <button
-        type="button"
-        class="group-manage-btn"
-        :title="createGroupLabel"
-        v-on:click="openGroupManager()"
-      >
-        <IconBars />
-      </button>
+          <IconXCircle />
+        </button>
+        <div id="searchHint" v-if="searchText === ''">
+          <div id="searchHintBorder">/</div>
+        </div>
+      </div>
+
+      <GroupFilterToolbar
+        :groups="groups"
+        :active-group-id="activeGroupId"
+        :total-count="entries.length"
+        :ungrouped-count="ungroupedTotalCount"
+        :group-counts="groupCounts"
+        @change="setActiveGroup"
+        @manage="openGroupManager"
+      />
     </div>
 
     <div
@@ -77,8 +62,6 @@
 
     <div
       class="entry-list"
-      v-dragula
-      drake="entryDrake"
       v-on:keydown.down="focusNextEntry()"
       v-on:keydown.right="focusNextEntry()"
       v-on:keydown.up="focusLastEntry()"
@@ -92,7 +75,10 @@
         v-bind:entry="entry"
         v-bind:tabindex="getTabindex(entry)"
         v-bind:selected="selectedHashes.has(entry.hash)"
+        v-bind:swipe-open="openSwipeHash === entry.hash"
         v-on:toggle-select="toggleSelect(entry.hash)"
+        v-on:open-swipe="openSwipe(entry.hash)"
+        v-on:close-swipe="closeSwipe(entry.hash)"
       />
     </div>
 
@@ -107,39 +93,51 @@
     </div>
 
     <div class="batch-bar" v-if="style.isSelecting">
-      <div class="batch-top-row">
-        <div class="batch-select-all" v-on:click="toggleSelectAll()">
+      <div class="batch-summary-row">
+        <button type="button" class="batch-select-all" @click="toggleSelectAll">
           <div
             v-bind:class="{ 'checkbox-inner': true, checked: isAllSelected }"
           >
             <IconCheck v-if="isAllSelected" />
           </div>
-          <span>{{ isAllSelected ? deselectAllLabel : selectAllLabel }}</span>
-        </div>
+          <span class="batch-selection-copy">
+            <strong>{{ batchSelectionTitle }}</strong>
+          </span>
+          <span class="batch-select-action">
+            {{ isAllSelected ? deselectAllLabel : selectAllLabel }}
+          </span>
+        </button>
       </div>
-      <div class="batch-bottom-row">
-        <div class="batch-group-move">
-          <select v-model="targetGroupId">
-            <option value="">{{ ungroupedShortLabel }}</option>
-            <option v-for="group in groups" :key="group.id" :value="group.id">
-              {{ group.name }}
-            </option>
-          </select>
-          <button
-            class="batch-assign-btn"
-            v-bind:disabled="selectedHashes.size === 0"
-            v-on:click="moveSelectedToGroup()"
-          >
-            {{ moveLabel }}
-          </button>
-          <button
-            class="batch-delete-btn"
-            v-bind:disabled="selectedHashes.size === 0"
-            v-on:click="batchDelete()"
-          >
-            {{ deleteLabel }}（{{ selectedHashes.size }}）
-          </button>
-        </div>
+
+      <div class="batch-actions-line">
+        <select
+          id="batchGroupSelect"
+          v-model="targetGroupId"
+          :aria-label="i18n.ui_target_group"
+        >
+          <option value="">{{ ungroupedShortLabel }}</option>
+          <option v-for="group in groups" :key="group.id" :value="group.id">
+            {{ group.name }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="batch-action-btn move"
+          :disabled="selectedHashes.size === 0"
+          @click="moveSelectedToGroup"
+        >
+          <IconExchange />
+          <span>{{ moveLabel }}</span>
+        </button>
+        <button
+          type="button"
+          class="batch-action-btn delete"
+          :disabled="selectedHashes.size === 0"
+          @click="batchDelete"
+        >
+          <IconXCircle />
+          <span>{{ deleteLabel }}</span>
+        </button>
       </div>
     </div>
   </div>
@@ -151,9 +149,10 @@ import { OTPEntry } from "../../models/otp";
 import { EntryStorage } from "../../models/storage";
 
 import EntryComponent from "./EntryComponent.vue";
-import IconBars from "../../../svg/bars.svg";
+import GroupFilterToolbar from "./GroupFilterToolbar.vue";
 import IconKey from "../../../svg/key-solid.svg";
 import IconCheck from "../../../svg/check.svg";
+import IconExchange from "../../../svg/exchange.svg";
 import IconXCircle from "../../../svg/x-circle.svg";
 
 const computed: {
@@ -175,6 +174,7 @@ export default Vue.extend({
       searchText: "",
       selectedHashes: new Set() as Set<string>,
       targetGroupId: "",
+      openSwipeHash: "",
     };
   },
   computed: {
@@ -185,35 +185,41 @@ export default Vue.extend({
     activeGroupId(): string {
       return this.$store.state.groups.activeGroupId || "__all__";
     },
+    groupCounts(): Record<string, number> {
+      return this.entries.reduce((counts: Record<string, number>, entry) => {
+        const groupId = entry.groupId || "__ungrouped__";
+        counts[groupId] = (counts[groupId] || 0) + 1;
+        return counts;
+      }, {});
+    },
     ungroupedTotalCount(): number {
-      return this.entries.filter((entry) => !entry.groupId).length;
+      return this.groupCounts.__ungrouped__ || 0;
     },
-    groupLabel(): string {
-      return "分组";
+    normalizedSearchText(): string {
+      return this.searchText.trim().toLowerCase();
     },
-    allGroupsLabel(): string {
-      return "全部";
-    },
-    ungroupedLabel(): string {
-      return "未分组";
-    },
-    createGroupLabel(): string {
-      return "编辑分组";
+    matchedEntryHashes(): Set<string> {
+      return new Set(this.$store.getters["accounts/matchedEntries"]);
     },
     selectAllLabel(): string {
-      return this.i18n.select_all || "全选";
+      return this.i18n.select_all || "Select all";
     },
     deselectAllLabel(): string {
-      return this.i18n.deselect_all || "取消全选";
+      return this.i18n.deselect_all || "Deselect all";
     },
     ungroupedShortLabel(): string {
-      return this.i18n.group_ungrouped || "未分组";
+      return this.i18n.group_ungrouped || "Ungrouped";
     },
     moveLabel(): string {
-      return this.i18n.group_move || "移动";
+      return this.i18n.group_move || "Move";
     },
     deleteLabel(): string {
-      return this.i18n.delete || "删除";
+      return this.i18n.delete || "Delete";
+    },
+    batchSelectionTitle(): string {
+      return this.selectedHashes.size > 0
+        ? `${this.i18n.ui_selected} ${this.selectedHashes.size} ${this.i18n.ui_items}`
+        : this.i18n.ui_no_selection;
     },
     visibleEntries(): OTPEntry[] {
       return this.entries.filter((entry) => {
@@ -237,6 +243,12 @@ export default Vue.extend({
     },
     totalEntriesCount(): number {
       return this.entries.length;
+    },
+    entryCountLabel(): string {
+      if (this.visibleEntriesCount === this.totalEntriesCount) {
+        return `${this.totalEntriesCount} ${this.i18n.ui_items}`;
+      }
+      return `${this.visibleEntriesCount} / ${this.totalEntriesCount} ${this.i18n.ui_items}`;
     },
     isAllSelected(): boolean {
       return (
@@ -269,7 +281,28 @@ export default Vue.extend({
       if (this.searchText) {
         return this.i18n.no_results || "No matching entries found.";
       }
-      return this.i18n.group_empty || "No entries in this group.";
+      return this.i18n.group_empty || "This group has no entries yet.";
+    },
+  },
+  watch: {
+    "style.isSelecting"(isSelecting: boolean) {
+      if (!isSelecting) {
+        this.selectedHashes = new Set();
+        this.targetGroupId = "";
+        this.openSwipeHash = "";
+      }
+    },
+    searchText() {
+      this.selectedHashes = new Set();
+      this.openSwipeHash = "";
+    },
+    entries(entries: OTPEntry[]) {
+      const existingHashes = new Set(entries.map((entry) => entry.hash));
+      this.selectedHashes = new Set(
+        Array.from(this.selectedHashes).filter((hash) =>
+          existingHashes.has(hash)
+        )
+      );
     },
   },
   methods: {
@@ -284,32 +317,19 @@ export default Vue.extend({
     setActiveGroup(groupId: string) {
       this.$store.commit("groups/setActiveGroup", groupId);
       this.selectedHashes = new Set();
-    },
-    onGroupFilterChange(event: Event) {
-      const target = event.target as HTMLSelectElement | null;
-      if (!target) {
-        return;
-      }
-      this.setActiveGroup(target.value);
-    },
-    getGroupTotal(groupId: string) {
-      return this.entries.filter((entry) => entry.groupId === groupId).length;
+      this.openSwipeHash = "";
     },
     isMatchedEntry(entry: OTPEntry) {
-      for (const hash of this.$store.getters["accounts/matchedEntries"]) {
-        if (entry.hash === hash) {
-          return true;
-        }
-      }
-      return false;
+      return this.matchedEntryHashes.has(entry.hash);
     },
     isSearchedEntry(entry: OTPEntry) {
-      if (this.searchText === "") {
+      if (!this.normalizedSearchText) {
         return true;
       }
       return (
-        entry.issuer.toLowerCase().includes(this.searchText.toLowerCase()) ||
-        entry.account.toLowerCase().includes(this.searchText.toLowerCase())
+        entry.issuer.toLowerCase().includes(this.normalizedSearchText) ||
+        entry.account.toLowerCase().includes(this.normalizedSearchText) ||
+        (entry.note || "").toLowerCase().includes(this.normalizedSearchText)
       );
     },
     clearFilter() {
@@ -317,12 +337,14 @@ export default Vue.extend({
     },
     clearSearch() {
       this.searchText = "";
+      this.openSwipeHash = "";
       this.$nextTick(() => {
         const input = this.$refs.searchInput as HTMLInputElement | undefined;
         input?.focus();
       });
     },
     toggleSelect(hash: string) {
+      this.openSwipeHash = "";
       const newSet = new Set(this.selectedHashes);
       if (newSet.has(hash)) {
         newSet.delete(hash);
@@ -332,6 +354,7 @@ export default Vue.extend({
       this.selectedHashes = newSet;
     },
     toggleSelectAll() {
+      this.openSwipeHash = "";
       if (this.isAllSelected) {
         this.selectedHashes = new Set();
       } else {
@@ -351,6 +374,17 @@ export default Vue.extend({
       });
       this.selectedHashes = new Set();
     },
+    openSwipe(hash: string) {
+      this.openSwipeHash = hash;
+    },
+    closeSwipe(hash: string) {
+      if (this.openSwipeHash === hash) {
+        this.openSwipeHash = "";
+      }
+    },
+    closeAllSwipe() {
+      this.openSwipeHash = "";
+    },
     async batchDelete() {
       const count = this.selectedHashes.size;
       if (count === 0) {
@@ -362,16 +396,9 @@ export default Vue.extend({
           (this.i18n.confirm_delete || "Delete") + " (" + count + ")"
         )
       ) {
-        for (const hash of this.selectedHashes) {
-          const entry = this.entries.find((e) => e.hash === hash);
-          if (entry) {
-            await entry.delete();
-          }
-        }
-        await this.$store.dispatch(
-          "accounts/batchDeleteCode",
-          Array.from(this.selectedHashes)
-        );
+        const hashes = Array.from(this.selectedHashes);
+        await EntryStorage.removeMany(hashes);
+        await this.$store.dispatch("accounts/batchDeleteCode", hashes);
         this.selectedHashes = new Set();
       }
     },
@@ -390,20 +417,20 @@ export default Vue.extend({
     },
     getVisibleEntryElements() {
       return Array.from(
-        document.querySelectorAll<HTMLAnchorElement>(".entry-list .entry")
+        document.querySelectorAll<HTMLElement>(".entry-list .entry")
       ).filter((entry) => entry.offsetParent !== null);
     },
     findNextEntryIndex(reverse: boolean) {
       const visibleElements = this.getVisibleEntryElements();
       if (
         !document.activeElement ||
-        !visibleElements.includes(document.activeElement as HTMLAnchorElement)
+        !visibleElements.includes(document.activeElement as HTMLElement)
       ) {
         return -1;
       }
 
       const activeIndex = visibleElements.indexOf(
-        document.activeElement as HTMLAnchorElement
+        document.activeElement as HTMLElement
       );
       if (activeIndex === -1) {
         return -1;
@@ -430,42 +457,12 @@ export default Vue.extend({
       this.getVisibleEntryElements()[nextIndex]?.focus();
     },
   },
-  created() {
-    this.$dragula.$service.options("entryDrake", {
-      invalid: () => {
-        if (!this.$store.state.style.style.isEditing) {
-          return true;
-        } else {
-          return false;
-        }
-      },
-    });
-
-    this.$dragula.$service.eventBus.$on(
-      "dropModel",
-      async ({
-        dragIndex,
-        dropIndex,
-      }: {
-        dragIndex: number;
-        dropIndex: number;
-      }) => {
-        if (this.activeGroupId !== "__all__" || this.searchText) {
-          return;
-        }
-        this.$store.commit("accounts/moveCode", {
-          from: dragIndex,
-          to: dropIndex,
-        });
-        await EntryStorage.set(this.$store.state.accounts.entries);
-      }
-    );
-  },
   components: {
     EntryComponent,
+    GroupFilterToolbar,
     IconKey,
     IconCheck,
-    IconBars,
+    IconExchange,
     IconXCircle,
   },
 });

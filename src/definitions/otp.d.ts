@@ -14,6 +14,7 @@ interface OTPEntryInterface {
   algorithm: number; // OTPAlgorithm
   pinned: boolean;
   encData?: string;
+  keyId?: string;
   encryption?: EncryptionInterface;
   create(): Promise<void>;
   update(): Promise<void>;
@@ -68,13 +69,24 @@ interface GroupStorageRecord {
   index: number;
 }
 
+interface EncGroupStorageRecord {
+  dataType: "EncGroup";
+  keyId: string;
+  data: string;
+  index: number;
+}
+
 interface OTPGroupInterface {
   id: string;
   name: string;
   index: number;
 }
 
-type OTPStorage = RawOTPStorage | EncOTPStorage | GroupStorageRecord;
+type OTPStorage =
+  | RawOTPStorage
+  | EncOTPStorage
+  | GroupStorageRecord
+  | EncGroupStorageRecord;
 
 interface OldKey {
   enc: string;

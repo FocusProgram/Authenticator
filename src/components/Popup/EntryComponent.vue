@@ -1,174 +1,244 @@
 <template>
-  <a
-    role="button"
-    data-x-role="entry"
-    v-bind:tabindex="tabindex"
+  <div
     v-bind:class="{
-      entry: true,
-      pinnedEntry: entry.pinned,
-      'no-copy': noCopy(entry.code),
-      'select-mode': style.isSelecting,
-      expanded: detailsOpen,
+      'entry-swipe-shell': true,
+      open: swipeOpen,
+      dragging: swipeDragging,
     }"
-    v-on:click="onEntryClick(entry)"
-    v-on:keydown.enter="onEntryClick(entry)"
   >
     <div
-      class="select-checkbox"
-      v-if="style.isSelecting"
-      v-on:click.stop="$emit('toggle-select')"
+      class="entry-swipe-actions"
+      v-bind:aria-hidden="swipeOpen ? 'false' : 'true'"
+      v-on:click.stop
     >
-      <div v-bind:class="{ 'checkbox-inner': true, checked: selected }">
-        <IconCheck v-if="selected" />
-      </div>
-    </div>
-    <div class="deleteAction" v-on:click.stop="removeEntry(entry)">
-      <IconMinusCircle />
-    </div>
-
-    <div class="entry-main">
-      <div class="entry-identity">
-        <div class="entry-title">
-          {{ displayName }}
-        </div>
-        <div class="issuer account">{{ displayUser }}</div>
-        <div class="entry-meta-row" v-if="entry.groupId">
-          <div :class="['entry-group', getGroupStyleClass(entry.groupId)]">
-            <span class="entry-group-dot"></span>
-            <span class="entry-group-text">
-              {{ getGroupName(entry.groupId) }}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="entry-code-row">
-        <div
-          v-bind:class="{
-            code: true,
-            hotp: entry.type === OTPType.hotp || entry.type === OTPType.hhex,
-            timeout: entry.period - (second % entry.period) < 5,
-          }"
-          v-html="showCode(entry.code)"
-        ></div>
-
-        <div class="entry-timer-slot">
-          <div
-            v-bind:class="{
-              sector: true,
-              timeout: entry.period - (second % entry.period) < 5,
-            }"
-            v-if="entry.type !== OTPType.hotp && entry.type !== OTPType.hhex"
-            v-show="sectorStart"
-          >
-            <svg viewBox="0 0 36 36">
-              <circle class="sector-bg" cx="18" cy="18" r="15.9" />
-              <circle
-                class="sector-fg"
-                cx="18"
-                cy="18"
-                r="15.9"
-                v-bind:style="{
-                  animationDuration: entry.period + 's',
-                  animationDelay: (sectorOffset % entry.period) + 's',
-                }"
-              />
-            </svg>
-            <span class="countdown">{{
-              entry.period - (second % entry.period)
-            }}</span>
-          </div>
-          <div
-            v-bind:class="{ counter: true, disabled: style.hotpDiabled }"
-            v-if="entry.type === OTPType.hotp || entry.type === OTPType.hhex"
-            v-on:click.stop="nextCode(entry)"
-          >
-            <IconRedo />
-          </div>
-        </div>
-      </div>
-
-      <div class="entry-note" v-if="entry.note">
-        {{ entry.note }}
-      </div>
-    </div>
-
-    <div class="entry-tools">
-      <div class="entry-actions-row">
-        <div
-          class="showqr"
-          v-if="shouldShowQrIcon(entry)"
-          title="显示二维码"
-          v-on:click.stop="showQr(entry)"
-        >
-          <IconQr />
-        </div>
-        <div
-          class="copyotpauth"
-          v-if="shouldShowQrIcon(entry)"
-          title="复制 OTP 链接"
-          v-on:click.stop="copyOtpAuth(entry)"
-        >
-          <IconClipboardCheck />
-        </div>
-        <div
-          v-bind:class="{ pin: true, pinned: entry.pinned }"
-          :title="entry.pinned ? '取消置顶' : '置顶'"
-          v-on:click.stop="pin(entry)"
-        >
-          <IconPin />
-        </div>
-      </div>
-
       <button
         type="button"
-        class="entry-detail-trigger"
-        v-on:click.stop="toggleDetails()"
+        class="entry-swipe-action edit"
+        :title="i18n.ui_edit_otp"
+        v-bind:tabindex="swipeOpen ? 0 : -1"
+        v-on:click.stop="openDetailsFromSwipe()"
       >
-        <IconInfo />
+        <IconPencil />
+        <span>{{ i18n.edit }}</span>
+      </button>
+      <button
+        type="button"
+        class="entry-swipe-action delete"
+        :title="i18n.ui_delete_otp"
+        v-bind:tabindex="swipeOpen ? 0 : -1"
+        v-on:click.stop="removeEntry(entry)"
+      >
+        <IconXCircle />
+        <span>{{ i18n.delete }}</span>
       </button>
     </div>
 
-    <div class="entry-details" v-if="detailsOpen" v-on:click.stop>
-      <div class="entry-detail-grid" v-if="entry.secret !== null">
-        <label>{{ i18n.issuer || "Name" }}</label>
-        <input class="input" type="text" v-model="draft.issuer" />
-
-        <label>{{ i18n.accountName || "User" }}</label>
-        <input class="input" type="text" v-model="draft.account" />
-
-        <label>{{ i18n.note || "Note" }}</label>
-        <textarea class="input detail-textarea" v-model="draft.note"></textarea>
-
-        <label>{{ i18n.secret || "Secret" }}</label>
-        <input class="input detail-secret" type="text" v-model="draft.secret" />
-
-        <label>分组</label>
-        <select class="input" v-model="draft.groupId">
-          <option value="">未分组</option>
-          <option v-for="group in groups" :key="group.id" :value="group.id">
-            {{ group.name }}
-          </option>
-        </select>
+    <div
+      role="button"
+      data-x-role="entry"
+      v-bind:tabindex="tabindex"
+      v-bind:aria-expanded="detailsOpen ? 'true' : 'false'"
+      v-bind:style="swipeTransformStyle"
+      v-bind:class="{
+        entry: true,
+        pinnedEntry: entry.pinned,
+        'no-copy': noCopy(entry.code),
+        'select-mode': style.isSelecting,
+        'is-selected': style.isSelecting && selected,
+        expanded: detailsOpen,
+      }"
+      v-on:click="onEntryClick(entry)"
+      v-on:keydown.enter.self.prevent="onEntryClick(entry)"
+      v-on:keydown.space.self.prevent="onEntryClick(entry)"
+      v-on:keydown.delete.self.stop.prevent="removeEntry(entry)"
+      v-on:keydown.e.self.stop.prevent="openDetailsFromSwipe()"
+      v-on:pointerdown="onSwipePointerDown"
+      v-on:pointermove="onSwipePointerMove"
+      v-on:pointerup="onSwipePointerEnd"
+      v-on:pointercancel="onSwipePointerEnd"
+    >
+      <div
+        class="select-checkbox"
+        v-if="style.isSelecting"
+        v-on:click.stop="$emit('toggle-select')"
+      >
+        <div v-bind:class="{ 'checkbox-inner': true, checked: selected }">
+          <IconCheck v-if="selected" />
+        </div>
       </div>
-      <div class="entry-detail-locked" v-else>
-        {{ i18n.encrypted || "Unlock this item to edit its details." }}
+
+      <div class="entry-main">
+        <div class="entry-identity">
+          <div class="entry-title">
+            {{ displayName }}
+          </div>
+          <div class="issuer account">{{ displayUser }}</div>
+          <div class="entry-meta-row" v-if="currentGroup">
+            <div :class="['entry-group', groupStyleClass]">
+              <span class="entry-group-icon" aria-hidden="true">
+                <IconTag />
+              </span>
+              <span class="entry-group-text">
+                {{ displayGroupName }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="entry-code-row">
+          <div
+            v-bind:class="{
+              code: true,
+              hotp: entry.type === OTPType.hotp || entry.type === OTPType.hhex,
+              timeout: entry.period - (second % entry.period) < 5,
+            }"
+            v-html="showCode(entry.code)"
+          ></div>
+
+          <div class="entry-timer-slot">
+            <div
+              v-bind:class="{
+                sector: true,
+                timeout: entry.period - (second % entry.period) < 5,
+              }"
+              v-if="entry.type !== OTPType.hotp && entry.type !== OTPType.hhex"
+              v-show="sectorStart"
+            >
+              <svg viewBox="0 0 36 36">
+                <circle class="sector-bg" cx="18" cy="18" r="15.9" />
+                <circle
+                  class="sector-fg"
+                  cx="18"
+                  cy="18"
+                  r="15.9"
+                  v-bind:style="{
+                    animationDuration: entry.period + 's',
+                    animationDelay: (sectorOffset % entry.period) + 's',
+                  }"
+                />
+              </svg>
+              <span class="countdown">{{
+                entry.period - (second % entry.period)
+              }}</span>
+            </div>
+            <button
+              type="button"
+              v-bind:class="{ counter: true, disabled: style.hotpDisabled }"
+              v-if="entry.type === OTPType.hotp || entry.type === OTPType.hhex"
+              v-bind:disabled="style.hotpDisabled"
+              v-on:click.stop="nextCode(entry)"
+            >
+              <IconRedo />
+            </button>
+          </div>
+        </div>
+
+        <div class="entry-note" v-if="entry.note">
+          {{ entry.note }}
+        </div>
       </div>
-      <div class="entry-detail-actions">
-        <button class="button" type="button" v-on:click.stop="toggleDetails()">
-          {{ i18n.cancel || "Cancel" }}
-        </button>
-        <button
-          class="button primary"
-          type="button"
-          v-if="entry.secret !== null"
-          v-on:click.stop="saveDetails()"
-        >
-          {{ i18n.ok || "Save" }}
-        </button>
+
+      <EntryActions
+        :entry="entry"
+        :show-export-actions="shouldShowQrIcon(entry)"
+        @show-qr="showQr(entry)"
+        @copy-otp="copyOtpAuth(entry)"
+        @pin="pin(entry)"
+        @view-details="openViewDetails()"
+      />
+
+      <div class="entry-details" v-if="detailsOpen" v-on:click.stop>
+        <template v-if="entry.secret !== null">
+          <div class="entry-detail-grid" v-if="detailsMode === 'edit'">
+            <label>{{ i18n.issuer || "Name" }}</label>
+            <input class="input" type="text" v-model="draft.issuer" />
+
+            <label>{{ i18n.accountName || "Account" }}</label>
+            <input class="input" type="text" v-model="draft.account" />
+
+            <label>{{ i18n.note || "Notes" }}</label>
+            <textarea
+              class="input detail-textarea"
+              v-model="draft.note"
+            ></textarea>
+
+            <label>{{ i18n.secret || "Secret" }}</label>
+            <input
+              class="input detail-secret"
+              type="text"
+              v-model="draft.secret"
+            />
+
+            <label>{{ i18n.ui_group_section }}</label>
+            <select class="input" v-model="draft.groupId">
+              <option value="">{{ i18n.group_ungrouped }}</option>
+              <option v-for="group in groups" :key="group.id" :value="group.id">
+                {{ group.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="entry-detail-view" v-else>
+            <div class="entry-detail-view-row">
+              <span class="entry-detail-view-label">{{ i18n.issuer }}</span>
+              <span class="entry-detail-view-value">
+                {{ entry.issuer ? entry.issuer.split("::")[0] : "—" }}
+              </span>
+            </div>
+            <div class="entry-detail-view-row">
+              <span class="entry-detail-view-label">{{
+                i18n.accountName
+              }}</span>
+              <span class="entry-detail-view-value">
+                {{ entry.account || "—" }}
+              </span>
+            </div>
+            <div class="entry-detail-view-row">
+              <span class="entry-detail-view-label">{{ i18n.note }}</span>
+              <span class="entry-detail-view-value multiline">
+                {{ entry.note || "—" }}
+              </span>
+            </div>
+            <div class="entry-detail-view-row">
+              <span class="entry-detail-view-label">{{ i18n.secret }}</span>
+              <span class="entry-detail-view-value secret">
+                {{ entry.secret }}
+              </span>
+            </div>
+            <div class="entry-detail-view-row">
+              <span class="entry-detail-view-label">{{
+                i18n.ui_group_section
+              }}</span>
+              <span class="entry-detail-view-value">
+                {{ displayGroupName }}
+              </span>
+            </div>
+          </div>
+        </template>
+        <div class="entry-detail-locked" v-else>
+          {{
+            i18n.encrypted ||
+            (detailsMode === "edit"
+              ? i18n.ui_unlock_to_edit
+              : i18n.ui_unlock_to_view)
+          }}
+        </div>
+        <div class="entry-detail-actions">
+          <button class="button" type="button" v-on:click.stop="closeDetails()">
+            {{ detailsMode === "view" ? i18n.close : i18n.cancel }}
+          </button>
+          <button
+            class="button primary"
+            type="button"
+            v-if="entry.secret !== null && detailsMode === 'edit'"
+            v-on:click.stop="saveDetails()"
+          >
+            {{ i18n.save || i18n.ok }}
+          </button>
+        </div>
       </div>
     </div>
-  </a>
+  </div>
 </template>
 <script lang="ts">
 import Vue from "vue";
@@ -178,28 +248,24 @@ import {
   OTPEntry,
   OTPType,
   CodeState,
-  OTPAlgorithm,
   normalizeOtpSecretForType,
 } from "../../models/otp";
 import { EntryStorage } from "../../models/storage";
+import { buildOtpAuthUri } from "../../models/otpauth-uri";
 import { getCurrentTab, okToInjectContentScript } from "../../utils";
 
-import IconMinusCircle from "../../../svg/minus-circle.svg";
 import IconRedo from "../../../svg/redo.svg";
-import IconQr from "../../../svg/qrcode.svg";
-import IconClipboardCheck from "../../../svg/clipboard-check.svg";
-import IconPin from "../../../svg/pin.svg";
 import IconCheck from "../../../svg/check.svg";
-import IconInfo from "../../../svg/info.svg";
+import IconPencil from "../../../svg/pencil.svg";
+import IconTag from "../../../svg/tag.svg";
+import IconXCircle from "../../../svg/x-circle.svg";
+import EntryActions from "./EntryActions.vue";
+
+const SWIPE_ACTION_WIDTH = 96;
+const SWIPE_OPEN_THRESHOLD = 40;
 
 const computedPrototype = [
-  mapState("accounts", [
-    "OTPType",
-    "sectorStart",
-    "sectorOffset",
-    "second",
-    "encryption",
-  ]),
+  mapState("accounts", ["OTPType", "sectorStart", "sectorOffset", "second"]),
   mapState("style", ["style"]),
 ];
 
@@ -215,21 +281,50 @@ export default Vue.extend({
     groups(): OTPGroupInterface[] {
       return this.$store.state.groups.groups;
     },
+    currentGroup(): OTPGroupInterface | undefined {
+      if (!this.entry.groupId) {
+        return undefined;
+      }
+      return this.groups.find((group) => group.id === this.entry.groupId);
+    },
+    displayGroupName(): string {
+      return (
+        this.currentGroup?.name || this.i18n.group_ungrouped || "Ungrouped"
+      );
+    },
+    groupStyleClass(): string {
+      return getGroupPaletteClass(this.entry.groupId || "");
+    },
     displayName(): string {
       return this.entry.issuer?.split("::")[0] || this.i18n.issuer || "Name";
     },
     displayUser(): string {
-      return this.entry.account || this.i18n.accountName || "User";
+      return this.entry.account || this.i18n.accountName || "Account";
+    },
+    swipeTransformStyle(): { transform: string } {
+      return {
+        transform: `translate3d(${this.swipeOffset}px, 0, 0)`,
+      };
     },
   },
   props: {
     entry: OTPEntry,
     tabindex: Number,
     selected: Boolean,
+    swipeOpen: Boolean,
   },
   data() {
     return {
       detailsOpen: false,
+      detailsMode: "view" as "view" | "edit",
+      swipeOffset: this.swipeOpen ? -SWIPE_ACTION_WIDTH : 0,
+      swipeDragging: false,
+      swipeStartX: 0,
+      swipeStartY: 0,
+      swipeStartOffset: 0,
+      swipePointerId: -1,
+      swipeAxis: "" as "" | "x" | "y",
+      suppressEntryClick: false,
       draft: {
         issuer: "",
         account: "",
@@ -238,6 +333,13 @@ export default Vue.extend({
         groupId: "",
       },
     };
+  },
+  watch: {
+    swipeOpen(open: boolean) {
+      if (!this.swipeDragging) {
+        this.swipeOffset = open ? -SWIPE_ACTION_WIDTH : 0;
+      }
+    },
   },
   methods: {
     noCopy(code: string) {
@@ -273,11 +375,107 @@ export default Vue.extend({
         groupId: this.entry.groupId || "",
       };
     },
-    toggleDetails() {
-      this.detailsOpen = !this.detailsOpen;
-      if (this.detailsOpen) {
-        this.syncDraft();
+    closeDetails() {
+      this.detailsOpen = false;
+    },
+    openViewDetails() {
+      this.closeSwipeActions();
+      if (this.detailsOpen && this.detailsMode === "view") {
+        this.closeDetails();
+        return;
       }
+      this.detailsMode = "view";
+      this.detailsOpen = true;
+    },
+    openDetailsFromSwipe() {
+      this.closeSwipeActions();
+      this.detailsMode = "edit";
+      this.syncDraft();
+      this.detailsOpen = true;
+    },
+    closeSwipeActions() {
+      this.swipeOffset = 0;
+      this.$emit("close-swipe");
+    },
+    onSwipePointerDown(event: PointerEvent) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const currentStyle = (this as any).style as StyleState["style"];
+      if (
+        !event.isPrimary ||
+        (event.pointerType === "mouse" && event.button !== 0) ||
+        currentStyle.isSelecting ||
+        this.detailsOpen
+      ) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      if (
+        target?.closest(
+          "button, input, textarea, select, .entry-tools, .entry-timer-slot"
+        )
+      ) {
+        return;
+      }
+
+      this.swipeDragging = true;
+      this.swipePointerId = event.pointerId;
+      this.swipeStartX = event.clientX;
+      this.swipeStartY = event.clientY;
+      this.swipeStartOffset = this.swipeOpen ? -SWIPE_ACTION_WIDTH : 0;
+      this.swipeAxis = "";
+      this.suppressEntryClick = false;
+
+      const currentTarget = event.currentTarget as HTMLElement | null;
+      currentTarget?.setPointerCapture?.(event.pointerId);
+    },
+    onSwipePointerMove(event: PointerEvent) {
+      if (!this.swipeDragging || event.pointerId !== this.swipePointerId) {
+        return;
+      }
+
+      const deltaX = event.clientX - this.swipeStartX;
+      const deltaY = event.clientY - this.swipeStartY;
+
+      if (!this.swipeAxis) {
+        if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 6) {
+          return;
+        }
+        this.swipeAxis = Math.abs(deltaX) > Math.abs(deltaY) ? "x" : "y";
+      }
+
+      if (this.swipeAxis === "y") {
+        return;
+      }
+
+      event.preventDefault();
+      this.suppressEntryClick = true;
+      this.swipeOffset = Math.max(
+        -SWIPE_ACTION_WIDTH,
+        Math.min(0, this.swipeStartOffset + deltaX)
+      );
+    },
+    onSwipePointerEnd(event: PointerEvent) {
+      if (!this.swipeDragging || event.pointerId !== this.swipePointerId) {
+        return;
+      }
+
+      const currentTarget = event.currentTarget as HTMLElement | null;
+      if (currentTarget?.hasPointerCapture?.(event.pointerId)) {
+        currentTarget.releasePointerCapture(event.pointerId);
+      }
+
+      const shouldOpen =
+        this.swipeAxis === "x" && this.swipeOffset <= -SWIPE_OPEN_THRESHOLD;
+      this.swipeOffset = shouldOpen ? -SWIPE_ACTION_WIDTH : 0;
+      this.swipeDragging = false;
+      this.swipePointerId = -1;
+      this.swipeAxis = "";
+
+      this.$emit(shouldOpen ? "open-swipe" : "close-swipe");
+      window.setTimeout(() => {
+        this.suppressEntryClick = false;
+      }, 0);
     },
     async saveDetails() {
       const normalizedSecretData = normalizeOtpSecretForType(
@@ -311,13 +509,20 @@ export default Vue.extend({
       this.$store.dispatch("accounts/updateEntries");
       this.$store.commit(
         "notification/alert",
-        this.i18n.updateSuccess || "Saved"
+        this.i18n.updateSuccess || this.i18n.ui_saved
       );
     },
     onEntryClick(entry: OTPEntry) {
+      if (this.suppressEntryClick) {
+        return;
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((this as any).style.isSelecting) {
         this.$emit("toggle-select");
+        return;
+      }
+      if (this.swipeOpen) {
+        this.closeSwipeActions();
         return;
       }
       if (this.detailsOpen) {
@@ -326,6 +531,7 @@ export default Vue.extend({
       this.copyCode(entry);
     },
     async removeEntry(entry: OTPEntry) {
+      this.closeSwipeActions();
       if (
         await this.$store.dispatch(
           "notification/confirm",
@@ -339,17 +545,26 @@ export default Vue.extend({
     },
     async pin(entry: OTPEntry) {
       this.$store.commit("accounts/pinEntry", entry);
-      await EntryStorage.set(this.$store.state.accounts.entries);
+      await EntryStorage.updateMany([entry]);
       const codesEl = document.getElementById("codes") as HTMLDivElement;
-      codesEl.scrollTop = 0;
+      if (codesEl) {
+        codesEl.scrollTop = 0;
+      }
     },
     showQr(entry: OTPEntry) {
-      this.$store.commit("qr/setQr", getQrUrl(entry));
+      const qrUrl = getQrUrl(entry);
+      if (!qrUrl) {
+        return;
+      }
+      this.$store.commit("qr/setQr", qrUrl);
       this.$store.commit("style/showQr");
       return;
     },
     copyOtpAuth(entry: OTPEntry) {
-      const otpAuth = getOtpAuthUrl(entry);
+      const otpAuth = buildOtpAuthUri(entry);
+      if (!otpAuth) {
+        return;
+      }
       chrome.permissions.request(
         { permissions: ["clipboardWrite"] },
         async (granted) => {
@@ -376,50 +591,28 @@ export default Vue.extend({
 
           this.$store.dispatch(
             "notification/ephermalMessage",
-            "已复制 OTP 链接"
+            this.i18n.ui_copy_otp_link_success
           );
         }
       );
     },
-    getGroupName(groupId: string) {
-      const group = this.$store.state.groups.groups.find(
-        (item: OTPGroupInterface) => item.id === groupId
-      );
-      return group?.name || this.i18n.group_ungrouped || "Ungrouped";
-    },
-    getGroupStyleClass(groupId: string) {
-      const palettes = [
-        "group-style-amber",
-        "group-style-green",
-        "group-style-rose",
-        "group-style-purple",
-        "group-style-slate",
-        "group-style-teal",
-        "group-style-cyan",
-      ];
-      let hash = 0;
-      for (let i = 0; i < groupId.length; i++) {
-        hash = (hash * 31 + groupId.charCodeAt(i)) >>> 0;
-      }
-      return palettes[hash % palettes.length];
-    },
     async nextCode(entry: OTPEntry) {
-      if (this.$store.state.style.hotpDisabled) {
+      const currentStyle = (this as any).style as StyleState["style"];
+      if (currentStyle.hotpDisabled) {
         return;
       }
-      this.$store.commit("style/toggleHotpDisabled");
-      await entry.next();
-      setTimeout(() => {
-        this.$store.commit("style/toggleHotpDisabled");
-      }, 3000);
+      this.$store.commit("style/setHotpDisabled", true);
+      try {
+        await entry.next();
+      } finally {
+        setTimeout(() => {
+          this.$store.commit("style/setHotpDisabled", false);
+        }, 3000);
+      }
       return;
     },
     async copyCode(entry: OTPEntry) {
-      if (
-        this.$store.state.style.style.isEditing ||
-        entry.code === CodeState.Invalid ||
-        entry.code.startsWith("&bull;")
-      ) {
+      if (entry.code === CodeState.Invalid || entry.code.startsWith("&bull;")) {
         return;
       }
 
@@ -477,51 +670,37 @@ export default Vue.extend({
     },
   },
   components: {
-    IconMinusCircle,
     IconRedo,
-    IconQr,
-    IconClipboardCheck,
-    IconPin,
     IconCheck,
-    IconInfo,
+    IconPencil,
+    IconTag,
+    IconXCircle,
+    EntryActions,
   },
 });
 
-function getOtpAuthUrl(entry: OTPEntry) {
-  const label = entry.issuer
-    ? entry.issuer + ":" + entry.account
-    : entry.account;
-  const type =
-    entry.type === OTPType.hex
-      ? OTPType[OTPType.totp]
-      : entry.type === OTPType.hhex
-      ? OTPType[OTPType.hotp]
-      : OTPType[entry.type];
-  return (
-    "otpauth://" +
-    type +
-    "/" +
-    encodeURIComponent(label) +
-    "?secret=" +
-    entry.secret +
-    (entry.issuer
-      ? "&issuer=" + encodeURIComponent(entry.issuer.split("::")[0])
-      : "") +
-    (entry.type === OTPType.hotp || entry.type === OTPType.hhex
-      ? "&counter=" + entry.counter
-      : "") +
-    (entry.type === OTPType.totp && entry.period !== 30
-      ? "&period=" + entry.period
-      : "") +
-    (entry.digits !== 6 ? "&digits=" + entry.digits : "") +
-    (entry.algorithm !== OTPAlgorithm.SHA1
-      ? "&algorithm=" + OTPAlgorithm[entry.algorithm]
-      : "")
-  );
+function getGroupPaletteClass(groupId: string) {
+  const palettes = [
+    "group-style-amber",
+    "group-style-green",
+    "group-style-rose",
+    "group-style-purple",
+    "group-style-slate",
+    "group-style-teal",
+    "group-style-cyan",
+  ];
+  let hash = 0;
+  for (let i = 0; i < groupId.length; i++) {
+    hash = (hash * 31 + groupId.charCodeAt(i)) >>> 0;
+  }
+  return palettes[hash % palettes.length];
 }
 
 function getQrUrl(entry: OTPEntry) {
-  const otpauth = getOtpAuthUrl(entry);
+  const otpauth = buildOtpAuthUri(entry);
+  if (!otpauth) {
+    return "";
+  }
   const qr = QRGen(0, "L");
   qr.addData(otpauth);
   qr.make();

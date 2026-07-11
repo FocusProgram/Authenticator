@@ -28,6 +28,14 @@ export class Groups implements Module {
           if (!trimmedName) {
             return null;
           }
+          const normalizedName = trimmedName.toLocaleLowerCase();
+          if (
+            state.state.groups.some(
+              (group) => group.name.toLocaleLowerCase() === normalizedName
+            )
+          ) {
+            return null;
+          }
 
           const group = {
             id: crypto.randomUUID(),
@@ -45,7 +53,18 @@ export class Groups implements Module {
         ) {
           const group = state.state.groups.find((item) => item.id === args.id);
           if (!group) {
-            return;
+            return false;
+          }
+          const normalizedName = args.name.trim().toLocaleLowerCase();
+          if (
+            !normalizedName ||
+            state.state.groups.some(
+              (item) =>
+                item.id !== args.id &&
+                item.name.toLocaleLowerCase() === normalizedName
+            )
+          ) {
+            return false;
           }
 
           await GroupStorage.update({
@@ -53,11 +72,15 @@ export class Groups implements Module {
             name: args.name,
           });
           await state.dispatch("refreshGroups");
+          return true;
         },
         async deleteGroup(
           state: ActionContext<GroupsState, object>,
           groupId: string
         ) {
+          if (state.rootGetters["accounts/currentlyEncrypted"]) {
+            return false;
+          }
           await GroupStorage.delete(groupId);
           await state.dispatch("refreshGroups");
           if (state.state.activeGroupId === groupId) {
@@ -66,6 +89,7 @@ export class Groups implements Module {
           await state.dispatch("accounts/updateEntries", undefined, {
             root: true,
           });
+          return true;
         },
         async moveGroup(
           state: ActionContext<GroupsState, object>,

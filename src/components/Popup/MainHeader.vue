@@ -1,83 +1,98 @@
 <template>
   <div class="header">
-    <span v-on:dblclick="popOut()">{{ i18n.extName }}</span>
-    <div v-show="!isPopup()">
-      <div
-        class="icon"
+    <div class="header-actions header-actions-left" v-show="!isPopup()">
+      <button
+        type="button"
+        class="icon header-icon"
         id="i-menu"
         v-bind:title="i18n.settings"
+        v-bind:aria-label="i18n.settings"
         v-on:click="showMenu()"
-        v-show="!style.isEditing && !style.isSelecting"
+        v-show="!style.isSelecting"
       >
         <IconCog />
-      </div>
-      <div
-        class="icon"
-        id="i-plus"
-        v-bind:title="i18n.add_code"
-        v-on:click="showInfo('AddMethodPage')"
-      >
-        <IconPlus />
-      </div>
-      <div
-        class="icon"
+      </button>
+      <button
+        type="button"
+        class="icon header-icon"
         id="i-lock"
         v-bind:title="i18n.lock"
+        v-bind:aria-label="i18n.lock"
         v-on:click="lock()"
-        v-show="!style.isEditing && !style.isSelecting && !!defaultEncryption"
+        v-show="!style.isSelecting && !!defaultEncryption"
       >
         <IconLock />
-      </div>
-      <div
-        class="icon"
+      </button>
+      <button
+        type="button"
+        class="icon header-icon"
         id="i-backup"
         v-bind:title="i18n.backup"
+        v-bind:aria-label="i18n.backup"
         v-on:click="showBackup()"
-        v-show="!style.isEditing && !style.isSelecting"
+        v-show="!style.isSelecting"
       >
         <IconBackup />
-      </div>
-      <div
-        class="icon"
-        id="i-sync"
-        v-bind:style="{
-          left: !!defaultEncryption ? '120px' : '95px',
-        }"
-        v-show="
-          (dropboxToken || driveToken || oneDriveToken) &&
-          !style.isEditing &&
-          !style.isSelecting
-        "
+        <span
+          class="header-sync-status"
+          id="i-sync"
+          v-show="dropboxToken || driveToken || oneDriveToken"
+          :title="i18n.ui_automatic_backup"
+        >
+          <IconSync />
+        </span>
+      </button>
+    </div>
+
+    <span class="header-title" v-on:dblclick="popOut()">
+      {{ style.isSelecting ? i18n.ui_batch_edit : i18n.extName }}
+    </span>
+
+    <div class="header-actions header-actions-right" v-show="!isPopup()">
+      <button
+        type="button"
+        class="icon header-icon"
+        id="i-plus"
+        v-bind:title="i18n.add_code"
+        v-bind:aria-label="i18n.add_code"
+        v-on:click="showInfo('AddMethodPage')"
+        v-show="!style.isSelecting"
       >
-        <IconSync />
-      </div>
-      <div
-        class="icon"
+        <IconPlus />
+      </button>
+      <button
+        type="button"
+        class="icon header-icon"
         id="i-qr"
         v-bind:title="i18n.add_qr"
-        v-show="!style.isEditing && !style.isSelecting"
+        v-bind:aria-label="i18n.add_qr"
+        v-show="!style.isSelecting"
         v-on:click="beginCapture()"
       >
         <IconScan />
-      </div>
-      <div
-        class="icon"
+      </button>
+      <button
+        type="button"
+        class="icon header-icon"
         id="i-edit"
-        v-bind:title="i18n.edit"
+        :title="i18n.ui_batch_edit"
+        :aria-label="i18n.ui_batch_edit"
         v-if="!style.isSelecting"
         v-on:click="toggleSelect()"
       >
         <IconPencil />
-      </div>
-      <div
-        class="icon"
+      </button>
+      <button
+        type="button"
+        class="icon header-icon"
         id="i-edit"
         v-bind:title="i18n.cancel || 'Cancel'"
+        v-bind:aria-label="i18n.cancel || 'Cancel'"
         v-else
         v-on:click="toggleSelect()"
       >
         <IconXCircle />
-      </div>
+      </button>
     </div>
   </div>
 </template>
@@ -147,12 +162,7 @@ export default Vue.extend({
       this.$store.commit("currentView/changeView", page);
     },
     showBackup() {
-      this.$store.commit("style/showInfo");
-      this.$store.commit("currentView/changeView", "BackupPage");
-    },
-    editEntry() {
-      this.$store.commit("style/toggleEdit");
-      this.$store.commit("accounts/stopFilter");
+      this.$store.commit("style/showBackupPanel");
     },
     toggleSelect() {
       this.$store.commit("style/toggleSelect");

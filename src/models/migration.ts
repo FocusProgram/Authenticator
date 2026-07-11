@@ -1,4 +1,5 @@
 import * as CryptoJS from "crypto-js";
+import { buildOtpAuthUri } from "./otpauth-uri";
 
 function byteArray2Base32(bytes: number[]) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
@@ -114,15 +115,25 @@ export function getOTPAuthPerLineFromOPTAuthMigration(migrationUri: string) {
     const type = ["totp", "hotp", "totp"][
       byteData[isserStart + isserLength + 5]
     ];
-    let line = `otpauth://${type}/${account}?secret=${secret}&issuer=${issuer}&algorithm=${algorithm}&digits=${digits}`;
+    let counter: number | undefined;
     if (type === "hotp") {
-      let counter = 1;
+      counter = 1;
       if (isserStart + isserLength + 7 <= lineLength) {
         counter = byteData[isserStart + isserLength + 7];
       }
-      line += `&counter=${counter}`;
     }
-    lines.push(line);
+    const line = buildOtpAuthUri({
+      type,
+      account,
+      secret,
+      issuer,
+      algorithm,
+      digits,
+      counter,
+    });
+    if (line) {
+      lines.push(line);
+    }
     offset += lineLength + 2;
   }
   return lines;

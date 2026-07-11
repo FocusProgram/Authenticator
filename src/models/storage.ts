@@ -2,6 +2,7 @@ import { Encryption } from "./encryption";
 import { OTPEntry, OTPType, OTPAlgorithm, CodeState } from "./otp";
 import { StorageLocation, UserSettings } from "./settings";
 import { DataType } from "./otp";
+import { createRecordMap, isUnsafeRecordKey } from "./record-map";
 export class BrowserStorage {
   private static async getStorageLocation(): Promise<StorageLocation> {
     await UserSettings.updateItems();
@@ -155,6 +156,215 @@ export class BrowserStorage {
     return;
   }
 
+  static async commitOtpAndGroupChanges(
+    data: { [key: string]: OTPStorage },
+    removeKeys: string[] = [],
+    currentData?: { [key: string]: OTPStorage }
+  ) {
+    const nextKeys = Object.keys(data);
+    const nextKeySet = new Set(nextKeys);
+    const keysToRemove = Array.from(new Set(removeKeys)).filter(
+      (key) => !nextKeySet.has(key)
+    );
+    const transactionKeys = Array.from(new Set([...nextKeys, ...keysToRemove]));
+    if (!transactionKeys.length) {
+      return;
+    }
+    const previousSnapshot = currentData || (await this.get());
+    const previousData = transactionKeys.reduce(
+      (records: { [key: string]: OTPStorage }, key) => {
+        if (Object.prototype.hasOwnProperty.call(previousSnapshot, key)) {
+          records[key] = previousSnapshot[key];
+        }
+        return records;
+      },
+      {}
+    );
+
+    try {
+      if (keysToRemove.length) {
+        await this.remove(keysToRemove);
+      }
+      if (nextKeys.length) {
+        await this.set(data);
+      }
+
+      const storedData = await this.get();
+      if (
+        !nextKeys.every((key) =>
+          Object.prototype.hasOwnProperty.call(storedData, key)
+        ) ||
+        keysToRemove.some((key) =>
+          Object.prototype.hasOwnProperty.call(storedData, key)
+        )
+      ) {
+        throw new Error("storageIncompleteWrite");
+      }
+    } catch (error) {
+      try {
+        if (transactionKeys.length) {
+          await this.remove(transactionKeys);
+        }
+        if (Object.keys(previousData).length) {
+          await this.set(previousData);
+        }
+      } catch (rollbackError) {
+        console.error(
+          "Failed to restore data after storage error:",
+          rollbackError
+        );
+      }
+      throw error;
+    }
+  }
+
+  static async assertImportKeysAreSafe(keys: string[]) {
+    const protectedKeys = new Set(["UserSettings", "LocalStorage", "key"]);
+    const encryptionKeys = await this.getKeys();
+    if (!isOldKey(encryptionKeys)) {
+      for (const key of encryptionKeys) {
+        protectedKeys.add(key.id);
+      }
+    }
+
+    if (keys.some((key) => protectedKeys.has(key))) {
+      throw new Error("importSystemKeyConflict");
+    }
+  }
+
+  static async assertImportPayloadIsSafe(
+    data: { [key: string]: OTPStorage },
+    allowReplacingOtpAndGroup = false
+  ) {
+    const keys = Object.keys(data);
+    await this.assertImportKeysAreSafe(keys);
+    const currentData = await this.get();
+
+    for (const key of keys) {
+      const incomingKind = getOtpOrGroupRecordKind(data[key]);
+      if (!incomingKind) {
+        throw new Error("importUnknownRecord");
+      }
+
+      if (!(key in currentData)) {
+        continue;
+      }
+
+      const existingKind = getOtpOrGroupRecordKind(currentData[key]);
+      if (
+        !existingKind ||
+        (!allowReplacingOtpAndGroup && existingKind !== incomingKind)
+      ) {
+        throw new Error("importTypeConflict");
+      }
+    }
+  }
+
+  static async replaceOtpAndGroupData(data: { [key: string]: OTPStorage }) {
+    const currentData = await this.get();
+    const previousData = Object.keys(currentData).reduce(
+      (records: { [key: string]: OTPStorage }, key) => {
+        if (isOtpOrGroupRecord(currentData[key])) {
+          records[key] = currentData[key];
+        }
+        return records;
+      },
+      {}
+    );
+    const previousKeys = Object.keys(previousData);
+    const nextKeys = Object.keys(data);
+    await this.assertImportPayloadIsSafe(data, true);
+    const transactionKeys = Array.from(new Set([...previousKeys, ...nextKeys]));
+
+    try {
+      if (previousKeys.length) {
+        await this.remove(previousKeys);
+      }
+      if (nextKeys.length) {
+        await this.set(data);
+      }
+
+      const storedData = await this.get();
+      if (!nextKeys.every((key) => key in storedData)) {
+        throw new Error("importIncompleteWrite");
+      }
+    } catch (error) {
+      try {
+        if (transactionKeys.length) {
+          await this.remove(transactionKeys);
+        }
+        if (previousKeys.length) {
+          await this.set(previousData);
+        }
+      } catch (rollbackError) {
+        console.error(
+          "Failed to restore data after import error:",
+          rollbackError
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  static async mergeOtpAndGroupData(data: { [key: string]: OTPStorage }) {
+    const previousData = await this.get();
+    await this.assertImportPayloadIsSafe(data);
+    const transactionKeys = Array.from(
+      new Set([...Object.keys(previousData), ...Object.keys(data)])
+    );
+
+    try {
+      if (Object.keys(data).length) {
+        await this.set(data);
+      }
+
+      const storedData = await this.get();
+      if (!Object.keys(data).every((key) => key in storedData)) {
+        throw new Error("importIncompleteWrite");
+      }
+    } catch (error) {
+      try {
+        if (transactionKeys.length) {
+          await this.remove(transactionKeys);
+        }
+        if (Object.keys(previousData).length) {
+          await this.set(previousData);
+        }
+      } catch (rollbackError) {
+        console.error(
+          "Failed to restore data after import error:",
+          rollbackError
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  static async clearOtpAndGroupData() {
+    const currentData = await this.get();
+    const keysToRemove: string[] = [];
+    let clearedEntryCount = 0;
+    let clearedGroupCount = 0;
+
+    for (const key of Object.keys(currentData)) {
+      const kind = getOtpOrGroupRecordKind(currentData[key]);
+      if (!kind) {
+        continue;
+      }
+      keysToRemove.push(key);
+      if (kind === "otp") {
+        clearedEntryCount++;
+      } else {
+        clearedGroupCount++;
+      }
+    }
+
+    await this.commitOtpAndGroupChanges({}, keysToRemove, currentData);
+    return { clearedEntryCount, clearedGroupCount };
+  }
+
   // Use for Chrome only.
   // https://github.com/Authenticator-Extension/Authenticator/issues/412
   static async clearLogs() {
@@ -212,6 +422,34 @@ export function isGroupRecord(group: unknown): group is GroupStorageRecord {
       typeof group.name === "string" &&
       typeof group.index === "number"
   );
+}
+
+function isOtpOrGroupRecord(record: unknown): record is OTPStorage {
+  return getOtpOrGroupRecordKind(record) !== null;
+}
+
+function getOtpOrGroupRecordKind(record: unknown): "otp" | "group" | null {
+  if (!record || typeof record !== "object") {
+    return null;
+  }
+
+  if ("dataType" in record) {
+    if (
+      record.dataType === DataType.OTPStorage ||
+      record.dataType === DataType.EncOTPStorage
+    ) {
+      return "otp";
+    }
+    if (
+      record.dataType === DataType.Group ||
+      record.dataType === DataType.EncGroup
+    ) {
+      return "group";
+    }
+    return null;
+  }
+
+  return "secret" in record ? "otp" : null;
 }
 
 function normalizeGroups(groups: OTPGroupInterface[]): OTPGroupInterface[] {
@@ -334,6 +572,7 @@ export class EntryStorage {
       if (
         hash === "UserSettings" ||
         (data[hash] as { dataType: string }).dataType === "Key" ||
+        getOtpOrGroupRecordKind(data[hash]) !== "otp" ||
         !this.isValidEntry(data, hash)
       ) {
         continue;
@@ -420,15 +659,30 @@ export class EntryStorage {
 
   static async backupGetExport(encryption: Encryption, encrypted?: boolean) {
     const rawData = await BrowserStorage.get();
-    const exportData: {
-      [hash: string]: OTPStorage | Key | OldKey | GroupStorageRecord;
-    } = {};
+    const exportData: { [hash: string]: OTPStorage | Key | OldKey } = {};
 
     for (const hash of Object.keys(rawData)) {
       const storageItem = rawData[hash];
 
       if (isGroupRecord(storageItem)) {
-        exportData[hash] = { ...storageItem };
+        if (
+          encrypted &&
+          encryption.getEncryptionStatus() &&
+          encryption.getEncryptionKeyId()
+        ) {
+          exportData[hash] = {
+            dataType: DataType.EncGroup,
+            keyId: encryption.getEncryptionKeyId(),
+            data: encryption.getEncryptedString(JSON.stringify(storageItem)),
+            index: storageItem.index,
+          };
+        } else {
+          exportData[hash] = { ...storageItem };
+        }
+        continue;
+      }
+
+      if (storageItem.dataType === DataType.EncGroup) {
         continue;
       }
 
@@ -584,11 +838,12 @@ export class EntryStorage {
     return exportData;
   }
 
-  static async import(
+  static getImportPayload(
     encryption: Encryption,
-    data: { [hash: string]: RawOTPStorage }
+    data: { [hash: string]: RawOTPStorage },
+    reservedOtpHashes: Set<string> = new Set()
   ) {
-    let _data = await BrowserStorage.get();
+    const payload = createRecordMap<OTPStorage>();
     for (const hash of Object.keys(data)) {
       // never trust data import from user
       // data must be decrypted before calling this method
@@ -597,7 +852,23 @@ export class EntryStorage {
         continue;
       }
 
+      const rawType = data[hash].type;
+      const parsedType = parseInt(rawType) as OTPType;
+      const normalizedType =
+        parsedType ||
+        (OTPType[rawType as keyof typeof OTPType] as OTPType) ||
+        OTPType.totp;
       const rawAlgorithm = data[hash].algorithm;
+      const parsedAlgorithm = rawAlgorithm
+        ? (parseInt(rawAlgorithm) as OTPAlgorithm)
+        : OTPAlgorithm.SHA1;
+      const normalizedAlgorithm = rawAlgorithm
+        ? parsedAlgorithm ||
+          (OTPAlgorithm[
+            rawAlgorithm as keyof typeof OTPAlgorithm
+          ] as OTPAlgorithm) ||
+          OTPAlgorithm.SHA1
+        : OTPAlgorithm.SHA1;
       const entryData: {
         account: string;
         encrypted: false;
@@ -614,7 +885,7 @@ export class EntryStorage {
         algorithm: OTPAlgorithm;
         pinned: boolean;
       } = {
-        type: (parseInt(data[hash].type) as OTPType) || OTPType[OTPType.totp],
+        type: normalizedType,
         index: data[hash].index || 0,
         issuer: data[hash].issuer || "",
         note: data[hash].note || "",
@@ -625,9 +896,7 @@ export class EntryStorage {
         counter: data[hash].counter || 0,
         period: data[hash].period || 30,
         digits: data[hash].digits || 6,
-        algorithm: rawAlgorithm
-          ? (parseInt(rawAlgorithm) as OTPAlgorithm)
-          : OTPAlgorithm.SHA1,
+        algorithm: normalizedAlgorithm,
         pinned: data[hash].pinned || false,
         hash: data[hash].hash || hash,
       };
@@ -678,49 +947,182 @@ export class EntryStorage {
         entryData.type = OTPType.hhex;
       }
 
-      // not a valid / old hash
+      const candidateHash = entryData.hash;
       if (
         !/^[a-f0-9]{8}-?[a-f0-9]{4}-?4[a-f0-9]{3}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}$/.test(
-          hash
+          candidateHash
         )
       ) {
         entryData.hash = crypto.randomUUID();
-        delete data[hash];
+      }
+
+      while (
+        reservedOtpHashes.has(entryData.hash) ||
+        Object.prototype.hasOwnProperty.call(payload, entryData.hash)
+      ) {
+        entryData.hash = crypto.randomUUID();
       }
 
       const entry = new OTPEntry(entryData, encryption);
       const storageItem = this.getOTPStorageFromEntry(entry);
-      _data[entryData.hash] = storageItem;
+      payload[entryData.hash] = storageItem;
     }
-    _data = this.ensureUniqueIndex(_data);
-    await BrowserStorage.set(_data);
+
+    return this.ensureUniqueIndex(payload);
+  }
+
+  static async import(
+    encryption: Encryption,
+    data: { [hash: string]: RawOTPStorage }
+  ) {
+    let currentData = await BrowserStorage.get();
+    const existingOtpHashes = new Set(
+      Object.keys(currentData).filter(
+        (hash) => getOtpOrGroupRecordKind(currentData[hash]) === "otp"
+      )
+    );
+    const payload = this.getImportPayload(encryption, data, existingOtpHashes);
+    await BrowserStorage.assertImportPayloadIsSafe(payload);
+    currentData = { ...currentData, ...payload };
+    currentData = this.ensureUniqueIndex(currentData);
+    await BrowserStorage.set(currentData);
+    return Object.keys(payload).length;
+  }
+
+  static async replaceImport(
+    encryption: Encryption,
+    data: { [hash: string]: RawOTPStorage },
+    groups: { [id: string]: GroupStorageRecord }
+  ) {
+    const entryPayload = this.getImportPayload(encryption, data);
+    if (!Object.keys(entryPayload).length) {
+      throw new Error("noImportableEntries");
+    }
+
+    const groupPayload = GroupStorage.getImportPayload(groups);
+    const conflictingKeys = Object.keys(entryPayload).filter((key) =>
+      Object.prototype.hasOwnProperty.call(groupPayload, key)
+    );
+    if (conflictingKeys.length) {
+      throw new Error("importBatchIdConflict");
+    }
+    await BrowserStorage.replaceOtpAndGroupData({
+      ...entryPayload,
+      ...groupPayload,
+    });
+
+    return {
+      importedEntryCount: Object.keys(entryPayload).length,
+      importedGroupCount: Object.keys(groupPayload).length,
+    };
+  }
+
+  static async mergeImport(
+    encryption: Encryption,
+    data: { [hash: string]: RawOTPStorage },
+    groups: { [id: string]: GroupStorageRecord }
+  ) {
+    const currentData = await BrowserStorage.get();
+    const existingOtpHashes = new Set(
+      Object.keys(currentData).filter(
+        (hash) => getOtpOrGroupRecordKind(currentData[hash]) === "otp"
+      )
+    );
+    const entryPayload = this.getImportPayload(
+      encryption,
+      data,
+      existingOtpHashes
+    );
+    if (!Object.keys(entryPayload).length) {
+      throw new Error("noImportableEntries");
+    }
+
+    const currentGroups = await GroupStorage.get();
+    const incomingGroups = GroupStorage.getImportGroups(groups);
+    const mergedGroups = GroupStorage.mergeImportGroups(
+      currentGroups,
+      incomingGroups
+    );
+    const groupPayload = GroupStorage.getPayload(mergedGroups);
+    const conflictingKeys = Object.keys(entryPayload).filter((key) =>
+      Object.prototype.hasOwnProperty.call(groupPayload, key)
+    );
+    if (conflictingKeys.length) {
+      throw new Error("importBatchIdConflict");
+    }
+
+    const normalizedEntries = this.ensureUniqueIndex({
+      ...currentData,
+      ...entryPayload,
+    });
+    await BrowserStorage.mergeOtpAndGroupData({
+      ...normalizedEntries,
+      ...groupPayload,
+    });
+
+    return {
+      importedEntryCount: Object.keys(entryPayload).length,
+      importedGroupCount: incomingGroups.length,
+    };
   }
 
   static async add(entry: OTPEntry) {
+    const currentData = await BrowserStorage.get();
+    const existingEntries = Object.entries(currentData)
+      .filter(
+        ([hash, record]) =>
+          hash !== entry.hash && getOtpOrGroupRecordKind(record) === "otp"
+      )
+      .sort(([, a], [, b]) => a.index - b.index);
+    const payload: { [hash: string]: OTPStorage } = {};
+
+    entry.index = 0;
+    payload[entry.hash] = this.getOTPStorageFromEntry(entry);
+    existingEntries.forEach(([hash, record], index) => {
+      payload[hash] = { ...record, index: index + 1 };
+    });
+
+    await BrowserStorage.commitOtpAndGroupChanges(payload, [], currentData);
+  }
+
+  static async update(entry: OTPEntry) {
+    const _data = await BrowserStorage.get();
+    if (!Object.prototype.hasOwnProperty.call(_data, entry.hash)) {
+      throw new Error("Entry to change does not exist.");
+    }
     await BrowserStorage.set({
       [entry.hash]: this.getOTPStorageFromEntry(entry),
     });
   }
 
-  static async update(entry: OTPEntry) {
-    let _data = await BrowserStorage.get();
-    if (!Object.prototype.hasOwnProperty.call(_data, entry.hash)) {
-      throw new Error("Entry to change does not exist.");
-    }
-    const storageItem = this.getOTPStorageFromEntry(entry);
-    _data[entry.hash] = storageItem;
-    _data = this.ensureUniqueIndex(_data);
-    await BrowserStorage.set(_data);
-  }
-
   static async set(entries: OTPEntry[]) {
-    let _data = await BrowserStorage.get();
+    const currentData = await BrowserStorage.get();
+    const nextData = { ...currentData };
     entries.forEach((entry) => {
       const storageItem = this.getOTPStorageFromEntry(entry);
-      _data[entry.hash] = storageItem;
+      nextData[entry.hash] = storageItem;
     });
-    _data = this.ensureUniqueIndex(_data);
-    await BrowserStorage.set(_data);
+    const normalizedEntries = this.ensureUniqueIndex(nextData);
+    await BrowserStorage.commitOtpAndGroupChanges(
+      normalizedEntries,
+      [],
+      currentData
+    );
+  }
+
+  static getStoragePayload(entries: OTPEntry[]) {
+    return entries.reduce((records: { [hash: string]: OTPStorage }, entry) => {
+      records[entry.hash] = this.getOTPStorageFromEntry(entry);
+      return records;
+    }, {});
+  }
+
+  static async updateMany(entries: OTPEntry[]) {
+    const payload = this.getStoragePayload(entries);
+
+    if (Object.keys(payload).length) {
+      await BrowserStorage.commitOtpAndGroupChanges(payload);
+    }
   }
 
   static async get() {
@@ -731,6 +1133,7 @@ export class EntryStorage {
       if (
         hash === "UserSettings" ||
         (_data[hash] as { dataType: string }).dataType === "Key" ||
+        getOtpOrGroupRecordKind(_data[hash]) !== "otp" ||
         !this.isValidEntry(_data, hash)
       ) {
         continue;
@@ -778,7 +1181,8 @@ export class EntryStorage {
 
       let period: number | undefined;
       if (
-        entryData.type === OTPType[OTPType.totp] &&
+        (entryData.type === OTPType[OTPType.totp] ||
+          entryData.type === OTPType[OTPType.hex]) &&
         entryData.period &&
         entryData.period > 0
       ) {
@@ -817,18 +1221,52 @@ export class EntryStorage {
     await BrowserStorage.remove(hash);
   }
 
-  static async delete(entry: OTPEntry) {
-    let _data = await BrowserStorage.get();
-    if (Object.prototype.hasOwnProperty.call(_data, entry.hash)) {
-      delete _data[entry.hash];
+  static async removeMany(hashes: string[]) {
+    if (!hashes.length) {
+      return;
     }
-    _data = this.ensureUniqueIndex(_data);
-    await BrowserStorage.remove(entry.hash);
-    await BrowserStorage.set(_data);
+
+    const hashSet = new Set(hashes);
+    const currentData = await BrowserStorage.get();
+
+    const remainingData = Object.keys(currentData).reduce(
+      (records: { [hash: string]: OTPStorage }, hash) => {
+        if (!hashSet.has(hash)) {
+          records[hash] = currentData[hash];
+        }
+        return records;
+      },
+      {}
+    );
+    const normalizedEntries = this.ensureUniqueIndex(remainingData);
+    await BrowserStorage.commitOtpAndGroupChanges(
+      normalizedEntries,
+      hashes,
+      currentData
+    );
+  }
+
+  static async delete(entry: OTPEntry) {
+    const currentData = await BrowserStorage.get();
+    const remainingData = { ...currentData };
+    if (Object.prototype.hasOwnProperty.call(remainingData, entry.hash)) {
+      delete remainingData[entry.hash];
+    }
+    const normalizedEntries = this.ensureUniqueIndex(remainingData);
+    await BrowserStorage.commitOtpAndGroupChanges(
+      normalizedEntries,
+      [entry.hash],
+      currentData
+    );
   }
 }
 
 export class GroupStorage {
+  private static readonly reservedGroupIds = new Set([
+    "__all__",
+    "__ungrouped__",
+  ]);
+
   private static getStorageRecord(
     group: OTPGroupInterface
   ): GroupStorageRecord {
@@ -838,6 +1276,84 @@ export class GroupStorage {
       name: group.name.trim(),
       index: group.index,
     };
+  }
+
+  static getImportGroups(groups: { [id: string]: GroupStorageRecord }) {
+    const importedGroups: OTPGroupInterface[] = [];
+
+    for (const groupId of Object.keys(groups)) {
+      const group = groups[groupId];
+      if (!isGroupRecord(group) || !group.name.trim()) {
+        continue;
+      }
+
+      const normalizedId = (group.id || groupId).trim();
+      if (
+        !normalizedId ||
+        this.reservedGroupIds.has(normalizedId) ||
+        isUnsafeRecordKey(groupId) ||
+        isUnsafeRecordKey(normalizedId) ||
+        normalizedId.length > 256 ||
+        Array.from(normalizedId).some((character) => {
+          const code = character.charCodeAt(0);
+          return code <= 31 || code === 127;
+        })
+      ) {
+        throw new Error("invalidImportGroupId");
+      }
+
+      importedGroups.push({
+        id: normalizedId,
+        name: group.name.trim(),
+        index: Number(group.index) || 0,
+      });
+    }
+
+    return normalizeGroups(importedGroups);
+  }
+
+  static getImportPayload(groups: { [id: string]: GroupStorageRecord }) {
+    return this.getPayload(this.getImportGroups(groups));
+  }
+
+  static getPayload(groups: OTPGroupInterface[]) {
+    return normalizeGroups(groups).reduce(
+      (payload: { [id: string]: GroupStorageRecord }, group) => {
+        payload[group.id] = this.getStorageRecord(group);
+        return payload;
+      },
+      createRecordMap<GroupStorageRecord>()
+    );
+  }
+
+  static mergeImportGroups(
+    existingGroups: OTPGroupInterface[],
+    incomingGroups: OTPGroupInterface[]
+  ) {
+    const mergedGroups = normalizeGroups(existingGroups).map((group) => ({
+      ...group,
+    }));
+    const indexById = new Map(
+      mergedGroups.map((group, index) => [group.id, index])
+    );
+
+    for (const incomingGroup of normalizeGroups(incomingGroups)) {
+      const existingIndex = indexById.get(incomingGroup.id);
+      if (existingIndex === undefined) {
+        indexById.set(incomingGroup.id, mergedGroups.length);
+        mergedGroups.push({
+          ...incomingGroup,
+          index: mergedGroups.length,
+        });
+      } else {
+        mergedGroups[existingIndex] = {
+          ...incomingGroup,
+          index: mergedGroups[existingIndex].index,
+        };
+      }
+    }
+
+    return normalizeGroups(mergedGroups);
   }
 
   static async get() {
@@ -859,9 +1375,16 @@ export class GroupStorage {
   }
 
   static async add(group: OTPGroupInterface) {
-    const groups = await this.get();
-    groups.push(group);
-    await this.set(groups);
+    const normalizedGroup = {
+      ...group,
+      name: group.name.trim(),
+    };
+    if (!normalizedGroup.id || !normalizedGroup.name) {
+      return;
+    }
+    await BrowserStorage.set({
+      [normalizedGroup.id]: this.getStorageRecord(normalizedGroup),
+    });
   }
 
   static async update(group: OTPGroupInterface) {
@@ -871,12 +1394,14 @@ export class GroupStorage {
       throw new Error("Group to change does not exist.");
     }
 
-    groups[index] = {
+    const updatedGroup = {
       ...groups[index],
       ...group,
       name: group.name.trim(),
     };
-    await this.set(groups);
+    await BrowserStorage.set({
+      [updatedGroup.id]: this.getStorageRecord(updatedGroup),
+    });
   }
 
   static async set(groups: OTPGroupInterface[]) {
@@ -884,75 +1409,61 @@ export class GroupStorage {
     const existingGroupKeys = Object.keys(currentData).filter((key) =>
       isGroupRecord(currentData[key])
     );
-
-    if (existingGroupKeys.length) {
-      await BrowserStorage.remove(existingGroupKeys);
-    }
-
     const normalizedGroups = normalizeGroups(groups);
+    const nextGroupIds = new Set(normalizedGroups.map((group) => group.id));
+    const removedGroupKeys = existingGroupKeys.filter(
+      (groupId) => !nextGroupIds.has(groupId)
+    );
     const payload = normalizedGroups.reduce(
       (acc: { [id: string]: GroupStorageRecord }, group) => {
-        acc[group.id] = this.getStorageRecord(group);
+        const nextRecord = this.getStorageRecord(group);
+        const currentRecord = currentData[group.id];
+        if (
+          !isGroupRecord(currentRecord) ||
+          currentRecord.name !== nextRecord.name ||
+          currentRecord.index !== nextRecord.index
+        ) {
+          acc[group.id] = nextRecord;
+        }
         return acc;
       },
-      {}
+      createRecordMap<GroupStorageRecord>()
     );
 
-    if (Object.keys(payload).length) {
-      await BrowserStorage.set(payload);
-    }
+    await BrowserStorage.commitOtpAndGroupChanges(
+      payload,
+      removedGroupKeys,
+      currentData
+    );
   }
 
   static async delete(groupId: string) {
-    await BrowserStorage.remove(groupId);
-
-    const entries = await EntryStorage.get();
-    let changed = false;
-    for (const entry of entries) {
-      if (entry.groupId === groupId) {
-        entry.groupId = undefined;
-        changed = true;
-      }
+    const affectedEntries = (await EntryStorage.get()).filter(
+      (entry) => entry.groupId === groupId
+    );
+    for (const entry of affectedEntries) {
+      entry.groupId = undefined;
     }
 
-    if (changed) {
-      await EntryStorage.set(entries);
-    }
-
-    const groups = await this.get();
-    if (groups.length) {
-      await this.set(groups);
-    }
+    const remainingGroups = (await this.get()).filter(
+      (group) => group.id !== groupId
+    );
+    const currentData = await BrowserStorage.get();
+    await BrowserStorage.commitOtpAndGroupChanges(
+      {
+        ...this.getPayload(remainingGroups),
+        ...EntryStorage.getStoragePayload(affectedEntries),
+      },
+      [groupId],
+      currentData
+    );
   }
 
   static async import(groups: { [id: string]: GroupStorageRecord }) {
-    const importedGroups: OTPGroupInterface[] = await this.get();
-    const existingIds = new Set(importedGroups.map((group) => group.id));
-
-    for (const groupId of Object.keys(groups)) {
-      const group = groups[groupId];
-      if (!isGroupRecord(group)) {
-        continue;
-      }
-
-      const normalizedGroup = {
-        id: group.id || groupId,
-        name: group.name.trim(),
-        index: Number(group.index) || 0,
-      };
-
-      if (existingIds.has(normalizedGroup.id)) {
-        const index = importedGroups.findIndex(
-          (item) => item.id === normalizedGroup.id
-        );
-        importedGroups[index] = normalizedGroup;
-      } else {
-        importedGroups.push(normalizedGroup);
-        existingIds.add(normalizedGroup.id);
-      }
-    }
-
-    await this.set(importedGroups);
+    const incomingGroups = this.getImportGroups(groups);
+    const incomingPayload = this.getPayload(incomingGroups);
+    await BrowserStorage.assertImportPayloadIsSafe(incomingPayload);
+    await this.set(this.mergeImportGroups(await this.get(), incomingGroups));
   }
 }
 

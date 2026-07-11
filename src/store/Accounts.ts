@@ -1,12 +1,18 @@
 import { EntryStorage, BrowserStorage, isOldKey } from "../models/storage";
 import { Encryption } from "../models/encryption";
 import * as CryptoJS from "crypto-js";
-import { OTPType, OTPAlgorithm, OTPEntry } from "../models/otp";
+import {
+  OTPType,
+  OTPAlgorithm,
+  OTPEntry,
+  regenerateLegacyEntryHash,
+} from "../models/otp";
 import { ActionContext } from "vuex";
 import { getSiteName, getMatchedEntriesHash } from "../utils";
 import { isChromium } from "../browser";
 import { StorageLocation, UserSettings } from "../models/settings";
 import { DataType } from "../models/otp";
+import { argonHash, argonVerify } from "../models/password";
 
 const LegacyEncryption = "LegacyEncryption";
 export class Accounts implements Module {
@@ -45,6 +51,7 @@ export class Accounts implements Module {
         exportEncData: await EntryStorage.getExport(entries, true),
         keys: await BrowserStorage.getKeys(),
         wrongPassword: false,
+        unresolvedKeyCount: 0,
         initComplete: false,
       },
       getters: {
@@ -137,21 +144,11 @@ export class Accounts implements Module {
         loadCodes(state: AccountsState, newCodes: OTPEntryInterface[]) {
           state.entries = newCodes;
         },
-        moveCode(state: AccountsState, opts: { from: number; to: number }) {
-          state.entries.splice(
-            opts.to,
-            0,
-            state.entries.splice(opts.from, 1)[0]
-          );
-
-          for (let i = 0; i < state.entries.length; i++) {
-            if (state.entries[i].index !== i) {
-              state.entries[i].index = i;
-            }
-          }
-        },
         pinEntry(state: AccountsState, entry: OTPEntryInterface) {
-          state.entries[entry.index].pinned = !entry.pinned;
+          const target = state.entries.find((item) => item.hash === entry.hash);
+          if (target) {
+            target.pinned = !target.pinned;
+          }
         },
         updateExport(
           state: AccountsState,
@@ -179,6 +176,12 @@ export class Accounts implements Module {
         wrongPassword(state: AccountsState) {
           state.wrongPassword = true;
         },
+        setWrongPassword(state: AccountsState, wrongPassword: boolean) {
+          state.wrongPassword = wrongPassword;
+        },
+        setUnresolvedKeyCount(state: AccountsState, count: number) {
+          state.unresolvedKeyCount = count;
+        },
         initComplete(state: AccountsState) {
           state.initComplete = true;
         },
@@ -194,6 +197,9 @@ export class Accounts implements Module {
           if (index > -1) {
             state.state.entries.splice(index, 1);
           }
+          state.state.entries.forEach((entry, entryIndex) => {
+            entry.index = entryIndex;
+          });
           state.commit(
             "updateExport",
             await EntryStorage.getExport(state.state.entries)
@@ -213,6 +219,9 @@ export class Accounts implements Module {
               state.state.entries.splice(i, 1);
             }
           }
+          state.state.entries.forEach((entry, index) => {
+            entry.index = index;
+          });
           state.commit(
             "updateExport",
             await EntryStorage.getExport(state.state.entries)
@@ -227,20 +236,27 @@ export class Accounts implements Module {
           args: { hashes: string[]; groupId?: string }
         ) => {
           const hashSet = new Set(args.hashes);
+          const changedEntries: OTPEntry[] = [];
           for (const entry of state.state.entries) {
-            if (hashSet.has(entry.hash)) {
+            if (hashSet.has(entry.hash) && entry.groupId !== args.groupId) {
               entry.groupId = args.groupId;
+              changedEntries.push(entry as OTPEntry);
             }
           }
 
-          await EntryStorage.set(state.state.entries as OTPEntry[]);
-          await state.dispatch("updateEntries");
+          if (changedEntries.length) {
+            await EntryStorage.updateMany(changedEntries);
+            await state.dispatch("updateEntries");
+          }
         },
         addCode: async (
           state: ActionContext<AccountsState, object>,
           entry: OTPEntryInterface
         ) => {
           state.state.entries.unshift(entry);
+          state.state.entries.forEach((item, index) => {
+            item.index = index;
+          });
           state.commit(
             "updateExport",
             await EntryStorage.getExport(state.state.entries)
@@ -258,6 +274,7 @@ export class Accounts implements Module {
             return;
           }
 
+          state.commit("setWrongPassword", false);
           state.commit("currentView/changeView", "LoadingPage", { root: true });
 
           // Decrypt entries
@@ -268,26 +285,10 @@ export class Accounts implements Module {
             // --- handle v2 encryption
             // decrypt using key
             const key = CryptoJS.AES.decrypt(encKeys.enc, password).toString();
-            const isCorrectPassword = await new Promise(
-              (resolve: (value: string) => void) => {
-                const iframe = document.getElementById("argon-sandbox");
-                const message = {
-                  action: "verify",
-                  value: key,
-                  hash: encKeys.hash,
-                };
-                if (iframe) {
-                  window.addEventListener("message", (response) => {
-                    resolve(response.data.response);
-                  });
-                  // @ts-expect-error - bad typings
-                  iframe.contentWindow.postMessage(message, "*");
-                }
-              }
-            );
+            const isCorrectPassword = await argonVerify(key, encKeys.hash);
 
             if (!isCorrectPassword) {
-              state.commit("wrongPassword");
+              state.commit("setWrongPassword", true);
               state.commit("currentView/changeView", "EnterPasswordPage", {
                 root: true,
               });
@@ -310,7 +311,7 @@ export class Accounts implements Module {
             await state.dispatch("updateEntries");
 
             if (state.getters.currentlyEncrypted) {
-              state.commit("wrongPassword");
+              state.commit("setWrongPassword", true);
               state.commit("currentView/changeView", "EnterPasswordPage", {
                 root: true,
               });
@@ -320,25 +321,11 @@ export class Accounts implements Module {
             migrationNeeded = true;
           } else {
             // --- handle v3 encryption
-            // TODO: let user reconcile multiple keys from sync conflicts
             for (const key of encKeys) {
-              const rawHash = await new Promise(
-                (resolve: (value: string) => void) => {
-                  const iframe = document.getElementById("argon-sandbox");
-                  const message = {
-                    action: "hash",
-                    value: password,
-                    salt: key.salt,
-                  };
-                  if (iframe) {
-                    window.addEventListener("message", (response) => {
-                      resolve(response.data.response);
-                    });
-                    // @ts-expect-error bad typings
-                    iframe.contentWindow.postMessage(message, "*");
-                  }
-                }
-              );
+              const rawHash = await argonHash(password, key.salt);
+              if (!rawHash) {
+                throw new Error("argon2 did not return a hash!");
+              }
 
               // https://passlib.readthedocs.io/en/stable/lib/passlib.hash.argon2.html#format-algorithm
               const possibleHash = rawHash.split("$")[5];
@@ -348,26 +335,11 @@ export class Accounts implements Module {
 
               // verify user password by comparing their password hash with the
               // hash of their password's hash
-              const isCorrectPassword = await new Promise(
-                (resolve: (value: string) => void) => {
-                  const iframe = document.getElementById("argon-sandbox");
-                  const message = {
-                    action: "verify",
-                    value: possibleHash,
-                    hash: key.hash,
-                  };
-                  if (iframe) {
-                    window.addEventListener("message", (response) => {
-                      resolve(response.data.response);
-                    });
-                    // @ts-expect-error bad typings
-                    iframe.contentWindow.postMessage(message, "*");
-                  }
-                }
+              const isCorrectPassword = await argonVerify(
+                possibleHash,
+                key.hash
               );
 
-              // TODO: there is a serious bug here. If two keys have the same password,
-              // then only one of them will be used for decryption.
               if (isCorrectPassword) {
                 state.state.encryption.set(
                   key.id,
@@ -382,7 +354,7 @@ export class Accounts implements Module {
             await state.dispatch("updateEntries");
 
             if (!saltedHash) {
-              state.commit("wrongPassword");
+              state.commit("setWrongPassword", true);
               state.commit("currentView/changeView", "EnterPasswordPage", {
                 root: true,
               });
@@ -427,14 +399,9 @@ export class Accounts implements Module {
 
               await entry.changeEncryption(newEncryption);
 
-              // if not uuidv4 regen
-              if (
-                /[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}/i.test(
-                  entry.hash
-                )
-              ) {
-                entry.genUUID();
-                toRemove.push(entry.hash);
+              const previousHash = regenerateLegacyEntryHash(entry);
+              if (previousHash) {
+                toRemove.push(previousHash);
               }
             }
 
@@ -477,6 +444,34 @@ export class Accounts implements Module {
           if (needUpdateStorage) {
             await EntryStorage.set(state.state.entries);
             await state.dispatch("updateEntries");
+          }
+
+          const unresolvedKeyIds = getUnresolvedEncryptionKeyIds(
+            state.state.entries
+          );
+          state.commit("setUnresolvedKeyCount", unresolvedKeyIds.size);
+          if (unresolvedKeyIds.size > 0) {
+            state.commit("currentView/changeView", "EnterPasswordPage", {
+              root: true,
+            });
+            return;
+          }
+
+          if (!isOldKey(encKeys) && state.state.entries.length > 0) {
+            const linkedKeyIds = new Set(
+              state.state.entries
+                .map((entry) => entry.encryption?.getEncryptionKeyId())
+                .filter((keyId): keyId is string => Boolean(keyId))
+            );
+            const unlinkedKeyIds = encKeys
+              .map((key) => key.id)
+              .filter((keyId) => !linkedKeyIds.has(keyId));
+            if (unlinkedKeyIds.length) {
+              await BrowserStorage.remove(unlinkedKeyIds);
+              for (const keyId of unlinkedKeyIds) {
+                state.state.encryption.delete(keyId);
+              }
+            }
           }
 
           if (!state.getters.currentlyEncrypted) {
@@ -535,14 +530,9 @@ export class Accounts implements Module {
             const linkedKeys = new Map<string, undefined>();
             for (const entry of state.state.entries) {
               await entry.changeEncryption(new Encryption(saltedHash, key.id));
-              // if not uuidv4 regen
-              if (
-                /[0-9A-F]{8}-[0-9A-F]{4}-4[0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}/i.test(
-                  entry.hash
-                )
-              ) {
-                removeKeys.push(entry.hash);
-                entry.genUUID();
+              const previousHash = regenerateLegacyEntryHash(entry);
+              if (previousHash) {
+                removeKeys.push(previousHash);
               }
 
               if (entry.encryption?.getEncryptionKeyId()) {
@@ -670,36 +660,13 @@ export class Accounts implements Module {
           }
         },
         clearAllData: async (state: ActionContext<AccountsState, object>) => {
-          const entries = await BrowserStorage.get();
-          // Filter out UserSettings to preserve WebDAV config and other settings
-          const entryKeys = Object.keys(entries).filter(
-            (key) => key !== "UserSettings"
-          );
-          if (entryKeys.length) {
-            await BrowserStorage.remove(entryKeys);
-          }
-
-          // Don't remove encryption keys and state to preserve security password
-          // const storedKeys = await BrowserStorage.getKeys();
-          // if (isOldKey(storedKeys)) {
-          //   await BrowserStorage.remove("key");
-          // } else if (Array.isArray(storedKeys) && storedKeys.length) {
-          //   await BrowserStorage.remove(storedKeys.map((key) => key.id));
-          // }
-
-          // state.state.encryption.clear();
-          // state.state.defaultEncryption = "";
+          // Preserve settings and encryption keys; only OTP and group records
+          // belong to the user data cleared by this action.
+          await BrowserStorage.clearOtpAndGroupData();
           await state.dispatch("updateEntries");
           await state.dispatch("groups/refreshGroups", undefined, {
             root: true,
           });
-          // Don't lock the app to keep password unlocked
-          // chrome.runtime.sendMessage({ action: "lock" }, () => {
-          //   // Ignore errors
-          //   if (chrome.runtime.lastError) {
-          //     return;
-          //   }
-          // });
           return "updateSuccess";
         },
         migrateStorage: async (
@@ -787,19 +754,20 @@ async function genHash(value: string) {
     salt += byte.toString(16);
   }
 
-  return new Promise((resolve: (value: string) => void) => {
-    const iframe = document.getElementById("argon-sandbox");
-    const message = {
-      action: "hash",
-      value: value,
-      salt,
-    };
-    if (iframe) {
-      window.addEventListener("message", (response) => {
-        resolve(response.data.response);
-      });
-      // @ts-expect-error bad typings
-      iframe.contentWindow.postMessage(message, "*");
+  const hash = await argonHash(value, salt);
+  if (!hash) {
+    throw new Error("argon2 did not return a hash!");
+  }
+  return hash;
+}
+
+export function getUnresolvedEncryptionKeyIds(entries: OTPEntryInterface[]) {
+  const unresolvedKeyIds = new Set<string>();
+  for (const entry of entries) {
+    if (entry.secret !== null) {
+      continue;
     }
-  });
+    unresolvedKeyIds.add(entry.keyId || "__unknown__");
+  }
+  return unresolvedKeyIds;
 }

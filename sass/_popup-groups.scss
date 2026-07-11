@@ -1,0 +1,150 @@
+.group-create-card {
+  padding: 9px;
+}
+
+.group-create-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 34px;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-create-input,
+.group-edit-input {
+  width: 100%;
+  margin: 0 !important;
+}
+
+.group-create-button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 9px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  cursor: pointer;
+  transition: opacity 0.14s ease, filter 0.14s ease;
+  @include themify($themes) {
+    background: themed("blue-1");
+  }
+
+  svg {
+    width: 13px;
+    height: 13px;
+    fill: currentColor;
+  }
+
+  &:hover:not(:disabled) {
+    filter: brightness(0.94);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.42;
+  }
+}
+
+.group-admin-list {
+  min-width: 0;
+}
+
+.group-admin-item {
+  min-width: 0;
+  min-height: 50px;
+  padding: 7px 8px 7px 11px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+
+  & + .group-admin-item {
+    @include themify($themes) {
+      border-top: 1px solid themed("grey-2");
+    }
+  }
+}
+
+.group-name-display {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  @include themify($themes) {
+    color: themed("black-1");
+  }
+}
+
+.group-edit-input {
+  height: 32px;
+  padding: 0 8px;
+}
+
+.group-row-actions {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.group-icon-btn {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.14s ease, color 0.14s ease, opacity 0.14s ease;
+  @include themify($themes) {
+    color: themed("grey-1");
+  }
+
+  svg {
+    width: 11px;
+    height: 11px;
+    fill: currentColor;
+  }
+
+  &:hover:not(:disabled) {
+    @include themify($themes) {
+      color: themed("black-1");
+      background: themed("grey-3");
+    }
+  }
+
+  &.edit {
+    @include themify($themes) {
+      color: themed("blue-1");
+    }
+  }
+
+  &.danger {
+    @include themify($themes) {
+      color: themed("red-1");
+    }
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.28;
+  }
+}
+
+.icon-rotate-up {
+  transform: rotate(90deg);
+}
+
+.icon-rotate-down {
+  transform: rotate(-90deg);
+}
