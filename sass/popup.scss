@@ -1384,10 +1384,12 @@ svg {
   position: absolute;
   left: 60px;
   top: -1000px;
+  z-index: 1300;
   width: 200px;
   height: 60px;
   line-height: 60px;
   text-align: center;
+  pointer-events: none;
   @include themify($themes) {
     background: themed("black-transparent");
     color: themed("white-1");
