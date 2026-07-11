@@ -9,6 +9,7 @@ import { EntryStorage } from "./models/storage";
 // Re-export utility functions for backward compatibility
 export {
   decryptBackupData,
+  decryptBackupGroups,
   getEntryDataFromOTPAuthPerLine,
   getEntryDataFromBitwarden,
   normalizeImportedEntryGroupIds,

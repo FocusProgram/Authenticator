@@ -1,3 +1,6 @@
+import { parseOtpAuthUri } from "./otpauth-uri";
+import { createRecordMap } from "./record-map";
+
 interface BitwardenItem {
   folderId?: string | null;
   name?: string;
@@ -17,8 +20,8 @@ export async function getEntryDataFromBitwarden(data: {
   items?: BitwardenItem[];
   folders?: BitwardenFolder[];
 }) {
-  const exportData: { [hash: string]: RawOTPStorage } = {};
-  const groups: { [id: string]: GroupStorageRecord } = {};
+  const exportData = createRecordMap<RawOTPStorage>();
+  const groups = createRecordMap<GroupStorageRecord>();
   let failedCount = 0;
   let succeededCount = 0;
 
@@ -51,8 +54,8 @@ export async function getEntryDataFromBitwarden(data: {
     let digits: number | undefined;
     let algorithm: string | undefined;
 
-    if (totp.startsWith("otpauth://")) {
-      const parsed = parseOtpauthUri(totp);
+    if (totp.toLowerCase().startsWith("otpauth://")) {
+      const parsed = parseOtpAuthUri(totp);
       if (!parsed) {
         failedCount++;
         continue;
@@ -66,7 +69,7 @@ export async function getEntryDataFromBitwarden(data: {
       algorithm = parsed.algorithm;
     } else {
       // Plain base32 secret (may be lowercase or have spaces)
-      secret = totp.replace(/ /g, "").toUpperCase();
+      secret = totp.replace(/\s+/g, "").toUpperCase();
     }
 
     if (!/^[2-7A-Z]+=*$/.test(secret) && !/^[0-9a-f]+$/i.test(secret)) {
@@ -113,67 +116,4 @@ export async function getEntryDataFromBitwarden(data: {
   }
 
   return { exportData, groups, failedCount, succeededCount };
-}
-
-function parseOtpauthUri(uri: string) {
-  const uriPart = uri.split("otpauth://")[1];
-  const type = uriPart.substr(0, 4).toLowerCase();
-  const afterType = uriPart.substr(5);
-  const label = afterType.split("?")[0];
-  const paramPart = afterType.split("?")[1];
-
-  if (!paramPart) {
-    return null;
-  }
-
-  let account = "";
-  let issuer = "";
-  try {
-    const decodedLabel = decodeURIComponent(label);
-    if (decodedLabel.indexOf(":") !== -1) {
-      issuer = decodedLabel.split(":")[0];
-      account = decodedLabel.split(":")[1];
-    } else {
-      account = decodedLabel;
-    }
-  } catch {
-    account = label;
-  }
-
-  let secret = "";
-  let period: number | undefined;
-  let digits: number | undefined;
-  let algorithm: string | undefined;
-
-  for (const param of paramPart.split("&")) {
-    const [key, val] = param.split("=");
-    const k = key.toLowerCase();
-    if (k === "secret") {
-      secret = val;
-    } else if (k === "issuer") {
-      try {
-        issuer = decodeURIComponent(val).replace(/\+/g, " ");
-      } catch {
-        issuer = val;
-      }
-    } else if (k === "period") {
-      const p = Number(val);
-      if (!isNaN(p) && p > 0 && p <= 60 && 60 % p === 0) {
-        period = p;
-      }
-    } else if (k === "digits") {
-      const d = Number(val);
-      if (!isNaN(d)) {
-        digits = d;
-      }
-    } else if (k === "algorithm") {
-      algorithm = val;
-    }
-  }
-
-  if (!secret) {
-    return null;
-  }
-
-  return { type, secret, account, issuer, period, digits, algorithm };
 }

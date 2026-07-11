@@ -65,6 +65,7 @@ const LocalUserSettingsDataKeys = [
   "webdavAutoBackup",
   "webdavLastBackupTime",
   "webdavClearBeforeRestore",
+  "webdavMaxBackups",
   "storageLocation",
 ];
 
@@ -209,7 +210,8 @@ type NumberOption =
   | "lastRemindingBackupTime"
   | "offset"
   | "zoom"
-  | "webdavLastBackupTime";
+  | "webdavLastBackupTime"
+  | "webdavMaxBackups";
 
 type JSONOption = "advisorIgnoreList";
 
@@ -238,6 +240,7 @@ function isNumberOption(key: string): key is NumberOption {
     "offset",
     "zoom",
     "webdavLastBackupTime",
+    "webdavMaxBackups",
   ].includes(key);
 }
 

@@ -1,55 +1,81 @@
 import { BrowserStorage, isOldKey } from "./storage";
 
+const ARGON_TIMEOUT_MS = 20000;
+let argonRequestCounter = 0;
+
+type ArgonRequest =
+  | { action: "hash"; value: string; salt: string }
+  | { action: "verify"; value: string; hash: string };
+
+function requestArgon<T>(request: ArgonRequest): Promise<T> {
+  const iframe = document.getElementById(
+    "argon-sandbox"
+  ) as HTMLIFrameElement | null;
+  const targetWindow = iframe?.contentWindow;
+
+  if (!targetWindow) {
+    throw new Error("argon-sandbox missing!");
+  }
+
+  const requestId = `argon-${Date.now()}-${++argonRequestCounter}`;
+
+  return new Promise<T>((resolve, reject) => {
+    const cleanup = () => {
+      window.removeEventListener("message", handleMessage);
+      window.clearTimeout(timeoutId);
+    };
+    const handleMessage = (event: MessageEvent) => {
+      if (
+        event.source !== targetWindow ||
+        !event.data ||
+        event.data.requestId !== requestId ||
+        (!("response" in event.data) && !("error" in event.data))
+      ) {
+        return;
+      }
+
+      cleanup();
+      if (event.data.error) {
+        reject(new Error(String(event.data.error)));
+        return;
+      }
+      resolve(event.data.response as T);
+    };
+    const timeoutId = window.setTimeout(() => {
+      cleanup();
+      reject(new Error("argon2 request timed out"));
+    }, ARGON_TIMEOUT_MS);
+
+    window.addEventListener("message", handleMessage);
+    try {
+      targetWindow.postMessage({ ...request, requestId }, "*");
+    } catch (error) {
+      cleanup();
+      reject(error);
+    }
+  });
+}
+
 export async function argonHash(
   value: string,
   salt: string
 ): Promise<string | undefined> {
-  const iframe = document.getElementById("argon-sandbox");
-  const message = {
+  return requestArgon<string | undefined>({
     action: "hash",
     value,
     salt,
-  };
-
-  if (!iframe) {
-    throw new Error("argon-sandbox missing!");
-  }
-
-  const argonPromise: Promise<string | undefined> = new Promise((resolve) => {
-    window.addEventListener("message", (response) => {
-      resolve(response.data.response);
-    });
-    // @ts-expect-error bad typings
-    iframe.contentWindow.postMessage(message, "*");
   });
-
-  return argonPromise;
 }
 
 export async function argonVerify(
   value: string,
   hash: string
 ): Promise<boolean> {
-  const iframe = document.getElementById("argon-sandbox");
-  const message = {
+  return requestArgon<boolean>({
     action: "verify",
     value,
     hash,
-  };
-
-  if (!iframe) {
-    throw new Error("argon-sandbox missing!");
-  }
-
-  const argonPromise: Promise<boolean> = new Promise((resolve) => {
-    window.addEventListener("message", (response) => {
-      resolve(response.data.response);
-    });
-    // @ts-expect-error bad typings
-    iframe.contentWindow.postMessage(message, "*");
   });
-
-  return argonPromise;
 }
 
 // Verify a password using keys in BrowserStorage
@@ -84,6 +110,9 @@ export async function verifyPasswordUsingKey(
   }
   // https://passlib.readthedocs.io/en/stable/lib/passlib.hash.argon2.html#format-algorithm
   const possibleHash = rawHash.split("$")[5];
+  if (!possibleHash) {
+    throw new Error("argon2 did not return a hash!");
+  }
 
   // verify user password by comparing their password hash with the
   // hash of their password's hash

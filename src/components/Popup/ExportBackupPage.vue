@@ -1,57 +1,174 @@
 <template>
-  <div>
-    <div class="backup-export-panel">
-      <div class="backup-export-title">导出备份</div>
-      <div class="backup-export-desc">
-        {{ i18n.backup_file_info }}
+  <div class="subpage export-backup-page">
+    <div class="subpage-head" v-if="!embedded">
+      <div class="subpage-title">{{ i18n.ui_export_backup }}</div>
+      <div class="subpage-subtitle">
+        {{ i18n.ui_export_subtitle }}
       </div>
+    </div>
 
-      <div class="control-group">
-        <label class="combo-label">导出格式</label>
-        <select v-model="exportFormat" @change="handleFormatChange">
-          <option value="json">JSON（完整备份）</option>
-          <option value="txt">TXT（兼容文本）</option>
-          <option value="csv">CSV（表格）</option>
-        </select>
+    <section class="subpage-section">
+      <div class="subpage-section-head">
+        <div class="subpage-section-title">{{ i18n.ui_export_options }}</div>
       </div>
+      <div class="subpage-list-card">
+        <label class="subpage-row export-format-row">
+          <span class="subpage-row-title">{{ i18n.ui_export_format }}</span>
+          <span class="subpage-control">
+            <select
+              class="subpage-select export-format-select"
+              v-model="exportFormat"
+              @change="handleFormatChange"
+            >
+              <option value="json">{{ i18n.ui_json_full_backup }}</option>
+              <option value="txt">{{ i18n.ui_txt_standard_links }}</option>
+              <option value="csv">{{ i18n.ui_csv_table_data }}</option>
+            </select>
+          </span>
+        </label>
 
-      <div class="control-group">
-        <label class="combo-label">加密导出</label>
-        <input
-          type="checkbox"
-          v-model="exportEncrypted"
-          :disabled="!canEncrypt"
-        />
+        <label class="subpage-row">
+          <span :class="['subpage-row-icon', canEncrypt ? '' : 'neutral']">
+            <IconLock />
+          </span>
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">{{ i18n.ui_encrypt_master }}</span>
+            <span class="subpage-row-desc">
+              {{ encryptionOptionDescription }}
+            </span>
+          </span>
+          <span class="subpage-switch">
+            <input
+              type="checkbox"
+              v-model="exportEncrypted"
+              :disabled="!canEncrypt"
+            />
+            <span class="subpage-switch-track"></span>
+          </span>
+        </label>
       </div>
+    </section>
 
-      <div class="backup-export-summary">
-        {{ exportSummaryText }}
+    <section class="subpage-section">
+      <div class="subpage-section-head">
+        <div class="subpage-section-title">{{ i18n.ui_this_export }}</div>
       </div>
+      <div class="subpage-notice export-summary-card">
+        <span class="subpage-row-icon"><IconInfo /></span>
+        <div>
+          <div class="subpage-notice-title">{{ exportFormatTitle }}</div>
+          <div class="subpage-notice-desc">{{ exportSummaryText }}</div>
+          <div class="export-summary-meta">
+            <span>{{ exportEntryCount }} {{ i18n.ui_code_count }}</span>
+            <span v-if="exportFormat === 'json'">
+              {{ groups.length }} {{ i18n.ui_group_count }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
 
-      <div class="text warning" v-if="!defaultEncryption">
-        {{ i18n.export_info }}
+    <section
+      class="subpage-section"
+      v-if="
+        !defaultEncryption || showUnsupportedFormatWarning || currentlyEncrypted
+      "
+    >
+      <div class="subpage-section-head">
+        <div class="subpage-section-title">{{ i18n.ui_export_tips }}</div>
       </div>
-      <div class="text warning" v-if="showUnsupportedFormatWarning">
-        {{ i18n.otp_unsupported_warn }}
-      </div>
-      <div class="text warning" v-if="currentlyEncrypted">
-        {{ i18n.phrase_incorrect_export }}
-      </div>
+      <div class="export-warning-list">
+        <div class="subpage-notice" v-if="!defaultEncryption">
+          <span class="subpage-row-icon warning"><IconAdvisor /></span>
+          <div>
+            <div class="subpage-notice-title">
+              {{ i18n.ui_no_master_password }}
+            </div>
+            <div class="subpage-notice-desc">
+              {{ i18n.ui_no_master_password_desc }}
+            </div>
+          </div>
+        </div>
 
-      <button class="button" @click="exportBackup">导出备份</button>
+        <div class="subpage-notice" v-if="showUnsupportedFormatWarning">
+          <span class="subpage-row-icon warning"><IconAdvisor /></span>
+          <div>
+            <div class="subpage-notice-title">
+              {{ i18n.ui_unsupported_format }}
+            </div>
+            <div class="subpage-notice-desc">
+              {{
+                i18n.otp_unsupported_warn ||
+                "Steam and Battle.net accounts are not included in TXT or CSV backups."
+              }}
+            </div>
+          </div>
+        </div>
+
+        <div class="subpage-notice" v-if="currentlyEncrypted">
+          <span class="subpage-row-icon danger"><IconXCircle /></span>
+          <div>
+            <div class="subpage-notice-title">
+              {{ i18n.ui_locked_accounts }}
+            </div>
+            <div class="subpage-notice-desc">
+              {{
+                i18n.phrase_incorrect_export ||
+                "Accounts that cannot be decrypted are not included in this backup."
+              }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="subpage-actions export-backup-actions">
+      <button
+        type="button"
+        class="subpage-button primary"
+        :disabled="isExporting"
+        @click="exportBackup"
+      >
+        {{ isExporting ? i18n.ui_exporting : exportButtonLabel }}
+      </button>
     </div>
   </div>
 </template>
 <script lang="ts">
 import Vue from "vue";
 import { isSafari } from "../../browser";
+import { Encryption } from "../../models/encryption";
 import { EntryStorage } from "../../models/storage";
+import IconAdvisor from "../../../svg/lightbulb.svg";
+import IconInfo from "../../../svg/info.svg";
+import IconLock from "../../../svg/lock.svg";
+import IconXCircle from "../../../svg/x-circle.svg";
+import {
+  buildBackupJson,
+  buildCsvBackup,
+  buildOtpAuthText,
+  getGroupExportData,
+  hasUnsupportedAccounts,
+} from "../../models/export-utils";
 
 export default Vue.extend({
+  props: {
+    embedded: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  components: {
+    IconAdvisor,
+    IconInfo,
+    IconLock,
+    IconXCircle,
+  },
   data() {
     return {
       exportFormat: "json",
       exportEncrypted: false,
+      isExporting: false,
     };
   },
   computed: {
@@ -62,46 +179,24 @@ export default Vue.extend({
         [h: string]: RawOTPStorage;
       };
     },
-    exportEncData(): { [h: string]: RawOTPStorage | Key } {
-      return this.$store.state.accounts.exportEncData || {};
-    },
-    groupsExportData(): { [id: string]: GroupStorageRecord } {
-      return this.$store.state.groups.groups.reduce(
-        (
-          acc: { [id: string]: GroupStorageRecord },
-          group: OTPGroupInterface
-        ) => {
-          acc[group.id] = {
-            dataType: "Group",
-            id: group.id,
-            name: group.name,
-            index: group.index,
-          };
-          return acc;
-        },
-        {}
-      );
+    groups(): OTPGroupInterface[] {
+      return this.$store.state.groups.groups;
     },
     unsupportedAccounts(): boolean {
       return hasUnsupportedAccounts(this.exportData);
     },
-    exportFile(): string {
-      return getBackupFile({ ...this.exportData, ...this.groupsExportData });
-    },
-    exportEncryptedFile(): string {
-      return getBackupFile({
-        ...this.exportEncData,
-        ...this.groupsExportData,
-      });
-    },
-    exportOneLineOtpAuthFile(): string {
-      return getOneLineOtpBackupFile(this.exportData);
-    },
-    exportCsvFile(): string {
-      return getCsvBackupFile(this.exportData, this.$store.state.groups.groups);
-    },
     defaultEncryption(): string {
       return this.$store.state.accounts.defaultEncryption;
+    },
+    activeEncryption(): EncryptionInterface | null {
+      if (!this.defaultEncryption) {
+        return null;
+      }
+      const encryption = this.$store.state.accounts.encryption as Map<
+        string,
+        EncryptionInterface
+      >;
+      return encryption.get(this.defaultEncryption) || null;
     },
     currentlyEncrypted(): boolean {
       return this.$store.getters["accounts/currentlyEncrypted"];
@@ -118,18 +213,46 @@ export default Vue.extend({
         (this.exportFormat === "txt" || this.exportFormat === "csv")
       );
     },
+    exportEntryCount(): number {
+      return Object.keys(this.exportData).length;
+    },
+    encryptionOptionDescription(): string {
+      if (this.exportFormat !== "json") {
+        return this.i18n.ui_txt_csv_no_encryption;
+      }
+      if (!this.defaultEncryption) {
+        return this.i18n.ui_create_password_first;
+      }
+      return this.i18n.ui_json_encryption_only;
+    },
+    exportFormatTitle(): string {
+      if (this.exportFormat === "json") {
+        return this.exportEncrypted
+          ? this.i18n.ui_encrypted_json_backup
+          : this.i18n.ui_json_backup;
+      }
+      if (this.exportFormat === "txt") {
+        return this.i18n.ui_txt_backup;
+      }
+      return this.i18n.ui_csv_backup;
+    },
+    exportButtonLabel(): string {
+      return `${
+        this.i18n.ui_export_prefix
+      } ${this.exportFormat.toUpperCase()} ${this.i18n.ui_backup_title}`;
+    },
     exportSummaryText(): string {
       if (this.exportFormat === "json") {
         return this.exportEncrypted
-          ? "导出为加密 JSON，适合完整备份与恢复。"
-          : "导出为 JSON，包含 OTP、备注和分组信息。";
+          ? this.i18n.ui_json_encrypted_summary
+          : this.i18n.ui_json_summary;
       }
 
       if (this.exportFormat === "txt") {
-        return "导出为 otpauth 文本，适合导入其他验证器。";
+        return this.i18n.ui_txt_summary;
       }
 
-      return "导出为 CSV，适合表格查看、筛选和归档。";
+      return this.i18n.ui_csv_summary;
     },
   },
   methods: {
@@ -138,199 +261,92 @@ export default Vue.extend({
         this.exportEncrypted = false;
       }
     },
-    exportBackup() {
-      const exportMap: Record<string, { url: string; filename: string }> = {
-        json: {
-          url: this.exportEncrypted
-            ? this.exportEncryptedFile
-            : this.exportFile,
-          filename: this.exportEncrypted
-            ? "authenticator-encrypted.json"
-            : "authenticator.json",
-        },
-        txt: {
-          url: this.exportOneLineOtpAuthFile,
+    async exportBackup() {
+      if (this.isExporting) {
+        return;
+      }
+      this.isExporting = true;
+      try {
+        const exportFile = await this.getExportFile();
+        if (!exportFile) {
+          return;
+        }
+
+        const blob = new Blob([exportFile.content], {
+          type: exportFile.mimeType,
+        });
+        const url = URL.createObjectURL(blob);
+
+        if (!this.isDataLinkSupported) {
+          window.open(url);
+          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+          return;
+        }
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = exportFile.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } finally {
+        this.isExporting = false;
+      }
+    },
+    async getExportFile(): Promise<{
+      content: string;
+      filename: string;
+      mimeType: string;
+    } | null> {
+      if (this.exportFormat === "json") {
+        if (this.exportEncrypted) {
+          if (!this.activeEncryption?.getEncryptionStatus()) {
+            this.$store.commit(
+              "notification/alert",
+              this.i18n.ui_unlock_before_encrypted_export
+            );
+            return null;
+          }
+          const encryptedData = await EntryStorage.backupGetExport(
+            this.activeEncryption as Encryption,
+            true
+          );
+          return {
+            content: buildBackupJson(encryptedData),
+            filename: "authenticator-encrypted.json",
+            mimeType: "application/json;charset=utf-8",
+          };
+        }
+
+        return {
+          content: buildBackupJson({
+            ...this.exportData,
+            ...getGroupExportData(this.groups),
+          }),
+          filename: "authenticator.json",
+          mimeType: "application/json;charset=utf-8",
+        };
+      }
+
+      if (this.exportFormat === "txt") {
+        return {
+          content: buildOtpAuthText(this.exportData),
           filename: "authenticator.txt",
-        },
-        csv: {
-          url: this.exportCsvFile,
+          mimeType: "text/plain;charset=utf-8",
+        };
+      }
+
+      if (this.exportFormat === "csv") {
+        return {
+          content: "\uFEFF" + buildCsvBackup(this.exportData, this.groups),
           filename: "authenticator.csv",
-        },
-      };
-
-      const current = exportMap[this.exportFormat];
-      if (!current) {
-        return;
+          mimeType: "text/csv;charset=utf-8",
+        };
       }
 
-      if (!this.isDataLinkSupported) {
-        window.open(current.url);
-        return;
-      }
-
-      const link = document.createElement("a");
-      link.href = current.url;
-      link.download = current.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      return null;
     },
   },
 });
-
-function hasUnsupportedAccounts(exportData: { [h: string]: RawOTPStorage }) {
-  for (const entry of Object.keys(exportData)) {
-    if (
-      exportData[entry].type === "battle" ||
-      exportData[entry].type === "steam"
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function getBackupFile(entryData: {
-  [hash: string]: RawOTPStorage | GroupStorageRecord | Key;
-}) {
-  let json = JSON.stringify(entryData, null, 2);
-  json = json.replace(/\n/g, "\r\n");
-  return downloadFileUrlBuilder(json);
-}
-
-function getOneLineOtpBackupFile(entryData: { [hash: string]: RawOTPStorage }) {
-  const otpAuthLines: string[] = [];
-  for (const hash of Object.keys(entryData)) {
-    const otpStorage = entryData[hash];
-    if (otpStorage.issuer) {
-      otpStorage.issuer = removeUnsafeData(otpStorage.issuer);
-    }
-    if (otpStorage.account) {
-      otpStorage.account = removeUnsafeData(otpStorage.account);
-    }
-    const label = otpStorage.issuer
-      ? otpStorage.issuer + ":" + (otpStorage.account || "")
-      : otpStorage.account || "";
-    let type = "";
-    if (otpStorage.type === "totp" || otpStorage.type === "hex") {
-      type = "totp";
-    } else if (otpStorage.type === "hotp" || otpStorage.type === "hhex") {
-      type = "hotp";
-    } else {
-      continue;
-    }
-
-    const otpAuthLine =
-      "otpauth://" +
-      type +
-      "/" +
-      label +
-      "?secret=" +
-      otpStorage.secret +
-      (otpStorage.issuer ? "&issuer=" + otpStorage.issuer : "") +
-      (type === "hotp" ? "&counter=" + otpStorage.counter : "") +
-      (type === "totp" && otpStorage.period
-        ? "&period=" + otpStorage.period
-        : "") +
-      (otpStorage.digits ? "&digits=" + otpStorage.digits : "") +
-      (otpStorage.algorithm ? "&algorithm=" + otpStorage.algorithm : "");
-
-    otpAuthLines.push(otpAuthLine);
-  }
-
-  return downloadFileUrlBuilder(otpAuthLines.join("\r\n"));
-}
-
-function getCsvBackupFile(
-  entryData: { [hash: string]: RawOTPStorage },
-  groups: OTPGroupInterface[]
-) {
-  const csvRows: string[] = [];
-  csvRows.push("title,url,username,password,issuer,group,secret,notes");
-
-  for (const hash of Object.keys(entryData)) {
-    const otpStorage = entryData[hash];
-
-    let type = "";
-    if (otpStorage.type === "totp" || otpStorage.type === "hex") {
-      type = "totp";
-    } else if (otpStorage.type === "hotp" || otpStorage.type === "hhex") {
-      type = "hotp";
-    } else {
-      continue;
-    }
-
-    const issuer = otpStorage.issuer
-      ? decodeUrlEncoding(otpStorage.issuer.split("::")[0].replace(/:/g, ""))
-      : "";
-    const account = otpStorage.account
-      ? decodeUrlEncoding(otpStorage.account.split("::")[0].replace(/:/g, ""))
-      : "";
-    const secret = otpStorage.secret || "";
-    const groupName =
-      groups.find((group) => group.id === otpStorage.groupId)?.name || "";
-    const note = otpStorage.note || "";
-    const label = issuer ? issuer + ":" + (account || "") : account || "";
-
-    const otpAuthUrl =
-      "otpauth://" +
-      type +
-      "/" +
-      encodeURIComponent(label) +
-      "?secret=" +
-      secret +
-      (issuer ? "&issuer=" + encodeURIComponent(issuer) : "") +
-      (type === "hotp" ? "&counter=" + otpStorage.counter : "") +
-      (type === "totp" && otpStorage.period
-        ? "&period=" + otpStorage.period
-        : "") +
-      (otpStorage.digits ? "&digits=" + otpStorage.digits : "") +
-      (otpStorage.algorithm ? "&algorithm=" + otpStorage.algorithm : "");
-
-    const title = escapeCsvField(issuer || account || "Authenticator Entry");
-    const url = "";
-    const username = escapeCsvField(account);
-    const password = "";
-    const issuerField = escapeCsvField(issuer);
-    const groupField = escapeCsvField(groupName);
-    const secretField = escapeCsvField(secret);
-    const notes = escapeCsvField([note, otpAuthUrl].filter(Boolean).join("\n"));
-
-    csvRows.push(
-      `${title},${url},${username},${password},${issuerField},${groupField},${secretField},${notes}`
-    );
-  }
-
-  return downloadFileUrlBuilder(csvRows.join("\r\n"));
-}
-
-function decodeUrlEncoding(data: string) {
-  try {
-    return decodeURIComponent(data);
-  } catch {
-    return data;
-  }
-}
-
-function escapeCsvField(field: string) {
-  if (!field) return "";
-  if (
-    field.includes('"') ||
-    field.includes(",") ||
-    field.includes("\n") ||
-    field.includes("\r")
-  ) {
-    return '"' + field.replace(/"/g, '""') + '"';
-  }
-  return field;
-}
-
-function downloadFileUrlBuilder(content: string) {
-  const blob = new Blob([content], { type: "application/octet-stream" });
-  return URL.createObjectURL(blob);
-}
-
-function removeUnsafeData(data: string) {
-  return encodeURIComponent(data.split("::")[0].replace(/:/g, ""));
-}
 </script>

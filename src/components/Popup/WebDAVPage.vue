@@ -1,216 +1,193 @@
 <template>
-  <div
-    class="webdav-page"
-    style="
-      padding: 8px;
-      background: linear-gradient(180deg, #f5f7fb 0%, #fdfdff 100%);
-    "
-  >
-    <div
-      class="card-grid"
-      style="display: flex; flex-direction: column; gap: 16px"
-    >
-      <section
-        class="card"
-        style="
-          background: rgba(255, 255, 255, 0.9);
-          border-radius: 18px;
-          padding: 16px;
-          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-          backdrop-filter: blur(6px);
-        "
-      >
-        <header style="margin-bottom: 12px">
-          <div style="font-size: 15px; font-weight: 600; color: #111827">
-            {{ i18n.webdav_card_connection }}
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 2px">
-            {{ lastBackupLabel }}
-          </div>
-        </header>
-        <div class="input-grid" style="display: grid; gap: 12px">
-          <div
-            class="control-group"
-            style="width: 100%; display: flex; flex-direction: column; gap: 4px"
+  <div class="subpage webdav-page">
+    <div class="subpage-head" v-if="!embedded">
+      <div class="subpage-title">{{ i18n.ui_webdav_title }}</div>
+      <div class="subpage-subtitle">
+        {{ i18n.ui_webdav_subtitle }}
+      </div>
+    </div>
+
+    <section class="subpage-section">
+      <div class="subpage-section-head">
+        <div class="subpage-section-title">{{ i18n.ui_server_connection }}</div>
+      </div>
+      <div class="subpage-card subpage-form-card">
+        <div class="webdav-connection-meta">
+          {{ i18n.ui_webdav_connection_info }}
+        </div>
+
+        <label class="subpage-field">
+          <span class="subpage-field-label">
+            {{ i18n.webdav_server_url || "Server URL" }}
+          </span>
+          <input
+            class="subpage-text-input"
+            type="url"
+            v-model="webdav.serverUrl"
+            placeholder="https://example.com/webdav"
+            autocomplete="url"
+          />
+        </label>
+
+        <label class="subpage-field">
+          <span class="subpage-field-label">
+            {{ i18n.webdav_username || "Username" }}
+          </span>
+          <input
+            class="subpage-text-input"
+            type="text"
+            v-model="webdav.username"
+            autocomplete="username"
+          />
+        </label>
+
+        <label class="subpage-field">
+          <span class="subpage-field-label">
+            {{ i18n.webdav_password || "Password" }}
+          </span>
+          <input
+            class="subpage-text-input"
+            type="password"
+            v-model="webdav.password"
+            autocomplete="current-password"
+          />
+        </label>
+
+        <label class="subpage-field">
+          <span class="subpage-field-label">{{ i18n.ui_backup_storage }}</span>
+          <select class="subpage-select" v-model="webdav.encrypted">
+            <option value="true">
+              {{
+                i18n.webdav_backup_option_encrypted ||
+                "Encrypted storage (recommended)"
+              }}
+            </option>
+            <option value="false">
+              {{ i18n.webdav_backup_option_plain || "Plain-text storage" }}
+            </option>
+          </select>
+        </label>
+
+        <div class="subpage-actions">
+          <button
+            type="button"
+            class="subpage-button"
+            :disabled="webdav.isTesting"
+            @click="testWebDAV"
           >
-            <label style="font-size: 13px; color: #111827">
-              {{ i18n.webdav_server_url }}
-            </label>
+            {{
+              webdav.isTesting
+                ? i18n.ui_testing
+                : i18n.webdav_test_connection || "Test connection"
+            }}
+          </button>
+          <button
+            type="button"
+            class="subpage-button primary"
+            :disabled="webdav.isSaving"
+            @click="saveWebDAVSettings"
+          >
+            {{ webdav.isSaving ? i18n.ui_saving : i18n.webdav_save || "Save" }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="subpage-section">
+      <div class="subpage-section-head">
+        <div class="subpage-section-title">{{ i18n.ui_automatic_backup }}</div>
+        <span class="subpage-section-meta">
+          {{ i18n.webdav_last_backup || "Last backup" }}: {{ lastBackupLabel }}
+        </span>
+      </div>
+      <div class="subpage-list-card">
+        <label class="subpage-row">
+          <span class="subpage-row-icon"><IconSync /></span>
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">
+              {{ i18n.webdav_auto_backup || "Automatic WebDAV backup" }}
+            </span>
+            <span class="subpage-row-desc">
+              {{
+                i18n.webdav_auto_backup_desc ||
+                "Upload a backup every 7 days when Authenticator opens."
+              }}
+            </span>
+          </span>
+          <span class="subpage-switch">
             <input
-              class="input"
-              type="text"
-              v-model="webdav.serverUrl"
-              placeholder="https://example.com/webdav"
-              style="width: 100%; box-sizing: border-box"
+              type="checkbox"
+              v-model="webdav.autoBackup"
+              @change="updateAutoBackupPreference"
             />
-          </div>
-          <div
-            class="control-group"
-            style="width: 100%; display: flex; flex-direction: column; gap: 4px"
-          >
-            <label style="font-size: 13px; color: #111827">
-              {{ i18n.webdav_username }}
-            </label>
+            <span class="subpage-switch-track"></span>
+          </span>
+        </label>
+
+        <label class="subpage-row">
+          <span class="subpage-row-icon neutral"><IconDatabase /></span>
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">{{ i18n.ui_retention_count }}</span>
+            <span class="subpage-row-desc">{{ i18n.ui_retention_desc }}</span>
+          </span>
+          <span class="subpage-control">
             <input
-              class="input"
-              type="text"
-              v-model="webdav.username"
-              :placeholder="i18n.webdav_username"
-              style="width: 100%; box-sizing: border-box"
-            />
-          </div>
-          <div
-            class="control-group"
-            style="width: 100%; display: flex; flex-direction: column; gap: 4px"
-          >
-            <label style="font-size: 13px; color: #111827">
-              {{ i18n.webdav_password }}
-            </label>
-            <input
-              class="input"
-              type="password"
-              v-model="webdav.password"
-              :placeholder="i18n.webdav_password"
-              style="width: 100%; box-sizing: border-box"
-            />
-          </div>
-          <div style="width: 100%">
-            <a-select-input
-              label="存储方式"
-              v-model="webdav.encrypted"
-              style="width: 100%"
-            >
-              <option value="true">
-                {{ i18n.webdav_backup_option_encrypted }}
-              </option>
-              <option value="false">
-                {{ i18n.webdav_backup_option_plain }}
-              </option>
-            </a-select-input>
-          </div>
-          <div
-            class="control-group"
-            style="width: 100%; display: flex; flex-direction: column; gap: 4px"
-          >
-            <label style="font-size: 13px; color: #111827">
-              最大备份数量（0表示不限制）
-            </label>
-            <input
-              class="input"
+              class="subpage-number-input"
               type="number"
               v-model.number="webdav.maxBackups"
               min="0"
-              placeholder="0"
-              style="width: 100%; box-sizing: border-box"
+              :aria-label="i18n.ui_retention_count"
+              @change="updateMaxBackupsPreference"
             />
-          </div>
-        </div>
-        <div
-          class="button-row"
-          style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px"
-        >
-          <a-button @click="testWebDAV" :disabled="webdav.isTesting">
-            {{ i18n.webdav_test_connection }}
-          </a-button>
-          <a-button @click="saveWebDAVSettings" :disabled="webdav.isSaving">
-            {{ i18n.webdav_save }}
-          </a-button>
-        </div>
-      </section>
-
-      <section
-        class="card"
-        style="
-          background: rgba(255, 255, 255, 0.9);
-          border-radius: 18px;
-          padding: 16px;
-          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-          backdrop-filter: blur(6px);
-        "
-      >
-        <header style="margin-bottom: 12px">
-          <div style="font-size: 15px; font-weight: 600; color: #111827">
-            {{ i18n.webdav_card_backup }}
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 2px">
-            {{ i18n.webdav_last_backup }} · {{ lastBackupLabel }}
-          </div>
-        </header>
-        <label
-          class="toggle"
-          style="
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            padding: 12px 0;
-          "
-        >
-          <input
-            type="checkbox"
-            v-model="webdav.autoBackup"
-            @change="updateAutoBackupPreference"
-            style="margin-top: 4px"
-          />
-          <div>
-            <div style="font-weight: 600; font-size: 14px">
-              {{ i18n.webdav_auto_backup }}
-            </div>
-            <div style="font-size: 12px; color: #6b7280">
-              {{ i18n.webdav_auto_backup_desc }}
-            </div>
-          </div>
+            <span class="subpage-control-unit">{{ i18n.ui_copies }}</span>
+          </span>
         </label>
-        <div
-          class="button-row"
-          style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px"
-        >
-          <a-button @click="backupToWebDAV" :disabled="webdav.isBackingUp">
-            {{ i18n.webdav_backup_button }}
-          </a-button>
-          <a-button @click="refreshWebDAVList" :disabled="webdav.isLoadingList">
-            {{ i18n.webdav_refresh_list }}
-          </a-button>
+      </div>
+
+      <div class="subpage-card webdav-action-card">
+        <div class="subpage-actions">
+          <button
+            type="button"
+            class="subpage-button primary"
+            :disabled="webdav.isBackingUp"
+            @click="backupToWebDAV"
+          >
+            {{
+              webdav.isBackingUp
+                ? i18n.ui_backing_up
+                : i18n.webdav_backup_button || "Back up now"
+            }}
+          </button>
+          <button
+            type="button"
+            class="subpage-button"
+            :disabled="webdav.isLoadingList"
+            @click="refreshWebDAVList"
+          >
+            {{
+              webdav.isLoadingList
+                ? i18n.ui_refreshing
+                : i18n.webdav_refresh_list || "Refresh"
+            }}
+          </button>
         </div>
-        <p
-          style="margin-top: 8px; font-size: 12px; color: #6b7280"
-          v-if="webdav.message"
-        >
+        <p class="subpage-card-message" v-if="webdav.message">
           {{ webdav.message }}
         </p>
-      </section>
+      </div>
+    </section>
 
-      <section
-        class="card"
-        style="
-          background: rgba(255, 255, 255, 0.9);
-          border-radius: 18px;
-          padding: 16px;
-          box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
-          backdrop-filter: blur(6px);
-        "
-      >
-        <header style="margin-bottom: 12px">
-          <div style="font-size: 15px; font-weight: 600; color: #111827">
-            {{ i18n.webdav_card_restore }}
-          </div>
-          <div style="font-size: 12px; color: #6b7280; margin-top: 2px">
-            {{ restoreHint }}
-          </div>
-        </header>
-        <div
-          class="control-group"
-          style="width: 100%; display: flex; flex-direction: column; gap: 4px"
-        >
-          <label style="font-size: 13px; color: #111827">
-            {{ i18n.webdav_choose_backup }}
-          </label>
-          <select
-            class="input"
-            v-model="webdav.selectedFile"
-            style="width: 100%; box-sizing: border-box"
-          >
+    <section class="subpage-section">
+      <div class="subpage-section-head">
+        <div class="subpage-section-title">{{ i18n.ui_restore_backup }}</div>
+      </div>
+      <div class="subpage-section-desc">{{ restoreHint }}</div>
+      <div class="subpage-card subpage-form-card">
+        <label class="subpage-field">
+          <span class="subpage-field-label">{{ i18n.ui_select_backup }}</span>
+          <select class="subpage-select" v-model="webdav.selectedFile">
             <option disabled value="">
-              {{ i18n.webdav_choose_backup }}
+              {{ i18n.webdav_choose_backup || "Choose a backup file" }}
             </option>
             <option
               v-for="file in webdav.files"
@@ -220,67 +197,146 @@
               {{ formatWebDAVFile(file) }}
             </option>
           </select>
-        </div>
-        <label
-          class="toggle"
-          style="
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-            padding: 12px 0;
-          "
-        >
-          <input
-            type="checkbox"
-            v-model="webdav.clearBeforeRestore"
-            @change="updateClearBeforeRestorePreference"
-            style="margin-top: 4px"
-          />
-          <div>
-            <div style="font-weight: 600; font-size: 14px">
-              {{ i18n.webdav_clear_before_restore }}
-            </div>
-            <div style="font-size: 12px; color: #6b7280">
-              {{ i18n.webdav_clear_before_restore_desc }}
-            </div>
-          </div>
         </label>
-        <div
-          class="button-row"
-          style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px"
-        >
-          <a-button
-            @click="restoreFromWebDAV"
+
+        <label class="webdav-toggle-field">
+          <span class="subpage-row-copy">
+            <span class="subpage-row-title">
+              {{
+                i18n.webdav_clear_before_restore ||
+                "Clear existing data before restore"
+              }}
+            </span>
+            <span class="subpage-row-desc">
+              {{
+                i18n.webdav_clear_before_restore_desc ||
+                "Delete all current accounts before importing the selected backup."
+              }}
+            </span>
+          </span>
+          <span class="subpage-switch">
+            <input
+              type="checkbox"
+              v-model="webdav.clearBeforeRestore"
+              @change="updateClearBeforeRestorePreference"
+            />
+            <span class="subpage-switch-track"></span>
+          </span>
+        </label>
+
+        <div class="subpage-actions webdav-restore-actions">
+          <button
+            type="button"
+            class="subpage-button primary"
             :disabled="!webdav.selectedFile || webdav.isRestoring"
+            @click="restoreFromWebDAV"
           >
-            {{ i18n.webdav_restore_button }}
-          </a-button>
-          <a-button
-            class="danger"
+            {{
+              webdav.isRestoring
+                ? i18n.ui_restoring
+                : i18n.webdav_restore_button || "Restore selected backup"
+            }}
+          </button>
+          <button
+            type="button"
+            class="subpage-button"
+            v-if="webdav.isRestoring && webdav.restoreCanCancel"
+            @click="cancelWebDAVRestore"
+          >
+            {{ i18n.ui_cancel_import }}
+          </button>
+          <button
+            type="button"
+            class="subpage-button danger"
+            :disabled="webdav.isRestoring"
             @click="handleClearAllData"
-            style="background: #fee2e2; color: #b91c1c"
           >
-            {{ i18n.backup_clear_button }}
-          </a-button>
+            {{ i18n.backup_clear_button || "Clear all data" }}
+          </button>
         </div>
-      </section>
+
+        <div class="webdav-transfer-progress" v-if="webdav.isRestoring">
+          <div class="webdav-transfer-progress-head">
+            <span>{{ webdav.restoreProgressLabel }}</span>
+            <span>{{ webdav.restoreProgress }}%</span>
+          </div>
+          <div
+            class="webdav-transfer-progress-track"
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            :aria-valuenow="webdav.restoreProgress"
+          >
+            <span
+              class="webdav-transfer-progress-fill"
+              :style="{ width: webdav.restoreProgress + '%' }"
+            ></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div
+      class="subpage-dialog-backdrop"
+      v-if="restorePassphraseDialogOpen"
+      role="presentation"
+      @click.self="cancelRestorePassphrase"
+      @keydown.esc.stop.prevent="cancelRestorePassphrase"
+    >
+      <form
+        class="subpage-dialog"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="'webdavRestorePasswordTitle'"
+        @submit.prevent="submitRestorePassphrase"
+      >
+        <div class="subpage-dialog-title" id="webdavRestorePasswordTitle">
+          {{ i18n.ui_backup_password_title }}
+        </div>
+        <div class="subpage-dialog-desc">
+          {{ i18n.ui_backup_password_desc }}
+        </div>
+        <label class="subpage-field">
+          <span class="subpage-field-label">{{ i18n.phrase }}</span>
+          <input
+            ref="restorePassphraseInput"
+            class="subpage-text-input"
+            type="password"
+            v-model="restorePassphrase"
+            autocomplete="current-password"
+          />
+        </label>
+        <div class="subpage-actions">
+          <button
+            type="button"
+            class="subpage-button"
+            @click="cancelRestorePassphrase"
+          >
+            {{ i18n.cancel }}
+          </button>
+          <button
+            type="submit"
+            class="subpage-button primary"
+            :disabled="!restorePassphrase"
+          >
+            {{ i18n.ok }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </template>
 <script lang="ts">
 import Vue from "vue";
-import * as CryptoJS from "crypto-js";
-import {
-  decryptBackupData,
-  getEntryDataFromOTPAuthPerLine,
-  normalizeImportedEntryGroupIds,
-} from "../../models/import-utils";
-import {
-  EntryStorage,
-  GroupStorage,
-  isGroupRecord,
-} from "../../models/storage";
+import IconDatabase from "../../../svg/database.svg";
+import IconSync from "../../../svg/sync.svg";
 import { Encryption } from "../../models/encryption";
+import { MAX_BACKUP_CONTENT_BYTES } from "../../models/import-limits";
+import {
+  applyDecryptedBackup,
+  decryptParsedBackup,
+} from "../../models/import-service";
+import { parseBackupContentOffThread } from "../../models/import-worker-client";
 import {
   downloadWebDAVBackup,
   getWebDAVConfig,
@@ -288,7 +344,7 @@ import {
   saveWebDAVConfig,
   testWebDAVConnection,
   uploadWebDAVBackup,
-  deleteWebDAVBackup,
+  pruneWebDAVBackups,
   type WebDAVConfig,
   type WebDAVFile,
   getWebDAVOrigin,
@@ -296,6 +352,16 @@ import {
 import { UserSettings } from "../../models/settings";
 
 export default Vue.extend({
+  props: {
+    embedded: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  components: {
+    IconDatabase,
+    IconSync,
+  },
   data: function () {
     return {
       webdav: {
@@ -315,16 +381,26 @@ export default Vue.extend({
         isSaving: false,
         message: "",
         lastBackupDay: 0,
+        restoreProgress: 0,
+        restoreProgressLabel: "",
+        restoreCanCancel: false,
       },
+      restoreAbortController: null as AbortController | null,
+      restorePassphraseDialogOpen: false,
+      restorePassphrase: "",
+      restorePassphraseResolver: null as
+        | ((passphrase: string | null) => void)
+        | null,
     };
   },
   created() {
     this.loadWebDAVSettings();
   },
+  beforeDestroy() {
+    this.restoreAbortController?.abort();
+    this.cancelRestorePassphrase();
+  },
   computed: {
-    defaultEncryption: function () {
-      return this.$store.state.accounts.defaultEncryption;
-    },
     currentlyEncrypted: function () {
       return this.$store.getters["accounts/currentlyEncrypted"];
     },
@@ -338,15 +414,15 @@ export default Vue.extend({
     },
     lastBackupLabel(): string {
       if (!this.webdav.lastBackupDay) {
-        return this.i18n.webdav_never_backed_up;
+        return this.i18n.webdav_never_backed_up || "Never backed up";
       }
       const ms = this.webdav.lastBackupDay * 24 * 60 * 60 * 1000;
       return new Date(ms).toLocaleDateString();
     },
     restoreHint(): string {
       return this.webdav.files.length
-        ? `${this.webdav.files.length} · ${this.lastBackupLabel}`
-        : this.i18n.webdav_no_files;
+        ? `${this.webdav.files.length} ${this.i18n.ui_backups_found} · ${this.i18n.ui_latest_backup} ${this.lastBackupLabel}`
+        : this.i18n.webdav_no_files || "No restorable backup files were found.";
     },
   },
   methods: {
@@ -418,7 +494,10 @@ export default Vue.extend({
 
       // Check if user selected encrypted backup but no password is set
       if (this.webdavConfig.encrypted && (!encryption || !encryption.getEncryptionStatus())) {
-        this.notify(this.i18n.backup_set_password_alert || "请先在「设置 → 安全」中设置密码，才能进行加密备份");
+        this.notify(
+          this.i18n.backup_set_password_alert ||
+            this.i18n.ui_create_password_first
+        );
         return false;
       }
 
@@ -440,16 +519,22 @@ export default Vue.extend({
           );
         }
         if (success) {
-          this.recordBackupDay();
-          await this.refreshWebDAVList(true);
-          // Clean up old backups if max limit is set
+          await this.recordBackupDay();
           await this.cleanupOldBackups();
+          await this.refreshWebDAVList(true);
         }
         return success;
       } catch (error) {
         if (showToast) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          this.notify(this.i18n.webdav_backup_failure + (errorMsg ? ": " + errorMsg : ""));
+          this.notify(
+            errorMsg === "webdavTimeout"
+              ? this.i18n.ui_error_webdav_timeout
+              : errorMsg === "backupContentTooLarge"
+              ? this.i18n.ui_error_backup_too_large
+              : this.i18n.webdav_backup_failure +
+                (errorMsg ? ": " + errorMsg : "")
+          );
         }
         return false;
       } finally {
@@ -469,7 +554,7 @@ export default Vue.extend({
         this.webdav.message = this.i18n.webdav_loading_files;
       }
       try {
-        // 强制刷新：清除当前文件列表，确保显示最新数据
+        // Clear the current list first so the refreshed state is unambiguous.
         this.webdav.files = [];
         const files = await listWebDAVBackups();
         this.webdav.files = files;
@@ -500,42 +585,96 @@ export default Vue.extend({
       if (!(await this.ensureWebDAVReady())) {
         return;
       }
+      const selectedFile = this.webdav.files.find(
+        (file) => file.name === this.webdav.selectedFile
+      );
+      if (
+        selectedFile?.size &&
+        selectedFile.size > MAX_BACKUP_CONTENT_BYTES
+      ) {
+        this.notify(this.i18n.ui_error_backup_too_large);
+        return;
+      }
       const encryption = this.getActiveEncryption();
       if (!encryption) {
         this.notify(this.i18n.import_error_password);
         return;
       }
+      const controller = new AbortController();
+      this.restoreAbortController = controller;
       this.webdav.isRestoring = true;
+      this.webdav.restoreCanCancel = true;
+      this.setRestoreProgress(2, this.i18n.ui_progress_downloading_backup);
       try {
-        const content = await downloadWebDAVBackup(this.webdav.selectedFile);
+        const content = await downloadWebDAVBackup(this.webdav.selectedFile, {
+          signal: controller.signal,
+          onDownloadProgress: (loadedBytes, totalBytes) => {
+            const ratio = totalBytes
+              ? loadedBytes / totalBytes
+              : loadedBytes / MAX_BACKUP_CONTENT_BYTES;
+            this.setRestoreProgress(
+              3 + Math.min(1, ratio) * 42,
+              this.i18n.ui_progress_downloading_backup
+            );
+          },
+        });
         await this.restoreFromBackupContent(
           content,
           encryption,
-          this.webdav.clearBeforeRestore
+          this.webdav.clearBeforeRestore,
+          controller.signal,
+          (value, label) => this.setRestoreProgress(value, label)
         );
+        this.setRestoreProgress(100, this.i18n.webdav_restore_success);
         this.notify(this.i18n.webdav_restore_success);
       } catch (error) {
         const message = (error as Error).message;
-        if (message === "cancelled") {
+        if (message === "cancelled" || message === "importCancelled") {
           this.notify(this.i18n.webdav_restore_cancelled);
         } else if (message === "parseError") {
           this.notify(this.i18n.webdav_restore_parse_error);
+        } else if (message === "incorrectPassphrase") {
+          this.notify(this.i18n.ui_incorrect_backup_password);
+        } else if (message === "backupContentTooLarge") {
+          this.notify(this.i18n.ui_error_backup_too_large);
+        } else if (message === "webdavTimeout") {
+          this.notify(this.i18n.ui_error_webdav_timeout);
         } else {
           this.notify(this.i18n.webdav_restore_failure);
         }
       } finally {
         this.webdav.isRestoring = false;
+        this.webdav.restoreCanCancel = false;
+        this.restoreAbortController = null;
       }
     },
+    cancelWebDAVRestore() {
+      this.restoreAbortController?.abort();
+      this.cancelRestorePassphrase();
+      this.setRestoreProgress(100, this.i18n.webdav_restore_cancelled);
+    },
     async handleClearAllData() {
-      if (!window.confirm(this.i18n.backup_clear_confirm)) {
+      if (
+        !(await this.$store.dispatch(
+          "notification/confirm",
+          this.i18n.backup_clear_confirm
+        ))
+      ) {
         return;
       }
       let proceed = true;
-      if (window.confirm(this.i18n.backup_clear_backup_prompt)) {
+      if (
+        await this.$store.dispatch(
+          "notification/confirm",
+          this.i18n.backup_clear_backup_prompt
+        )
+      ) {
         const success = await this.backupToWebDAV(false);
         if (!success) {
-          proceed = window.confirm(this.i18n.webdav_backup_failure);
+          proceed = await this.$store.dispatch(
+            "notification/confirm",
+            this.i18n.webdav_backup_failure
+          );
         }
       }
       if (!proceed) {
@@ -548,105 +687,58 @@ export default Vue.extend({
     async restoreFromBackupContent(
       content: string,
       encryption: Encryption,
-      clearFirst: boolean
+      clearFirst: boolean,
+      signal?: AbortSignal,
+      onProgress?: (value: number, label: string) => void
     ) {
-      let importData = {} as Record<
-        string,
-        RawOTPStorage | Key | GroupStorageRecord
-      > & {
-        key?: { enc: string; hash: string };
-        enc?: string;
-        hash?: string;
-      };
-      let failedCount = 0;
-      let succeededCount = 0;
-      try {
-        importData = JSON.parse(content);
-        succeededCount = Object.keys(importData).filter(
-          (key) => ["key", "enc", "hash"].indexOf(key) === -1
-        ).length;
-      } catch {
-        const result = await getEntryDataFromOTPAuthPerLine(content);
-        importData = result.exportData;
-        failedCount = result.failedCount;
-        succeededCount = result.succeededCount;
+      onProgress?.(48, this.i18n.ui_progress_parsing_backup);
+      const parsedBackup = await parseBackupContentOffThread(content, {
+        signal,
+        onProgress: (value) =>
+          onProgress?.(
+            48 + value * 0.16,
+            this.i18n.ui_progress_parsing_backup
+          ),
+      });
+      const passphrase = parsedBackup.requiresPassphrase
+        ? await this.promptRestorePassphrase()
+        : null;
+      if (parsedBackup.requiresPassphrase && !passphrase) {
+        throw new Error("cancelled");
       }
-
-      let key: { enc: string } | null = null;
-      const groups: { [id: string]: GroupStorageRecord } = {};
-      if (importData.key) {
-        key = importData.key;
-        delete importData.key;
-      } else if (importData.enc && importData.hash) {
-        key = { enc: importData.enc };
-        delete importData.hash;
-        delete importData.enc;
-      }
-
-      for (const recordId in importData) {
-        const possibleGroup = importData[recordId];
-        if (isGroupRecord(possibleGroup)) {
-          groups[recordId] = possibleGroup;
-          delete importData[recordId];
-        }
-      }
-
-      let decryptedFileData: { [hash: string]: RawOTPStorage } = {};
-      let requiresPassphrase = false;
-      for (const hash in importData) {
-        const possibleEntry = importData[hash] as any;
-        if (!possibleEntry || possibleEntry.dataType === "Key") {
-          continue;
-        }
-        if (
-          possibleEntry.dataType === "EncOTPStorage" ||
-          possibleEntry.keyId ||
-          possibleEntry.encrypted
-        ) {
-          requiresPassphrase = true;
-          break;
-        }
-      }
-
-      if (requiresPassphrase) {
-        const passphrase = await this.promptRestorePassphrase();
-        if (!passphrase) {
-          throw new Error("cancelled");
-        }
-        const unlockKey = key
-          ? CryptoJS.AES.decrypt(key.enc, passphrase).toString()
-          : passphrase;
-        decryptedFileData = await decryptBackupData(importData, unlockKey);
-      } else {
-        for (const hash in importData) {
-          const entry = importData[hash] as RawOTPStorage;
-          if (entry && !entry.encrypted) {
-            decryptedFileData[hash] = entry;
-          }
-        }
-      }
-
-      if (!Object.keys(decryptedFileData).length) {
-        throw new Error("parseError");
-      }
-
-      if (clearFirst) {
-        await this.$store.dispatch("accounts/clearAllData");
-        await this.$store.dispatch("accounts/updateEntries");
-      }
-
-      // Use empty encryption to prevent re-encrypting already decrypted backup data
-      const emptyEncryption = new Encryption("", "");
-      if (Object.keys(groups).length) {
-        await GroupStorage.import(groups);
-        await this.$store.dispatch("groups/refreshGroups");
-      }
-      normalizeImportedEntryGroupIds(
-        decryptedFileData,
-        await GroupStorage.get()
+      onProgress?.(
+        68,
+        passphrase
+          ? this.i18n.ui_progress_decrypting
+          : this.i18n.ui_progress_preparing_import
       );
-      await EntryStorage.import(emptyEncryption, decryptedFileData);
-      await this.$store.dispatch("accounts/updateEntries");
+      const decryptedBackup = await decryptParsedBackup(
+        parsedBackup,
+        passphrase,
+        signal
+      );
+      const failedCount = parsedBackup.failedCount;
+      const succeededCount = parsedBackup.succeededCount;
+
+      try {
+        this.webdav.restoreCanCancel = false;
+        await applyDecryptedBackup(decryptedBackup, {
+          encryption,
+          clearFirst,
+          onProgress: (value, key) =>
+            onProgress?.(value, this.i18n[key] || key),
+          refresh: async () => {
+            await this.$store.dispatch("groups/refreshGroups");
+            await this.$store.dispatch("accounts/updateEntries");
+          },
+          signal,
+        });
+      } catch (error) {
+        if ((error as Error).message === "noImportableEntries") {
+          throw new Error("parseError");
+        }
+        throw error;
+      }
 
       if (failedCount > 0 && succeededCount === 0) {
         this.notify(this.i18n.migration_fail);
@@ -655,11 +747,36 @@ export default Vue.extend({
       }
     },
     async promptRestorePassphrase() {
-      const input = window.prompt(this.i18n.webdav_restore_passphrase_prompt);
-      if (input === null || input === "") {
-        return null;
+      this.cancelRestorePassphrase();
+      this.restorePassphrase = "";
+      this.restorePassphraseDialogOpen = true;
+      this.$nextTick(() => {
+        const input = this.$refs.restorePassphraseInput as
+          | HTMLInputElement
+          | undefined;
+        input?.focus();
+      });
+      return new Promise<string | null>((resolve) => {
+        this.restorePassphraseResolver = resolve;
+      });
+    },
+    submitRestorePassphrase() {
+      if (!this.restorePassphrase || !this.restorePassphraseResolver) {
+        return;
       }
-      return input;
+      const resolver = this.restorePassphraseResolver;
+      const passphrase = this.restorePassphrase;
+      this.restorePassphraseResolver = null;
+      this.restorePassphraseDialogOpen = false;
+      this.restorePassphrase = "";
+      resolver(passphrase);
+    },
+    cancelRestorePassphrase() {
+      const resolver = this.restorePassphraseResolver;
+      this.restorePassphraseResolver = null;
+      this.restorePassphraseDialogOpen = false;
+      this.restorePassphrase = "";
+      resolver?.(null);
     },
     validateWebDAVFields() {
       return (
@@ -729,6 +846,13 @@ export default Vue.extend({
     notify(message: string) {
       this.$store.commit("notification/alert", message);
     },
+    setRestoreProgress(value: number, label: string) {
+      this.webdav.restoreProgress = Math.max(
+        0,
+        Math.min(100, Math.round(value))
+      );
+      this.webdav.restoreProgressLabel = label;
+    },
     updateAutoBackupPreference() {
       UserSettings.items.webdavAutoBackup = this.webdav.autoBackup;
       UserSettings.commitItems();
@@ -738,47 +862,23 @@ export default Vue.extend({
         this.webdav.clearBeforeRestore;
       UserSettings.commitItems();
     },
-    recordBackupDay(day = getClientDay()) {
+    updateMaxBackupsPreference() {
+      const maxBackups = Math.max(0, Number(this.webdav.maxBackups) || 0);
+      this.webdav.maxBackups = maxBackups;
+      UserSettings.items.webdavMaxBackups = maxBackups;
+      UserSettings.commitItems();
+    },
+    async recordBackupDay(day = getClientDay()) {
       this.webdav.lastBackupDay = day;
       UserSettings.items.webdavLastBackupTime = day;
-      UserSettings.commitItems();
+      await UserSettings.commitItems();
     },
     async cleanupOldBackups() {
       const maxBackups = this.webdav.maxBackups;
       if (!maxBackups || maxBackups <= 0) {
-        // No limit set
         return;
       }
-
-      const files = this.webdav.files;
-      if (files.length <= maxBackups) {
-        // Within limit
-        return;
-      }
-
-      // Sort files by last modified (newest first)
-      const sortedFiles = [...files].sort((a, b) => {
-        if (a.lastModified && b.lastModified) {
-          return (
-            new Date(b.lastModified).getTime() -
-            new Date(a.lastModified).getTime()
-          );
-        }
-        return b.name.localeCompare(a.name);
-      });
-
-      // Delete old files beyond the limit
-      const filesToDelete = sortedFiles.slice(maxBackups);
-      for (const file of filesToDelete) {
-        try {
-          await deleteWebDAVBackup(file.name);
-        } catch (error) {
-          console.error("Failed to delete old backup:", file.name, error);
-        }
-      }
-
-      // Refresh file list after cleanup
-      await this.refreshWebDAVList(true);
+      await pruneWebDAVBackups(maxBackups);
     },
   },
 });

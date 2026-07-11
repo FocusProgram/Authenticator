@@ -11,6 +11,7 @@ import {
 import { CodeState } from "./models/otp";
 
 import { getOTPAuthPerLineFromOPTAuthMigration } from "./models/migration";
+import { parseOtpAuthUri } from "./models/otpauth-uri";
 import { isChrome, isFirefox } from "./browser";
 import { UserSettings } from "./models/settings";
 
@@ -98,7 +99,9 @@ async function getTotp(text: string, silent = false) {
       }
 
       const getTotpResults = await Promise.allSettled(getTotpPromises);
-      const failedCount = getTotpResults.filter((res) => !res).length;
+      const failedCount = getTotpResults.filter(
+        (result) => result.status === "rejected" || result.value !== true
+      ).length;
       if (failedCount === otpUrls.length) {
         !silent && chrome.tabs.sendMessage(id, { action: "migrationfail" });
         return false;
@@ -120,125 +123,54 @@ async function getTotp(text: string, silent = false) {
       return true;
     }
   } else {
-    let uri = text.split("otpauth://")[1];
-    let type = uri.substr(0, 4).toLowerCase();
-    uri = uri.substr(5);
-    let label = uri.split("?")[0];
-    const parameterPart = uri.split("?")[1];
-    if (!label || !parameterPart) {
+    const parsed = parseOtpAuthUri(text);
+    if (!parsed) {
       !silent && chrome.tabs.sendMessage(id, { action: "errorqr" });
       return false;
-    } else {
-      let secret = "";
-      let account: string | undefined;
-      let issuer: string | undefined;
-      let algorithm: string | undefined;
-      let period: number | undefined;
-      let digits: number | undefined;
-
-      try {
-        label = decodeURIComponent(label);
-      } catch (error) {
-        console.error(error);
-      }
-      if (label.indexOf(":") !== -1) {
-        issuer = label.split(":")[0];
-        account = label.split(":")[1];
-      } else {
-        account = label;
-      }
-      const parameters = parameterPart.split("&");
-      const {
-        cachedPassphrase,
-        cachedKeyId,
-      } = await chrome.storage.session.get();
-      parameters.forEach((item) => {
-        const parameter = item.split("=");
-        if (parameter[0].toLowerCase() === "secret") {
-          secret = parameter[1];
-        } else if (parameter[0].toLowerCase() === "issuer") {
-          try {
-            issuer = decodeURIComponent(parameter[1]);
-          } catch {
-            issuer = parameter[1];
-          }
-          issuer = issuer.replace(/\+/g, " ");
-        } else if (parameter[0].toLowerCase() === "counter") {
-          // let counter = Number(parameter[1]);
-          // counter = isNaN(counter) || counter < 0 ? 0 : counter;
-        } else if (parameter[0].toLowerCase() === "period") {
-          period = Number(parameter[1]);
-          period =
-            isNaN(period) || period < 0 || period > 60 || 60 % period !== 0
-              ? undefined
-              : period;
-        } else if (parameter[0].toLowerCase() === "digits") {
-          digits = Number(parameter[1]);
-          digits = isNaN(digits) || digits === 0 ? 6 : digits;
-        } else if (parameter[0].toLowerCase() === "algorithm") {
-          algorithm = parameter[1];
-        }
-      });
-
-      if (!secret) {
-        !silent && chrome.tabs.sendMessage(id, { action: "errorqr" });
-        return false;
-      } else if (
-        !/^[0-9a-f]+$/i.test(secret) &&
-        !/^[2-7a-z]+=*$/i.test(secret)
-      ) {
-        !silent && chrome.tabs.sendMessage(id, { action: "secretqr", secret });
-        return false;
-      } else {
-        const encryption = new Encryption(cachedPassphrase, cachedKeyId);
-        const hash = crypto.randomUUID();
-        if (
-          !/^[2-7a-z]+=*$/i.test(secret) &&
-          /^[0-9a-f]+$/i.test(secret) &&
-          type === "totp"
-        ) {
-          type = "hex";
-        } else if (
-          !/^[2-7a-z]+=*$/i.test(secret) &&
-          /^[0-9a-f]+$/i.test(secret) &&
-          type === "hotp"
-        ) {
-          type = "hhex";
-        }
-        const entryData: { [hash: string]: RawOTPStorage } = {};
-        entryData[hash] = {
-          account,
-          hash,
-          issuer,
-          secret,
-          type,
-          encrypted: false,
-          index: 0,
-          counter: 0,
-          pinned: false,
-        };
-        if (period) {
-          entryData[hash].period = period;
-        }
-        if (digits) {
-          entryData[hash].digits = digits;
-        }
-        if (algorithm) {
-          entryData[hash].algorithm = algorithm;
-        }
-        if (
-          // If the entries are encrypted and we aren't unlocked, error.
-          (await EntryStorage.hasEncryptionKey()) !==
-          encryption.getEncryptionStatus()
-        ) {
-          !silent && chrome.tabs.sendMessage(id, { action: "errorenc" });
-          return false;
-        }
-        await EntryStorage.import(encryption, entryData);
-        !silent && chrome.tabs.sendMessage(id, { action: "added", account });
-        return true;
-      }
     }
+
+    const {
+      cachedPassphrase,
+      cachedKeyId,
+    } = await chrome.storage.session.get();
+    const encryption = new Encryption(cachedPassphrase, cachedKeyId);
+    if (
+      // If the entries are encrypted and we aren't unlocked, error.
+      (await EntryStorage.hasEncryptionKey()) !==
+      encryption.getEncryptionStatus()
+    ) {
+      !silent && chrome.tabs.sendMessage(id, { action: "errorenc" });
+      return false;
+    }
+
+    const hash = crypto.randomUUID();
+    const entryData: { [hash: string]: RawOTPStorage } = {
+      [hash]: {
+        account: parsed.account,
+        hash,
+        issuer: parsed.issuer,
+        secret: parsed.secret,
+        type: parsed.type,
+        encrypted: false,
+        index: 0,
+        counter: parsed.counter || 0,
+        pinned: false,
+      },
+    };
+    if (parsed.period) {
+      entryData[hash].period = parsed.period;
+    }
+    if (parsed.digits) {
+      entryData[hash].digits = parsed.digits;
+    }
+    if (parsed.algorithm) {
+      entryData[hash].algorithm = parsed.algorithm;
+    }
+
+    await EntryStorage.import(encryption, entryData);
+    !silent &&
+      chrome.tabs.sendMessage(id, { action: "added", account: parsed.account });
+    return true;
   }
 }
 

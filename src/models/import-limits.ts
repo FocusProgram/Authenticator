@@ -1,0 +1,1 @@
+export const MAX_BACKUP_CONTENT_BYTES = 100 * 1024 * 1024;

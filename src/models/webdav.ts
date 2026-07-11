@@ -1,4 +1,5 @@
 import { Encryption } from "./encryption";
+import { MAX_BACKUP_CONTENT_BYTES } from "./import-limits";
 import { EntryStorage } from "./storage";
 import { UserSettings } from "./settings";
 
@@ -23,7 +24,28 @@ type WebDAVResponse = {
   responseText: string;
 };
 
-const DEFAULT_TIMEOUT = 15000;
+export type WebDAVTransferOptions = {
+  signal?: AbortSignal;
+  onDownloadProgress?: (loadedBytes: number, totalBytes?: number) => void;
+};
+
+type WebDAVRequestOptions = WebDAVTransferOptions & {
+  maxResponseBytes?: number;
+  preferDirect?: boolean;
+  timeout?: number;
+};
+
+export const WEBDAV_CONTROL_TIMEOUT_MS = 15000;
+export const WEBDAV_TRANSFER_TIMEOUT_MS = 5 * 60 * 1000;
+
+export function isWebDAVBackupDue(
+  currentDay: number,
+  lastBackupDay: number,
+  intervalDays = 7
+) {
+  const delta = currentDay - lastBackupDay;
+  return delta < 0 || delta >= intervalDays;
+}
 
 function getBaseUrl(url: string) {
   return url.replace(/\/+$/, "");
@@ -71,14 +93,21 @@ async function directFetch(
   url: string,
   headers: Record<string, string>,
   body?: string,
-  timeout = DEFAULT_TIMEOUT
+  options: WebDAVRequestOptions = {}
 ): Promise<WebDAVResponse> {
   if (!hasSessionFetchSupport()) {
     throw new Error("Fetch is not available.");
   }
 
   const controller = new AbortController();
+  const timeout = options.timeout || WEBDAV_CONTROL_TIMEOUT_MS;
   const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const abortFromCaller = () => controller.abort();
+  if (options.signal?.aborted) {
+    controller.abort();
+  } else {
+    options.signal?.addEventListener("abort", abortFromCaller, { once: true });
+  }
 
   try {
     const response = await fetch(url, {
@@ -88,20 +117,98 @@ async function directFetch(
       signal: controller.signal,
     });
 
-    const responseText = await response.text();
+    const responseText = await readWebDAVResponseText(response, {
+      maxBytes: options.maxResponseBytes,
+      onProgress: options.onDownloadProgress,
+      signal: controller.signal,
+    });
     const headerLines: string[] = [];
     response.headers.forEach((value, key) => {
       headerLines.push(`${key}: ${value}`);
     });
 
-    return {
+    const result = {
       status: response.status,
       statusText: response.statusText,
       headers: headerLines.join("\r\n"),
       responseText,
     };
+    return result;
+  } catch (error) {
+    if (options.signal?.aborted) {
+      throw new Error("cancelled");
+    }
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("webdavTimeout");
+    }
+    throw error;
   } finally {
     clearTimeout(timeoutId);
+    options.signal?.removeEventListener("abort", abortFromCaller);
+  }
+}
+
+export async function readWebDAVResponseText(
+  response: Response,
+  options: {
+    maxBytes?: number;
+    onProgress?: (loadedBytes: number, totalBytes?: number) => void;
+    signal?: AbortSignal;
+  } = {}
+) {
+  const contentLength = Number(response.headers.get("content-length") || 0);
+  if (options.maxBytes && contentLength > options.maxBytes) {
+    throw new Error("backupContentTooLarge");
+  }
+
+  if (!response.body) {
+    const responseText = await response.text();
+    const responseBytes = new Blob([responseText]).size;
+    if (options.maxBytes && responseBytes > options.maxBytes) {
+      throw new Error("backupContentTooLarge");
+    }
+    options.onProgress?.(responseBytes, contentLength || responseBytes);
+    return responseText;
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  const chunks: string[] = [];
+  let loadedBytes = 0;
+  let readComplete = false;
+
+  try {
+    while (!readComplete) {
+      if (options.signal?.aborted) {
+        throw new DOMException("Aborted", "AbortError");
+      }
+      const result = await reader.read();
+      if (result.done) {
+        readComplete = true;
+        continue;
+      }
+      if (!result.value) {
+        continue;
+      }
+      loadedBytes += result.value.byteLength;
+      if (options.maxBytes && loadedBytes > options.maxBytes) {
+        await reader.cancel();
+        throw new Error("backupContentTooLarge");
+      }
+      chunks.push(decoder.decode(result.value, { stream: true }));
+      options.onProgress?.(
+        loadedBytes,
+        contentLength > 0 ? contentLength : undefined
+      );
+    }
+    chunks.push(decoder.decode());
+    options.onProgress?.(
+      loadedBytes,
+      contentLength > 0 ? contentLength : loadedBytes
+    );
+    return chunks.join("");
+  } finally {
+    reader.releaseLock();
   }
 }
 
@@ -111,7 +218,8 @@ async function sendWebDAVRequest(
   username: string,
   password: string,
   body?: string,
-  additionalHeaders?: Record<string, string>
+  additionalHeaders?: Record<string, string>,
+  options: WebDAVRequestOptions = {}
 ): Promise<WebDAVResponse> {
   const credentials = btoa(`${username}:${password}`);
   const headers: Record<string, string> = {
@@ -125,14 +233,18 @@ async function sendWebDAVRequest(
     url,
     headers,
     body,
-    timeout: DEFAULT_TIMEOUT,
+    timeout: options.timeout || WEBDAV_CONTROL_TIMEOUT_MS,
   };
+
+  if (options.preferDirect) {
+    return directFetch(method, url, headers, body, options);
+  }
 
   try {
     const response = await runtimeSendMessage<WebDAVResponse>(message);
     return response;
   } catch (error) {
-    return await directFetch(method, url, headers, body, DEFAULT_TIMEOUT);
+    return await directFetch(method, url, headers, body, options);
   }
 }
 
@@ -208,7 +320,8 @@ export async function testWebDAVConnection(): Promise<boolean> {
 
 export async function uploadWebDAVBackup(
   encryption: Encryption,
-  encryptedBackup: boolean
+  encryptedBackup: boolean,
+  options: WebDAVTransferOptions = {}
 ): Promise<boolean> {
   const config = await getWebDAVConfig();
   if (!config.url || !config.username || !config.password) {
@@ -220,6 +333,9 @@ export async function uploadWebDAVBackup(
     encryptedBackup
   );
   const backup = JSON.stringify(exportData, null, 2);
+  if (new Blob([backup]).size > MAX_BACKUP_CONTENT_BYTES) {
+    throw new Error("backupContentTooLarge");
+  }
   const now = new Date();
   const timestamp = now.toISOString().replace(/[:.]/g, "-");
   // Add milliseconds to make filename more unique and avoid 423 conflicts
@@ -232,6 +348,9 @@ export async function uploadWebDAVBackup(
   // Retry logic for handling 423 (Locked) status
   const maxRetries = 3;
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    if (options.signal?.aborted) {
+      throw new Error("cancelled");
+    }
     try {
       const response = await sendWebDAVRequest(
         "PUT",
@@ -241,6 +360,11 @@ export async function uploadWebDAVBackup(
         backup,
         {
           "Content-Type": "application/json",
+        },
+        {
+          preferDirect: true,
+          signal: options.signal,
+          timeout: WEBDAV_TRANSFER_TIMEOUT_MS,
         }
       );
 
@@ -258,7 +382,7 @@ export async function uploadWebDAVBackup(
           `[WebDAV] Upload locked (423), retrying (${attempt}/${maxRetries})...`
         );
         // Wait before retry (exponential backoff)
-        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        await waitForWebDAVRetry(1000 * attempt, options.signal);
         continue;
       }
 
@@ -267,12 +391,18 @@ export async function uploadWebDAVBackup(
       );
       return false;
     } catch (error) {
+      if (
+        options.signal?.aborted ||
+        (error instanceof Error && error.message === "cancelled")
+      ) {
+        throw new Error("cancelled");
+      }
       if (attempt < maxRetries) {
         console.log(
           `[WebDAV] Upload error, retrying (${attempt}/${maxRetries})...`,
           error
         );
-        await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
+        await waitForWebDAVRetry(1000 * attempt, options.signal);
         continue;
       }
       throw error;
@@ -280,6 +410,24 @@ export async function uploadWebDAVBackup(
   }
 
   return false;
+}
+
+function waitForWebDAVRetry(ms: number, signal?: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    if (signal?.aborted) {
+      reject(new Error("cancelled"));
+      return;
+    }
+    const timeoutId = window.setTimeout(() => {
+      signal?.removeEventListener("abort", handleAbort);
+      resolve();
+    }, ms);
+    const handleAbort = () => {
+      window.clearTimeout(timeoutId);
+      reject(new Error("cancelled"));
+    };
+    signal?.addEventListener("abort", handleAbort, { once: true });
+  });
 }
 
 export async function listWebDAVBackups(): Promise<WebDAVFile[]> {
@@ -360,17 +508,13 @@ export async function listWebDAVBackups(): Promise<WebDAVFile[]> {
     });
   });
 
-  return files.sort((a, b) => {
-    if (a.lastModified && b.lastModified) {
-      return (
-        new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
-      );
-    }
-    return b.name.localeCompare(a.name);
-  });
+  return files.sort(compareWebDAVFilesNewestFirst);
 }
 
-export async function downloadWebDAVBackup(fileName: string): Promise<string> {
+export async function downloadWebDAVBackup(
+  fileName: string,
+  options: WebDAVTransferOptions = {}
+): Promise<string> {
   const config = await getWebDAVConfig();
   if (!config.url || !config.username || !config.password) {
     throw new Error("Missing WebDAV configuration.");
@@ -382,7 +526,16 @@ export async function downloadWebDAVBackup(fileName: string): Promise<string> {
     "GET",
     fileUrl,
     config.username,
-    config.password
+    config.password,
+    undefined,
+    undefined,
+    {
+      maxResponseBytes: MAX_BACKUP_CONTENT_BYTES,
+      onDownloadProgress: options.onDownloadProgress,
+      preferDirect: true,
+      signal: options.signal,
+      timeout: WEBDAV_TRANSFER_TIMEOUT_MS,
+    }
   );
 
   if (response.status >= 200 && response.status < 300) {
@@ -412,4 +565,58 @@ export async function deleteWebDAVBackup(fileName: string): Promise<boolean> {
     response.status === 204 ||
     response.status === 404
   );
+}
+
+export function getWebDAVBackupsToPrune(
+  files: WebDAVFile[],
+  maxBackups: number
+) {
+  const normalizedLimit = Math.max(0, Math.floor(Number(maxBackups) || 0));
+  if (!normalizedLimit || files.length <= normalizedLimit) {
+    return [];
+  }
+  return [...files].sort(compareWebDAVFilesNewestFirst).slice(normalizedLimit);
+}
+
+export async function pruneWebDAVBackups(
+  maxBackups: number,
+  knownFiles?: WebDAVFile[]
+) {
+  const normalizedLimit = Math.max(0, Math.floor(Number(maxBackups) || 0));
+  if (!normalizedLimit) {
+    return 0;
+  }
+
+  let files: WebDAVFile[];
+  try {
+    files = knownFiles || (await listWebDAVBackups());
+  } catch (error) {
+    console.error("Failed to list WebDAV backups for retention cleanup", error);
+    return 0;
+  }
+  const filesToDelete = getWebDAVBackupsToPrune(files, normalizedLimit);
+  let deletedCount = 0;
+
+  for (const file of filesToDelete) {
+    try {
+      if (await deleteWebDAVBackup(file.name)) {
+        deletedCount++;
+      }
+    } catch (error) {
+      console.error("Failed to delete old WebDAV backup:", file.name, error);
+    }
+  }
+
+  return deletedCount;
+}
+
+function compareWebDAVFilesNewestFirst(a: WebDAVFile, b: WebDAVFile) {
+  if (a.lastModified && b.lastModified) {
+    const timestampDelta =
+      new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime();
+    if (Number.isFinite(timestampDelta) && timestampDelta !== 0) {
+      return timestampDelta;
+    }
+  }
+  return b.name.localeCompare(a.name);
 }

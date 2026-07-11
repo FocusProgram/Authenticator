@@ -1,4 +1,7 @@
 import * as CryptoJS from "crypto-js";
+import { throwIfImportCancelled } from "./import-cancellation";
+import { argonHash, argonVerify } from "./password";
+import { createRecordMap } from "./record-map";
 
 export { getEntryDataFromOTPAuthPerLine } from "./import-otpauth";
 export { getEntryDataFromBitwarden } from "./import-bitwarden";
@@ -8,16 +11,19 @@ export { getEntryDataFromBitwarden } from "./import-bitwarden";
  */
 export async function decryptBackupData(
   backupData: { [hash: string]: OTPStorage | Key },
-  passphrase: string | null
+  passphrase: string | null,
+  keys: Map<string, string | null> = new Map(),
+  signal?: AbortSignal
 ) {
-  const decryptedBackupData: { [hash: string]: RawOTPStorage } = {};
-  const keys: Map<string, string | null> = new Map();
+  const decryptedBackupData = createRecordMap<RawOTPStorage>();
   for (const hash in backupData) {
+    throwIfImportCancelled(signal);
     const unknownStorageItem = backupData[hash];
     if (
       typeof unknownStorageItem !== "object" ||
       unknownStorageItem.dataType === "Key" ||
-      unknownStorageItem.dataType === "Group"
+      unknownStorageItem.dataType === "Group" ||
+      unknownStorageItem.dataType === "EncGroup"
     ) {
       continue;
     }
@@ -33,7 +39,8 @@ export async function decryptBackupData(
           await findAndUnlockKey(
             backupData,
             unknownStorageItem.keyId,
-            passphrase
+            passphrase,
+            signal
           )
         );
       }
@@ -64,7 +71,7 @@ export async function decryptBackupData(
         continue;
       }
     } else {
-      storageItem = unknownStorageItem;
+      storageItem = { ...unknownStorageItem } as RawOTPStorage;
     }
     if (!storageItem.secret) {
       continue;
@@ -89,6 +96,69 @@ export async function decryptBackupData(
     decryptedBackupData[hash] = storageItem;
   }
   return decryptedBackupData;
+}
+
+export async function decryptBackupGroups(
+  backupData: { [hash: string]: OTPStorage | Key },
+  passphrase: string | null,
+  keys: Map<string, string | null> = new Map(),
+  signal?: AbortSignal
+) {
+  const groups = createRecordMap<GroupStorageRecord>();
+
+  for (const recordId of Object.keys(backupData)) {
+    throwIfImportCancelled(signal);
+    const record = backupData[recordId];
+    if (!record || typeof record !== "object") {
+      continue;
+    }
+
+    if (record.dataType === "Group") {
+      if (record.id && record.name.trim()) {
+        groups[record.id] = { ...record, name: record.name.trim() };
+      }
+      continue;
+    }
+
+    if (record.dataType !== "EncGroup" || !passphrase) {
+      continue;
+    }
+
+    if (!keys.has(record.keyId)) {
+      keys.set(
+        record.keyId,
+        await findAndUnlockKey(backupData, record.keyId, passphrase, signal)
+      );
+    }
+    const decryptKey = keys.get(record.keyId);
+    if (!decryptKey) {
+      continue;
+    }
+
+    try {
+      const decrypted = JSON.parse(
+        CryptoJS.AES.decrypt(record.data, decryptKey).toString(
+          CryptoJS.enc.Utf8
+        )
+      ) as GroupStorageRecord;
+      if (
+        decrypted.dataType === "Group" &&
+        decrypted.id &&
+        typeof decrypted.name === "string" &&
+        decrypted.name.trim()
+      ) {
+        groups[decrypted.id] = {
+          ...decrypted,
+          name: decrypted.name.trim(),
+          index: Number(decrypted.index) || 0,
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
+  return groups;
 }
 
 export function normalizeImportedEntryGroupIds(
@@ -120,8 +190,10 @@ export function normalizeImportedEntryGroupIds(
 async function findAndUnlockKey(
   importData: { [key: string]: OTPStorage | Key },
   keyId: string,
-  password: string
+  password: string,
+  signal?: AbortSignal
 ): Promise<string | null> {
+  throwIfImportCancelled(signal);
   if (!(keyId in importData)) {
     return null;
   }
@@ -131,44 +203,19 @@ async function findAndUnlockKey(
     return null;
   }
 
-  const rawHash = await new Promise((resolve: (value: string) => void) => {
-    const iframe = document.getElementById("argon-sandbox");
-    const message = {
-      action: "hash",
-      value: password,
-      salt: key.salt,
-    };
-    if (iframe) {
-      window.addEventListener("message", (response) => {
-        resolve(response.data.response);
-      });
-      // @ts-expect-error bad typings
-      iframe.contentWindow.postMessage(message, "*");
-    }
-  });
+  const rawHash = await argonHash(password, key.salt);
+  throwIfImportCancelled(signal);
+  if (!rawHash) {
+    throw new Error("argon2 did not return a hash!");
+  }
 
   const possibleHash = rawHash.split("$")[5];
   if (!possibleHash) {
     throw new Error("argon2 did not return a hash!");
   }
 
-  const isCorrectPassword = await new Promise(
-    (resolve: (value: string) => void) => {
-      const iframe = document.getElementById("argon-sandbox");
-      const message = {
-        action: "verify",
-        value: possibleHash,
-        hash: key.hash,
-      };
-      if (iframe) {
-        window.addEventListener("message", (response) => {
-          resolve(response.data.response);
-        });
-        // @ts-expect-error bad typings
-        iframe.contentWindow.postMessage(message, "*");
-      }
-    }
-  );
+  const isCorrectPassword = await argonVerify(possibleHash, key.hash);
+  throwIfImportCancelled(signal);
 
   if (!isCorrectPassword) {
     return null;
