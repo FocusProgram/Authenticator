@@ -47,9 +47,9 @@ export class Accounts implements Module {
         filter: true,
         siteName: await getSiteName(),
         showSearch: false,
-        exportData: await EntryStorage.getExport(entries),
-        exportEncData: await EntryStorage.getExport(entries, true),
-        keys: await BrowserStorage.getKeys(),
+        exportData: {},
+        exportEncData: {},
+        keys: [],
         wrongPassword: false,
         unresolvedKeyCount: 0,
         initComplete: false,
@@ -642,14 +642,6 @@ export class Accounts implements Module {
 
           state.commit("loadCodes", entries);
           state.commit("updateCodes");
-          state.commit(
-            "updateExport",
-            await EntryStorage.getExport(state.state.entries)
-          );
-          state.commit("updateEncExport", {
-            entries: await EntryStorage.getExport(state.state.entries, true),
-            keys: await BrowserStorage.getKeys(),
-          });
           state.commit("initComplete");
           return;
         },

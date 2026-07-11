@@ -4,6 +4,51 @@
 <head>
     <meta charset="utf-8" />
     <link rel="manifest" href="/manifest-pwa.json">
+    <style>
+        html,
+        body {
+            width: 320px;
+            height: 480px;
+            margin: 0;
+            overflow: hidden;
+            background: #f5f5f7;
+        }
+
+        #authenticator {
+            width: 320px;
+            height: 480px;
+            background: #f5f5f7;
+        }
+
+        .popup-boot {
+            width: 320px;
+            height: 480px;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+                "PingFang SC", "Helvetica Neue", sans-serif;
+            color: #1d1d1f;
+            background: #f5f5f7;
+        }
+
+        .popup-boot-header {
+            height: 48px;
+            box-sizing: border-box;
+            border-bottom: 1px solid #e5e5ea;
+            background: #ffffff;
+        }
+
+        .popup-boot-body {
+            padding: 12px 10px;
+        }
+
+        .popup-boot-card {
+            height: 74px;
+            margin-bottom: 10px;
+            border-radius: 14px;
+            background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.035);
+        }
+    </style>
     <link href="../css/popup.css"
         type="text/css"
         rel="stylesheet"
@@ -12,6 +57,14 @@
 
 <body>
     <div id="authenticator">
+        <div class="popup-boot">
+            <div class="popup-boot-header"></div>
+            <div class="popup-boot-body">
+                <div class="popup-boot-card"></div>
+                <div class="popup-boot-card"></div>
+                <div class="popup-boot-card"></div>
+            </div>
+        </div>
     </div>
     <script src="../dist/popup.js"></script>
     <iframe src="argon.html"

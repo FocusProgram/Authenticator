@@ -54,15 +54,29 @@ async function init() {
     Vue.component(component.name, component.component);
   }
 
+  const [
+    accountsModule,
+    advisorModule,
+    backupModule,
+    groupsModule,
+    menuModule,
+  ] = await Promise.all([
+    new Accounts().getModule(),
+    new Advisor().getModule(),
+    new Backup().getModule(),
+    new Groups().getModule(),
+    new Menu().getModule(),
+  ]);
+
   // State
   const store = new Vuex.Store({
     modules: {
-      accounts: await new Accounts().getModule(),
-      advisor: await new Advisor().getModule(),
-      backup: await new Backup().getModule(),
+      accounts: accountsModule,
+      advisor: advisorModule,
+      backup: backupModule,
       currentView: new CurrentView().getModule(),
-      groups: await new Groups().getModule(),
-      menu: await new Menu().getModule(),
+      groups: groupsModule,
+      menu: menuModule,
       notification: new Notification().getModule(),
       qr: new Qr().getModule(),
       style: new Style().getModule(),
